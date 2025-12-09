@@ -1,0 +1,34 @@
+# Environment variables (never commit these!)
+.env
+.env.local
+.env.production
+
+# Supabase local development
+.supabase/
+
+# API keys (if you created a config file)
+config.local.js
+secrets.js
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Node modules (if you add any)
+node_modules/
+
+# Build outputs (if using a build step)
+dist/
+build/
+.vercel
+.netlify

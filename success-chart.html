@@ -637,11 +637,11 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTA1MDQsImV4cCI6MjA4MDg4NjUwNH0.yWzSV2Nid_T1XiDE0RrskFob9mRUc-m6MbeIiT7huC4';
 
         // ============================================
-        // ANTHROPIC (CLAUDE) API CONFIGURATION
+        // EDGE FUNCTION CONFIGURATION
         // ============================================
-        // ADD YOUR ANTHROPIC API KEY HERE FOR CONVERSATION ANALYSIS
-        // Get your key from: https://console.anthropic.com/settings/keys
-        const ANTHROPIC_API_KEY = 'YOUR_ANTHROPIC_API_KEY_HERE';
+        // For public deployment, conversation analysis uses a secure Supabase Edge Function
+        // No API keys needed in this file - they're stored securely on the server
+        const USE_EDGE_FUNCTION = true; // Set to true for public deployment
 
         let supabaseClient;
 
@@ -1303,12 +1303,24 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
 
         // Analyze conversation using Sandler methodology (with VERIFICATION)
         async function analyzeSandlerConversation(transcript, callType) {
-            // Check if API key is configured
-            if (ANTHROPIC_API_KEY === 'YOUR_ANTHROPIC_API_KEY_HERE') {
-                showAlert('⚠️ Please add your Anthropic API key to enable AI analysis', 'error');
-                return null;
+            // Use secure Edge Function for public deployment
+            if (USE_EDGE_FUNCTION) {
+                try {
+                    const { data, error } = await supabaseClient.functions.invoke('analyze-conversation', {
+                        body: { transcript, callType }
+                    });
+
+                    if (error) throw error;
+                    return data;
+                } catch (error) {
+                    console.error('Edge Function Error:', error);
+                    showAlert(`AI Analysis failed: ${error.message}`, 'error');
+                    return null;
+                }
             }
 
+            // Legacy direct API call (NOT SECURE for public deployment)
+            // Only use this for local testing
             const sandlerPrompt = `
 You are an expert Sandler Sales trainer analyzing a sales conversation.
 

@@ -60,6 +60,18 @@ const SUPABASE_ANON_KEY = 'your-anon-key-here';
 
 📖 **Full setup instructions**: See [SETUP-GUIDE.md](SETUP-GUIDE.md)
 
+### 4. Deploy Publicly (Optional)
+
+Want to share your dashboard online or access from anywhere?
+
+🔐 **Secure deployment with protected API keys**: See [DEPLOYMENT-GUIDE.md](DEPLOYMENT-GUIDE.md)
+
+Includes:
+- Supabase Edge Functions setup (keeps API keys secure)
+- Row Level Security configuration
+- Free hosting options (Vercel, Netlify, GitHub Pages)
+- Authentication options
+
 ---
 
 ## 📁 File Structure

@@ -885,7 +885,7 @@
             }
         }
 
-        // Analyze performance and generate insights
+        // Analyze performance and generate insights with SANDLER SALES METHODOLOGY
         function analyzePerformance(dailyData, salesData) {
             const insights = [];
             const today = new Date().toISOString().split('T')[0];
@@ -893,8 +893,8 @@
             if (dailyData.length === 0) {
                 insights.push({
                     type: 'alert',
-                    title: '🚀 Get Started',
-                    content: 'Start tracking your daily activities to unlock AI coaching insights. Log your dials, conversations, and meetings.',
+                    title: '🚀 Get Started - Sandler Cookbook',
+                    content: 'Start tracking your daily activities to unlock Sandler-based coaching insights. Remember: Success in sales = Activity × Effectiveness. Log your dials, conversations, and meetings.',
                     priority: 'high'
                 });
                 return insights;
@@ -907,74 +907,126 @@
             const avgDials = totalDials / dailyData.length;
             const conversionRate = totalDials > 0 ? (totalConversations / totalDials) * 100 : 0;
             const meetingRate = totalConversations > 0 ? (totalMeetings / totalConversations) * 100 : 0;
+            const closeRate = totalMeetings > 0 ? (salesData.length / totalMeetings) * 100 : 0;
 
-            // Insight 1: Daily activity trend
+            // SANDLER INSIGHT 1: Cookbook Consistency - Daily Behavior
             if (avgDials < 10) {
                 insights.push({
                     type: 'suggestion',
-                    title: '📞 Increase Daily Dials',
-                    content: `You're averaging ${avgDials.toFixed(1)} dials per day. Top performers make 20-30 dials daily. Try blocking 1-2 hours for focused outreach.`,
+                    title: '📞 Sandler Cookbook: Increase Activity',
+                    content: `You're averaging ${avgDials.toFixed(1)} dials per day. Sandler principle: "You can't control outcomes, only behaviors." Target 20-30 prospecting calls daily. Block time like a real appointment - no interruptions.`,
                     priority: 'high'
                 });
             } else if (avgDials >= 20) {
                 insights.push({
                     type: 'milestone',
-                    title: '🌟 Excellent Call Volume',
-                    content: `You're averaging ${avgDials.toFixed(1)} dials per day - that's outstanding! Keep this momentum going.`,
+                    title: '🌟 Sandler Behavior: Excellent Activity',
+                    content: `You're averaging ${avgDials.toFixed(1)} dials per day - outstanding cookbook execution! Remember: "Success = Activity × Effectiveness". Keep this momentum going.`,
                     priority: 'low'
                 });
             }
 
-            // Insight 2: Conversion rate analysis
+            // SANDLER INSIGHT 2: Bonding & Rapport - Getting Conversations
             if (conversionRate < 15 && totalDials >= 20) {
                 insights.push({
                     type: 'performance',
-                    title: '💡 Improve Your Pitch',
-                    content: `Your dial-to-conversation rate is ${conversionRate.toFixed(1)}%. Consider refining your opening message or trying different calling times. Industry benchmark is 20-30%.`,
-                    priority: 'medium'
+                    title: '🤝 Sandler: Work on Bonding & Rapport',
+                    content: `Your dial-to-conversation rate is ${conversionRate.toFixed(1)}%. Sandler tip: People buy from people they trust. Focus on bonding in the first 30 seconds. Ask: "How's your day going?" before jumping into business. Use Negative Reverse Selling: "I'm not sure if we're a fit, but..."`,
+                    priority: 'high'
                 });
             } else if (conversionRate >= 25) {
                 insights.push({
                     type: 'milestone',
-                    title: '🎯 Great Conversion Rate',
-                    content: `Your ${conversionRate.toFixed(1)}% conversion rate is above average! Your messaging is resonating well.`,
+                    title: '🎯 Sandler: Strong Bonding Skills',
+                    content: `Your ${conversionRate.toFixed(1)}% conversation rate shows excellent bonding! You're building rapport effectively. Keep using curiosity-based questions and avoiding "show up and throw up" presentations.`,
                     priority: 'low'
                 });
             }
 
-            // Insight 3: Meeting booking effectiveness
+            // SANDLER INSIGHT 3: Up-Front Contracts - Meeting Conversion
             if (meetingRate < 20 && totalConversations >= 10) {
                 insights.push({
                     type: 'suggestion',
-                    title: '🤝 Focus on Meeting Quality',
-                    content: `${meetingRate.toFixed(1)}% of conversations lead to meetings. Try qualifying leads earlier and clearly communicating meeting value.`,
-                    priority: 'medium'
+                    title: '📋 Sandler: Set Up-Front Contracts',
+                    content: `${meetingRate.toFixed(1)}% of conversations lead to meetings. Sandler principle: Always set an Up-Front Contract. Ask: "Would it make sense to schedule 15 minutes to explore if we're a fit? At the end, you can tell me 'yes,' 'no,' or 'let's talk again.' Fair enough?" This removes pressure and increases bookings.`,
+                    priority: 'high'
+                });
+            } else if (meetingRate >= 30) {
+                insights.push({
+                    type: 'milestone',
+                    title: '📋 Sandler: Excellent Up-Front Contracts',
+                    content: `${meetingRate.toFixed(1)}% meeting conversion shows you're setting clear expectations! Keep using Up-Front Contracts to build trust and reduce no-shows.`,
+                    priority: 'low'
                 });
             }
 
-            // Insight 4: Revenue insights
+            // SANDLER INSIGHT 4: Pain Funnel & Closing - Revenue Performance
             if (salesData.length > 0) {
                 const totalRevenue = salesData.reduce((sum, sale) => sum + parseFloat(sale.amount_cad), 0);
                 const avgSale = totalRevenue / salesData.length;
 
                 insights.push({
                     type: 'performance',
-                    title: '💰 Revenue Performance',
-                    content: `You've closed ${salesData.length} sales with an average value of $${avgSale.toFixed(2)} CAD. Total revenue: $${totalRevenue.toFixed(2)} CAD.`,
+                    title: '💰 Sandler: Revenue & Pain Discovery',
+                    content: `You've closed ${salesData.length} sales (${closeRate.toFixed(1)}% close rate) with average value of $${avgSale.toFixed(2)} CAD. Total: $${totalRevenue.toFixed(2)} CAD. Sandler reminder: "No pain, no change." Keep using the Pain Funnel in discovery meetings to uncover compelling reasons to buy.`,
                     priority: 'low'
+                });
+
+                // Close rate coaching
+                if (closeRate < 25 && totalMeetings >= 5) {
+                    insights.push({
+                        type: 'suggestion',
+                        title: '🔍 Sandler: Use the Pain Funnel',
+                        content: `Your ${closeRate.toFixed(1)}% close rate suggests qualification gaps. In discovery meetings, use the Pain Funnel: "Tell me more about that... How long has that been a problem? What have you tried? How much is it costing you? What happens if you don't fix it?" Uncover COMPELLING pain, not just technical needs.`,
+                        priority: 'high'
+                    });
+                } else if (closeRate >= 40) {
+                    insights.push({
+                        type: 'milestone',
+                        title: '🎯 Sandler: Excellent Qualification',
+                        content: `Your ${closeRate.toFixed(1)}% close rate shows you're qualifying well! You're uncovering real pain and only moving forward with qualified prospects. This is true Sandler discipline.`,
+                        priority: 'low'
+                    });
+                }
+            }
+
+            // SANDLER INSIGHT 5: Budget & Decision - Qualification Discipline
+            if (totalMeetings >= 5 && salesData.length === 0) {
+                insights.push({
+                    type: 'alert',
+                    title: '💵 Sandler: Qualify Budget & Decision Early',
+                    content: `You've held ${totalMeetings} meetings but no sales yet. Sandler tip: Don't waste time on unqualified prospects. In first call, ask: "If this makes sense, what kind of budget have you set aside?" and "Who else needs to be involved in this decision?" Disqualify fast to focus on real opportunities.`,
+                    priority: 'high'
                 });
             }
 
-            // Insight 5: Consistency check
+            // SANDLER INSIGHT 6: Cookbook Consistency - Daily Discipline
             const activeDays = dailyData.filter(day => (day.dials || 0) > 0).length;
             const consistencyRate = (activeDays / dailyData.length) * 100;
 
             if (consistencyRate < 70) {
                 insights.push({
                     type: 'alert',
-                    title: '📅 Build Consistency',
-                    content: `You've been active ${activeDays} out of ${dailyData.length} days (${consistencyRate.toFixed(0)}%). Consistency drives results - aim for daily activity.`,
+                    title: '📅 Sandler Cookbook: Build Consistency',
+                    content: `You've been active ${activeDays} out of ${dailyData.length} days (${consistencyRate.toFixed(0)}%). Sandler principle: "The Cookbook is your recipe for success." Treat prospecting time as sacred. Block your calendar and protect it like you would a meeting with your best client. Consistency compounds.`,
                     priority: 'high'
+                });
+            } else if (consistencyRate >= 85) {
+                insights.push({
+                    type: 'milestone',
+                    title: '📖 Sandler Cookbook: Excellent Discipline',
+                    content: `${consistencyRate.toFixed(0)}% consistency shows true cookbook discipline! You're treating sales as a science, not an art. This consistent behavior WILL drive predictable results.`,
+                    priority: 'low'
+                });
+            }
+
+            // SANDLER INSIGHT 7: Negative Reverse Selling Reminder
+            if (totalConversations >= 10 && conversionRate < 20) {
+                insights.push({
+                    type: 'suggestion',
+                    title: '🔄 Sandler: Try Negative Reverse Selling',
+                    content: `Low conversation-to-meeting rate? Try Negative Reverse Selling to remove pressure: "I'm not sure if what we do is a fit for you, but would it make sense to spend 10 minutes finding out? Worst case, we'll both know it's not a match." This approach often INCREASES interest by removing the "sales pressure."`,
+                    priority: 'medium'
                 });
             }
 

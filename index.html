@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Outreach Habit Dashboard</title>
+    <style>
+        /* --- BRAND COLOR PALETTE VARIABLES --- */
+        :root {
+            --brand-navy: #0C1030;
+            --brand-teal: #10C3B0;
+            --brand-aqua: #3DE0D2;
+            --brand-pink: #E64563;
+            --brand-gold: #F4B03A;
+            --brand-yellow: #F9C863;
+            --light-text: #F2F4F8;
+            --card-bg: #131a40;
+            --input-bg: #090c26;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--brand-navy);
+            color: var(--light-text);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 25px;
+            max-width: 1000px;
+            width: 100%;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(61, 224, 210, 0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        h2 {
+            color: var(--brand-aqua);
+            font-size: 1.2rem;
+            margin-bottom: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--brand-gold), var(--brand-yellow));
+            border: none;
+            padding: 12px 24px;
+            color: var(--brand-navy);
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+            margin-top: 15px;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 176, 58, 0.4);
+        }
+
+        .btn-secondary {
+            background: transparent;
+            border: 2px solid var(--brand-teal);
+            padding: 10px 20px;
+            color: var(--brand-teal);
+            font-weight: 600;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            background: var(--brand-teal);
+            color: var(--brand-navy);
+        }
+
+        #timer-display {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--brand-gold);
+            text-align: center;
+            margin: 10px 0;
+            display: none;
+        }
+
+        #timer-display.complete {
+            color: var(--brand-teal);
+            animation: pulse 1s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+            background: rgba(255,255,255,0.05);
+            padding: 10px;
+            border-radius: 10px;
+        }
+
+        .custom-checkbox {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--brand-teal);
+            margin-right: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+
+        .checklist-item input[type="checkbox"] {
+             display: none;
+        }
+
+        .custom-checkbox.checked {
+            background-color: var(--brand-teal);
+        }
+
+        .custom-checkbox.checked::after {
+            content: '✓';
+            color: var(--brand-navy);
+            font-weight: bold;
+        }
+
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .input-group label {
+            font-size: 0.9rem;
+            color: var(--light-text);
+        }
+
+        .input-group input {
+            background-color: var(--input-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--brand-teal);
+            padding: 8px;
+            border-radius: 8px;
+            width: 70px;
+            text-align: center;
+            font-weight: bold;
+            font-size: 1rem;
+        }
+
+        .input-group input:focus {
+             outline: none;
+             border-color: var(--brand-aqua);
+        }
+
+        .total-score-container {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 15px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .total-score-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+        }
+
+        .total-score-value {
+            font-size: 2.5rem;
+            font-weight: 800;
+            color: var(--brand-gold);
+            line-height: 1.1;
+        }
+
+        .progress-container {
+            margin-top: 20px;
+        }
+
+        .progress-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+        }
+
+        .progress-bar-bg {
+            background-color: rgba(255,255,255,0.1);
+            height: 14px;
+            border-radius: 7px;
+            overflow: hidden;
+        }
+
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--brand-teal), var(--brand-aqua));
+            width: 0%;
+            transition: width 0.5s ease-in-out;
+        }
+
+        .streak-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            background: linear-gradient(135deg, rgba(16, 195, 176, 0.1), rgba(61, 224, 210, 0.1));
+            padding: 30px;
+            border-radius: 20px;
+            text-align: center;
+            height: 100%;
+        }
+
+        .streak-count {
+            font-size: 4rem;
+            font-weight: 900;
+            color: var(--brand-teal);
+            line-height: 1;
+        }
+
+        .streak-label {
+            font-size: 1.1rem;
+            color: var(--brand-aqua);
+            margin-top: 10px;
+        }
+
+        .history-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 15px;
+        }
+
+        .history-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            margin-bottom: 8px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .history-date {
+            color: var(--brand-aqua);
+        }
+
+        .history-score {
+            color: var(--brand-gold);
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="dashboard-grid">
+        <!-- CARD 1: Activation & Sprint -->
+        <div class="card">
+            <div>
+                <h2>Morning Activation</h2>
+                <div class="checklist-item">
+                    <label class="custom-checkbox" onclick="toggleCheck(this, 'activation1')">
+                        <input type="checkbox" id="activation1">
+                    </label>
+                    <span>I know enough to solve problems.</span>
+                </div>
+                 <div class="checklist-item">
+                    <label class="custom-checkbox" onclick="toggleCheck(this, 'activation2')">
+                        <input type="checkbox" id="activation2">
+                    </label>
+                    <span>Rejection is just data.</span>
+                </div>
+            </div>
+            <div>
+                 <div id="timer-display">05:00</div>
+                <button class="btn-primary" id="timer-btn" onclick="startTimer()">Start 5-Min Action Sprint</button>
+            </div>
+        </div>
+
+        <!-- CARD 2: Weekly Progress -->
+        <div class="card">
+             <h2>Weekly Target: 15 Points</h2>
+             <div class="progress-container">
+                <div class="progress-header">
+                    <span>Progress</span>
+                    <span id="weekly-progress-text">0 / 15</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="weekly-progress-fill"></div>
+                </div>
+             </div>
+             <p style="margin-top: 20px; font-size: 0.9rem; opacity: 0.7;">Consistency beats intensity. Keep chipping away.</p>
+             <button class="btn-secondary" onclick="resetWeek()">Reset Week</button>
+        </div>
+
+        <!-- CARD 3: Daily Input Form -->
+        <div class="card" style="grid-row: span 2;">
+            <h2>Today's Input & Score</h2>
+
+            <div class="input-group">
+                <label>New Messages (+1)</label>
+                <input type="number" id="input-msg" min="0" value="0" oninput="calculateDaily()">
+            </div>
+            <div class="input-group">
+                <label>Follow-ups (+1)</label>
+                <input type="number" id="input-follow" min="0" value="0" oninput="calculateDaily()">
+            </div>
+             <div class="input-group">
+                <label>Call Attempts (+1)</label>
+                <input type="number" id="input-call" min="0" value="0" oninput="calculateDaily()">
+            </div>
+             <div class="input-group">
+                <label>LIVE Conversations (+3)</label>
+                <input type="number" id="input-live" min="0" value="0" style="color: var(--brand-gold); border-color: var(--brand-gold);" oninput="calculateDaily()">
+            </div>
+             <div class="input-group">
+                <label>Meeting Booked (+5)</label>
+                <input type="number" id="input-meeting" min="0" value="0" style="color: var(--brand-pink); border-color: var(--brand-pink);" oninput="calculateDaily()">
+            </div>
+
+            <div class="total-score-container">
+                <div class="total-score-label">TODAY'S POINTS</div>
+                <div class="total-score-value" id="daily-total-display">0</div>
+            </div>
+
+            <button class="btn-primary" onclick="saveToday()">Save Today's Score</button>
+            <button class="btn-secondary" onclick="resetToday()">Reset Today</button>
+        </div>
+
+        <!-- CARD 4: Streak & History -->
+        <div class="card">
+            <h2>Current Streak</h2>
+            <div class="streak-container">
+                <div class="streak-count" id="streak-display">0</div>
+                <div class="streak-label">Days in a row</div>
+            </div>
+            <div class="history-list" id="history-list"></div>
+        </div>
+    </div>
+
+    <script>
+        // --- DATA PERSISTENCE WITH LOCALSTORAGE ---
+        const STORAGE_KEYS = {
+            WEEKLY_SCORE: 'outreach_weekly_score',
+            STREAK: 'outreach_streak',
+            LAST_DATE: 'outreach_last_date',
+            HISTORY: 'outreach_history',
+            ACTIVATION: 'outreach_activation',
+            TODAY_DATA: 'outreach_today'
+        };
+
+        // --- LOAD DATA ON PAGE LOAD ---
+        window.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            calculateDaily();
+        });
+
+        function loadData() {
+            // Load weekly score
+            const weeklyScore = parseInt(localStorage.getItem(STORAGE_KEYS.WEEKLY_SCORE)) || 0;
+            updateWeeklyProgress(weeklyScore);
+
+            // Load streak
+            const streak = parseInt(localStorage.getItem(STORAGE_KEYS.STREAK)) || 0;
+            document.getElementById('streak-display').textContent = streak;
+
+            // Load activation checkboxes
+            const activation = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVATION) || '{}');
+            if (activation.activation1) {
+                const cb1 = document.querySelector('#activation1').parentElement;
+                cb1.classList.add('checked');
+            }
+            if (activation.activation2) {
+                const cb2 = document.querySelector('#activation2').parentElement;
+                cb2.classList.add('checked');
+            }
+
+            // Load today's data
+            const todayData = JSON.parse(localStorage.getItem(STORAGE_KEYS.TODAY_DATA) || '{}');
+            if (todayData) {
+                document.getElementById('input-msg').value = todayData.msg || 0;
+                document.getElementById('input-follow').value = todayData.follow || 0;
+                document.getElementById('input-call').value = todayData.call || 0;
+                document.getElementById('input-live').value = todayData.live || 0;
+                document.getElementById('input-meeting').value = todayData.meeting || 0;
+            }
+
+            // Load history
+            loadHistory();
+        }
+
+        function loadHistory() {
+            const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
+            const historyList = document.getElementById('history-list');
+            historyList.innerHTML = '';
+
+            history.slice(-7).reverse().forEach(entry => {
+                const item = document.createElement('div');
+                item.className = 'history-item';
+                item.innerHTML = `
+                    <span class="history-date">${entry.date}</span>
+                    <span class="history-score">${entry.score} pts</span>
+                `;
+                historyList.appendChild(item);
+            });
+        }
+
+        // --- CHECKBOX TOGGLE ---
+        function toggleCheck(element, id) {
+            element.classList.toggle('checked');
+            const activation = JSON.parse(localStorage.getItem(STORAGE_KEYS.ACTIVATION) || '{}');
+            activation[id] = element.classList.contains('checked');
+            localStorage.setItem(STORAGE_KEYS.ACTIVATION, JSON.stringify(activation));
+        }
+
+        // --- SPRINT TIMER WITH SOUND ---
+        let timerInterval;
+        function startTimer() {
+            clearInterval(timerInterval);
+            const timerDisplay = document.getElementById('timer-display');
+            const timerBtn = document.getElementById('timer-btn');
+            timerDisplay.style.display = 'block';
+            timerDisplay.classList.remove('complete');
+            timerBtn.textContent = 'Sprint in Progress...';
+            timerBtn.disabled = true;
+
+            let duration = 5 * 60;
+            let timer = duration, minutes, seconds;
+
+            timerInterval = setInterval(function () {
+                minutes = parseInt(timer / 60, 10);
+                seconds = parseInt(timer % 60, 10);
+
+                minutes = minutes < 10 ? "0" + minutes : minutes;
+                seconds = seconds < 10 ? "0" + seconds : seconds;
+
+                timerDisplay.textContent = minutes + ":" + seconds;
+
+                if (--timer < 0) {
+                    clearInterval(timerInterval);
+                    timerDisplay.textContent = "SPRINT COMPLETE!";
+                    timerDisplay.classList.add('complete');
+                    timerBtn.textContent = 'Start 5-Min Action Sprint';
+                    timerBtn.disabled = false;
+                    playCompletionSound();
+
+                    // Request notification permission and send
+                    if (Notification.permission === 'granted') {
+                        new Notification('Sprint Complete!', {
+                            body: 'Great work! Time to review and plan next action.',
+                            icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">✅</text></svg>'
+                        });
+                    }
+                }
+            }, 1000);
+        }
+
+        function playCompletionSound() {
+            // Create a simple beep sound using Web Audio API
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.5);
+        }
+
+        // Request notification permission on load
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+
+        // --- DAILY SCORE CALCULATION ---
+        function calculateDaily() {
+            const msg = parseInt(document.getElementById('input-msg').value) || 0;
+            const follow = parseInt(document.getElementById('input-follow').value) || 0;
+            const call = parseInt(document.getElementById('input-call').value) || 0;
+            const live = parseInt(document.getElementById('input-live').value) || 0;
+            const meeting = parseInt(document.getElementById('input-meeting').value) || 0;
+
+            const dailyTotal = (msg * 1) + (follow * 1) + (call * 1) + (live * 3) + (meeting * 5);
+            document.getElementById('daily-total-display').textContent = dailyTotal;
+
+            // Save to localStorage as draft
+            const todayData = { msg, follow, call, live, meeting };
+            localStorage.setItem(STORAGE_KEYS.TODAY_DATA, JSON.stringify(todayData));
+        }
+
+        // --- SAVE TODAY'S SCORE ---
+        function saveToday() {
+            const dailyTotal = parseInt(document.getElementById('daily-total-display').textContent);
+
+            if (dailyTotal === 0) {
+                alert('Add some activities before saving!');
+                return;
+            }
+
+            // Add to weekly score
+            const weeklyScore = parseInt(localStorage.getItem(STORAGE_KEYS.WEEKLY_SCORE) || '0');
+            const newWeeklyScore = weeklyScore + dailyTotal;
+            localStorage.setItem(STORAGE_KEYS.WEEKLY_SCORE, newWeeklyScore);
+            updateWeeklyProgress(newWeeklyScore);
+
+            // Update streak
+            updateStreak();
+
+            // Add to history
+            const today = new Date().toLocaleDateString();
+            const history = JSON.parse(localStorage.getItem(STORAGE_KEYS.HISTORY) || '[]');
+            history.push({ date: today, score: dailyTotal });
+            localStorage.setItem(STORAGE_KEYS.HISTORY, JSON.stringify(history));
+            loadHistory();
+
+            // Reset today's inputs
+            resetToday();
+
+            alert(`✅ Saved ${dailyTotal} points! Keep crushing it!`);
+        }
+
+        function updateWeeklyProgress(score) {
+            const weeklyGoal = 15;
+            const progressPercentage = Math.min((score / weeklyGoal) * 100, 100);
+            document.getElementById('weekly-progress-fill').style.width = progressPercentage + "%";
+            document.getElementById('weekly-progress-text').textContent = score + " / " + weeklyGoal;
+        }
+
+        function updateStreak() {
+            const lastDate = localStorage.getItem(STORAGE_KEYS.LAST_DATE);
+            const today = new Date().toDateString();
+            let streak = parseInt(localStorage.getItem(STORAGE_KEYS.STREAK) || '0');
+
+            if (lastDate === today) {
+                // Already logged today
+                return;
+            }
+
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toDateString();
+
+            if (lastDate === yesterdayStr) {
+                // Continue streak
+                streak++;
+            } else if (lastDate === today) {
+                // Same day, maintain streak
+            } else {
+                // Streak broken, start over
+                streak = 1;
+            }
+
+            localStorage.setItem(STORAGE_KEYS.STREAK, streak);
+            localStorage.setItem(STORAGE_KEYS.LAST_DATE, today);
+            document.getElementById('streak-display').textContent = streak;
+        }
+
+        // --- RESET FUNCTIONS ---
+        function resetToday() {
+            document.getElementById('input-msg').value = 0;
+            document.getElementById('input-follow').value = 0;
+            document.getElementById('input-call').value = 0;
+            document.getElementById('input-live').value = 0;
+            document.getElementById('input-meeting').value = 0;
+            calculateDaily();
+            localStorage.removeItem(STORAGE_KEYS.TODAY_DATA);
+        }
+
+        function resetWeek() {
+            if (confirm('Reset your weekly progress? This cannot be undone.')) {
+                localStorage.setItem(STORAGE_KEYS.WEEKLY_SCORE, '0');
+                updateWeeklyProgress(0);
+            }
+        }
+    </script>
+</body>
+</html>

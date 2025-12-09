@@ -11,6 +11,9 @@
     <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
+    <!-- Confetti for celebrations -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+
     <style>
         /* --- BRAND COLOR PALETTE --- */
         :root {
@@ -490,6 +493,65 @@
         }
 
         // ============================================
+        // CONFETTI CELEBRATION
+        // ============================================
+
+        function celebrateWithConfetti(type = 'default') {
+            if (typeof confetti === 'undefined') {
+                console.warn('Confetti library not loaded');
+                return;
+            }
+
+            if (type === 'sale') {
+                // Bigger celebration for sales with gold colors
+                const count = 200;
+                const defaults = {
+                    origin: { y: 0.7 },
+                    colors: ['#F4B03A', '#F9C863', '#10C3B0', '#3DE0D2']
+                };
+
+                function fire(particleRatio, opts) {
+                    confetti({
+                        ...defaults,
+                        ...opts,
+                        particleCount: Math.floor(count * particleRatio)
+                    });
+                }
+
+                fire(0.25, {
+                    spread: 26,
+                    startVelocity: 55,
+                });
+                fire(0.2, {
+                    spread: 60,
+                });
+                fire(0.35, {
+                    spread: 100,
+                    decay: 0.91,
+                    scalar: 0.8
+                });
+                fire(0.1, {
+                    spread: 120,
+                    startVelocity: 25,
+                    decay: 0.92,
+                    scalar: 1.2
+                });
+                fire(0.1, {
+                    spread: 120,
+                    startVelocity: 45,
+                });
+            } else {
+                // Standard celebration for daily stats with teal colors
+                confetti({
+                    particleCount: 100,
+                    spread: 70,
+                    origin: { y: 0.6 },
+                    colors: ['#10C3B0', '#3DE0D2', '#F4B03A']
+                });
+            }
+        }
+
+        // ============================================
         // DATA MANAGEMENT FUNCTIONS
         // ============================================
 
@@ -519,6 +581,7 @@
                 if (error) throw error;
 
                 showAlert('Daily stats saved successfully!', 'success');
+                celebrateWithConfetti('default');
 
                 // Reset inputs
                 document.getElementById('input-dials').value = 0;
@@ -559,6 +622,7 @@
                 if (error) throw error;
 
                 showAlert(`Sale of $${amount.toFixed(2)} CAD recorded!`, 'success');
+                celebrateWithConfetti('sale');
 
                 // Reset inputs
                 document.getElementById('input-amount').value = '';

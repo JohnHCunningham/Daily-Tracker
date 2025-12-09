@@ -611,7 +611,7 @@
 
             try {
                 const { data, error } = await supabase
-                    .from('sales')
+                    .from('Sales')
                     .insert({
                         date: today,
                         amount_cad: amount,
@@ -654,7 +654,7 @@
         async function loadConversionFunnel() {
             try {
                 const { data, error } = await supabase
-                    .from('conversion_funnel')
+                    .from('Conversion_Funnel')
                     .select('*')
                     .single();
 
@@ -700,7 +700,7 @@
         async function loadRevenueSummary() {
             try {
                 const { data, error } = await supabase
-                    .from('sales')
+                    .from('Sales')
                     .select('amount_cad');
 
                 if (error) throw error;
@@ -722,7 +722,7 @@
         async function loadWeeklyChart() {
             try {
                 const { data, error } = await supabase
-                    .from('weekly_performance')
+                    .from('Weekly_Performance')
                     .select('*')
                     .order('week_start', { ascending: true })
                     .limit(8);
@@ -815,7 +815,7 @@
         async function loadCoachingInsights() {
             try {
                 const { data, error } = await supabase
-                    .from('coaching_insights')
+                    .from('Coaching_Insights')
                     .select('*')
                     .order('created_at', { ascending: false })
                     .limit(5);
@@ -855,7 +855,7 @@
                 if (dailyError) throw dailyError;
 
                 const { data: salesData, error: salesError } = await supabase
-                    .from('sales')
+                    .from('Sales')
                     .select('*')
                     .order('date', { ascending: false })
                     .limit(30);
@@ -867,7 +867,7 @@
 
                 // Save insights to database
                 for (const insight of insights) {
-                    await supabase.from('coaching_insights').insert({
+                    await supabase.from('Coaching_Insights').insert({
                         date: new Date().toISOString().split('T')[0],
                         insight_type: insight.type,
                         title: insight.title,

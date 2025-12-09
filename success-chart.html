@@ -846,7 +846,7 @@
 
             try {
                 // Fetch recent performance data
-                const { data: dailyData, error: dailyError } = await supabase
+                const { data: dailyData, error: dailyError } = await supabaseClient
                     .from('Daily_Tracker')
                     .select('*')
                     .order('date', { ascending: false })
@@ -854,7 +854,7 @@
 
                 if (dailyError) throw dailyError;
 
-                const { data: salesData, error: salesError } = await supabase
+                const { data: salesData, error: salesError } = await supabaseClient
                     .from('Sales')
                     .select('*')
                     .order('date', { ascending: false })

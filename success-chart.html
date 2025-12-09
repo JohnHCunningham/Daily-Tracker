@@ -570,7 +570,7 @@
 
             try {
                 const { data, error } = await supabase
-                    .from('daily_stats')
+                    .from('Daily_Tracker')
                     .upsert({
                         date: today,
                         dials: dials,
@@ -847,7 +847,7 @@
             try {
                 // Fetch recent performance data
                 const { data: dailyData, error: dailyError } = await supabase
-                    .from('daily_stats')
+                    .from('Daily_Tracker')
                     .select('*')
                     .order('date', { ascending: false })
                     .limit(30);

@@ -339,6 +339,129 @@
                 grid-column: span 1;
             }
         }
+
+        /* Circular Progress Indicators */
+        .goal-progress-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .circular-progress {
+            position: relative;
+            width: 140px;
+            height: 140px;
+            margin: 0 auto;
+        }
+
+        .circular-progress svg {
+            transform: rotate(-90deg);
+        }
+
+        .progress-circle-bg {
+            fill: none;
+            stroke: rgba(255,255,255,0.1);
+            stroke-width: 10;
+        }
+
+        .progress-circle-fill {
+            fill: none;
+            stroke-width: 10;
+            stroke-linecap: round;
+            transition: stroke-dashoffset 0.5s ease;
+        }
+
+        .progress-circle-fill.dials {
+            stroke: var(--brand-teal);
+        }
+
+        .progress-circle-fill.conversations {
+            stroke: var(--brand-aqua);
+        }
+
+        .progress-circle-fill.meetings {
+            stroke: var(--brand-gold);
+        }
+
+        .progress-circle-fill.sales {
+            stroke: var(--brand-pink);
+        }
+
+        .progress-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .progress-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--brand-gold);
+            line-height: 1;
+        }
+
+        .progress-goal {
+            font-size: 0.75rem;
+            color: var(--light-text);
+            opacity: 0.6;
+            margin-top: 2px;
+        }
+
+        .progress-label {
+            text-align: center;
+            margin-top: 10px;
+            font-size: 0.9rem;
+            color: var(--light-text);
+            font-weight: 600;
+        }
+
+        .progress-percentage {
+            font-size: 0.8rem;
+            color: var(--brand-teal);
+            margin-top: 3px;
+        }
+
+        /* Tab styles for Monthly/YTD toggle */
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: rgba(255,255,255,0.05);
+            padding: 5px;
+            border-radius: 10px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 10px;
+            background: transparent;
+            border: none;
+            color: var(--light-text);
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn.active {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua));
+            color: var(--brand-navy);
+        }
+
+        .tab-btn:hover:not(.active) {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -377,6 +500,18 @@
                 </div>
 
                 <button class="btn-primary" onclick="saveDailyStats()">Save Today's Stats</button>
+            </div>
+
+            <!-- Daily Goal Progress Card -->
+            <div class="card wide-card">
+                <div class="card-header">
+                    <h2 class="card-title">Today's Goal Progress</h2>
+                    <span class="card-icon">🎯</span>
+                </div>
+
+                <div class="goal-progress-container" id="goal-progress-container">
+                    <!-- Goal circles will be dynamically inserted here -->
+                </div>
             </div>
 
             <!-- Sales Entry Card -->
@@ -419,8 +554,21 @@
                     <span class="card-icon">🎯</span>
                 </div>
 
-                <div class="funnel-container" id="funnel-container">
-                    <div class="loading">Loading funnel data...</div>
+                <div class="tab-container">
+                    <button class="tab-btn active" onclick="switchFunnelTab('monthly')">This Month</button>
+                    <button class="tab-btn" onclick="switchFunnelTab('ytd')">Year to Date</button>
+                </div>
+
+                <div class="tab-content active" id="funnel-monthly">
+                    <div class="funnel-container" id="funnel-container-monthly">
+                        <div class="loading">Loading monthly data...</div>
+                    </div>
+                </div>
+
+                <div class="tab-content" id="funnel-ytd">
+                    <div class="funnel-container" id="funnel-container-ytd">
+                        <div class="loading">Loading YTD data...</div>
+                    </div>
                 </div>
             </div>
 
@@ -805,6 +953,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         async function loadDashboardData() {
             await Promise.all([
                 loadConversionFunnel(),
+                loadGoalProgress(),
                 loadRevenueSummary(),
                 loadWeeklyChart(),
                 loadCoachingInsights()
@@ -814,47 +963,194 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         // Load conversion funnel data
         async function loadConversionFunnel() {
             try {
-                const { data, error } = await supabaseClient
-                    .from('Conversion_Funnel')
+                // Get current date info
+                const now = new Date();
+                const currentMonth = now.toISOString().slice(0, 7); // YYYY-MM
+                const currentYear = now.getFullYear().toString();
+
+                // Fetch all daily tracker data for YTD
+                const { data: dailyData, error: dailyError } = await supabaseClient
+                    .from('Daily_Tracker')
                     .select('*')
-                    .single();
+                    .gte('date', `${currentYear}-01-01`);
 
-                if (error) throw error;
+                if (dailyError) throw dailyError;
 
-                const funnelContainer = document.getElementById('funnel-container');
-                funnelContainer.innerHTML = `
-                    <div class="funnel-stage">
-                        <span class="funnel-stage-label">📞 Dials</span>
-                        <span>
-                            <span class="funnel-stage-value">${data.total_dials || 0}</span>
-                        </span>
-                    </div>
-                    <div class="funnel-stage">
-                        <span class="funnel-stage-label">💬 Conversations</span>
-                        <span>
-                            <span class="funnel-stage-value">${data.total_conversations || 0}</span>
-                            <span class="funnel-stage-rate">${data.dial_to_conversation_rate || 0}%</span>
-                        </span>
-                    </div>
-                    <div class="funnel-stage">
-                        <span class="funnel-stage-label">🤝 Discovery Meetings</span>
-                        <span>
-                            <span class="funnel-stage-value">${data.total_meetings || 0}</span>
-                            <span class="funnel-stage-rate">${data.conversation_to_meeting_rate || 0}%</span>
-                        </span>
-                    </div>
-                    <div class="funnel-stage">
-                        <span class="funnel-stage-label">💰 Sales Closed</span>
-                        <span>
-                            <span class="funnel-stage-value">${data.total_sales || 0}</span>
-                            <span class="funnel-stage-rate">${data.meeting_to_sale_rate || 0}%</span>
-                        </span>
-                    </div>
-                `;
+                // Fetch sales data for YTD
+                const { data: salesData, error: salesError } = await supabaseClient
+                    .from('Sales')
+                    .select('*')
+                    .gte('date', `${currentYear}-01-01`);
+
+                if (salesError) throw salesError;
+
+                // Calculate monthly metrics
+                const monthlyData = dailyData.filter(d => d.date.startsWith(currentMonth));
+                const monthlySales = salesData.filter(s => s.date.startsWith(currentMonth));
+
+                const monthlyMetrics = calculateMetrics(monthlyData, monthlySales);
+
+                // Calculate YTD metrics
+                const ytdMetrics = calculateMetrics(dailyData, salesData);
+
+                // Render monthly funnel
+                renderFunnel('funnel-container-monthly', monthlyMetrics);
+
+                // Render YTD funnel
+                renderFunnel('funnel-container-ytd', ytdMetrics);
+
             } catch (error) {
                 console.error('Error loading funnel:', error);
-                document.getElementById('funnel-container').innerHTML = '<p style="color: var(--brand-pink);">Unable to load funnel data.</p>';
+                document.getElementById('funnel-container-monthly').innerHTML = '<p style="color: var(--brand-pink);">Unable to load funnel data.</p>';
+                document.getElementById('funnel-container-ytd').innerHTML = '<p style="color: var(--brand-pink);">Unable to load funnel data.</p>';
             }
+        }
+
+        // Calculate metrics from daily data
+        function calculateMetrics(dailyData, salesData) {
+            const totalDials = dailyData.reduce((sum, d) => sum + (d.dials || 0), 0);
+            const totalConversations = dailyData.reduce((sum, d) => sum + (d.conversations || 0), 0);
+            const totalMeetings = dailyData.reduce((sum, d) => sum + (d.discovery_meetings || 0), 0);
+            const totalSales = salesData.length;
+
+            const dialToConvRate = totalDials > 0 ? ((totalConversations / totalDials) * 100).toFixed(1) : 0;
+            const convToMeetingRate = totalConversations > 0 ? ((totalMeetings / totalConversations) * 100).toFixed(1) : 0;
+            const meetingToSaleRate = totalMeetings > 0 ? ((totalSales / totalMeetings) * 100).toFixed(1) : 0;
+
+            return {
+                totalDials,
+                totalConversations,
+                totalMeetings,
+                totalSales,
+                dialToConvRate,
+                convToMeetingRate,
+                meetingToSaleRate
+            };
+        }
+
+        // Render funnel HTML
+        function renderFunnel(containerId, metrics) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = `
+                <div class="funnel-stage">
+                    <span class="funnel-stage-label">📞 Dials</span>
+                    <span>
+                        <span class="funnel-stage-value">${metrics.totalDials}</span>
+                    </span>
+                </div>
+                <div class="funnel-stage">
+                    <span class="funnel-stage-label">💬 Conversations</span>
+                    <span>
+                        <span class="funnel-stage-value">${metrics.totalConversations}</span>
+                        <span class="funnel-stage-rate">${metrics.dialToConvRate}%</span>
+                    </span>
+                </div>
+                <div class="funnel-stage">
+                    <span class="funnel-stage-label">🤝 Discovery Meetings</span>
+                    <span>
+                        <span class="funnel-stage-value">${metrics.totalMeetings}</span>
+                        <span class="funnel-stage-rate">${metrics.convToMeetingRate}%</span>
+                    </span>
+                </div>
+                <div class="funnel-stage">
+                    <span class="funnel-stage-label">💰 Sales Closed</span>
+                    <span>
+                        <span class="funnel-stage-value">${metrics.totalSales}</span>
+                        <span class="funnel-stage-rate">${metrics.meetingToSaleRate}%</span>
+                    </span>
+                </div>
+            `;
+        }
+
+        // Switch between monthly and YTD tabs
+        function switchFunnelTab(tab) {
+            const tabs = document.querySelectorAll('.tab-btn');
+            const contents = document.querySelectorAll('.tab-content');
+
+            tabs.forEach(t => t.classList.remove('active'));
+            contents.forEach(c => c.classList.remove('active'));
+
+            if (tab === 'monthly') {
+                tabs[0].classList.add('active');
+                document.getElementById('funnel-monthly').classList.add('active');
+            } else {
+                tabs[1].classList.add('active');
+                document.getElementById('funnel-ytd').classList.add('active');
+            }
+        }
+
+        // Load goal progress circles
+        async function loadGoalProgress() {
+            try {
+                // Define daily goals
+                const goals = {
+                    dials: 15,
+                    conversations: 5,
+                    meetings: 2,
+                    sales: 1
+                };
+
+                // Get today's date
+                const today = new Date().toISOString().split('T')[0];
+
+                // Fetch today's activity data
+                const { data: dailyData, error: dailyError } = await supabaseClient
+                    .from('Daily_Tracker')
+                    .select('*')
+                    .eq('date', today)
+                    .single();
+
+                // Fetch today's sales
+                const { data: salesData, error: salesError } = await supabaseClient
+                    .from('Sales')
+                    .select('*')
+                    .eq('date', today);
+
+                const actual = {
+                    dials: dailyData?.dials || 0,
+                    conversations: dailyData?.conversations || 0,
+                    meetings: dailyData?.discovery_meetings || 0,
+                    sales: salesData?.length || 0
+                };
+
+                // Render the progress circles
+                const container = document.getElementById('goal-progress-container');
+                container.innerHTML = `
+                    ${createCircularProgress('Dials', actual.dials, goals.dials, 'dials')}
+                    ${createCircularProgress('Conversations', actual.conversations, goals.conversations, 'conversations')}
+                    ${createCircularProgress('Meetings', actual.meetings, goals.meetings, 'meetings')}
+                    ${createCircularProgress('Sales', actual.sales, goals.sales, 'sales')}
+                `;
+
+            } catch (error) {
+                console.error('Error loading goal progress:', error);
+            }
+        }
+
+        // Create circular progress indicator HTML
+        function createCircularProgress(label, actual, goal, className) {
+            const percentage = Math.min((actual / goal) * 100, 100);
+            const radius = 60;
+            const circumference = 2 * Math.PI * radius;
+            const offset = circumference - (percentage / 100) * circumference;
+
+            return `
+                <div>
+                    <div class="circular-progress">
+                        <svg width="140" height="140">
+                            <circle class="progress-circle-bg" cx="70" cy="70" r="${radius}"></circle>
+                            <circle class="progress-circle-fill ${className}" cx="70" cy="70" r="${radius}"
+                                style="stroke-dasharray: ${circumference}; stroke-dashoffset: ${offset};"></circle>
+                        </svg>
+                        <div class="progress-text">
+                            <div class="progress-value">${actual}</div>
+                            <div class="progress-goal">of ${goal}</div>
+                        </div>
+                    </div>
+                    <div class="progress-label">${label}</div>
+                    <div class="progress-percentage">${percentage.toFixed(0)}% Complete</div>
+                </div>
+            `;
         }
 
         // Load revenue summary
@@ -1221,24 +1517,37 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
 
                 // If audio file uploaded, transcribe it first
                 if (audioFile && !transcript) {
-                    showAlert('🎙️ Transcribing audio... (This requires OpenAI Whisper API)', 'success');
-                    // TODO: Implement audio transcription with Whisper API
-                    // For now, show placeholder
-                    document.getElementById('conversation-analysis-result').innerHTML = `
-                        <div class="coaching-card priority-high">
-                            <div class="coaching-title">⚠️ Audio Transcription Not Yet Implemented</div>
-                            <div class="coaching-content">
-                                <p>To enable audio transcription, you'll need to:</p>
-                                <ol style="margin-left: 20px; margin-top: 10px;">
-                                    <li>Get an OpenAI API key from <a href="https://platform.openai.com/" target="_blank">platform.openai.com</a></li>
-                                    <li>Create a backend function to call Whisper API</li>
-                                    <li>Or use a service like AssemblyAI or Deepgram</li>
-                                </ol>
-                                <p style="margin-top: 10px;"><strong>For now, please paste your transcript manually.</strong></p>
-                            </div>
-                        </div>
-                    `;
-                    return;
+                    showAlert('🎙️ Transcribing audio with Whisper...', 'success');
+
+                    try {
+                        // Create form data for audio file
+                        const formData = new FormData();
+                        formData.append('audio', audioFile);
+
+                        // Call transcribe-audio Edge Function
+                        const { data: transcriptionData, error: transcriptionError } = await supabaseClient.functions.invoke('transcribe-audio', {
+                            body: formData
+                        });
+
+                        if (transcriptionError) {
+                            throw new Error(transcriptionError.message || 'Failed to transcribe audio');
+                        }
+
+                        if (!transcriptionData || !transcriptionData.transcript) {
+                            throw new Error('No transcript returned from transcription service');
+                        }
+
+                        finalTranscript = transcriptionData.transcript;
+                        showAlert('✅ Audio transcribed successfully! Now analyzing with Sandler framework...', 'success');
+
+                        // Show the transcript to the user
+                        document.getElementById('transcript-input').value = finalTranscript;
+
+                    } catch (transcriptionError) {
+                        console.error('Transcription error:', transcriptionError);
+                        showAlert(`Transcription failed: ${transcriptionError.message}. Please paste transcript manually.`, 'error');
+                        return;
+                    }
                 }
 
                 // Analyze transcript with Sandler methodology
@@ -1484,6 +1793,108 @@ ONLY include observations you can PROVE from the transcript.
         function displayAnalysisResults(analysis) {
             const container = document.getElementById('conversation-analysis-result');
 
+            // Build tactical scripts sections
+            let tacticalScriptsHTML = '';
+            if (analysis.tactical_scripts) {
+                const scripts = analysis.tactical_scripts;
+
+                tacticalScriptsHTML = `
+                    <h3 style="color: var(--brand-gold); font-size: 1.3rem; margin: 30px 0 15px 0;">
+                        📋 Your Tactical Playbook
+                    </h3>
+
+                    ${scripts.opening_alternatives ? `
+                    <div class="coaching-card priority-medium" style="margin-bottom: 15px;">
+                        <div class="coaching-title">🎯 Opening Script Alternatives</div>
+                        <div class="coaching-content">
+                            <ol style="margin-left: 20px;">
+                                ${scripts.opening_alternatives.map(script => `<li style="margin-bottom: 10px;"><strong>"${script}"</strong></li>`).join('')}
+                            </ol>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${scripts.upfront_contract ? `
+                    <div class="coaching-card priority-high" style="margin-bottom: 15px;">
+                        <div class="coaching-title">📝 Up-Front Contract Script</div>
+                        <div class="coaching-content">
+                            <p style="font-size: 1.05rem; line-height: 1.6;"><strong>"${scripts.upfront_contract}"</strong></p>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${scripts.pain_funnel_sequence ? `
+                    <div class="coaching-card priority-high" style="margin-bottom: 15px;">
+                        <div class="coaching-title">💎 Pain Funnel Question Sequence</div>
+                        <div class="coaching-content">
+                            <p style="margin-bottom: 10px; opacity: 0.9;">Ask these questions in order, and after each answer say: "Tell me more about that"</p>
+                            <ol style="margin-left: 20px;">
+                                ${scripts.pain_funnel_sequence.map(q => `<li style="margin-bottom: 8px;">${q}</li>`).join('')}
+                            </ol>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${scripts.budget_discussion ? `
+                    <div class="coaching-card priority-medium" style="margin-bottom: 15px;">
+                        <div class="coaching-title">💰 Budget Discussion Script</div>
+                        <div class="coaching-content">
+                            <p style="font-size: 1.05rem; line-height: 1.6;"><strong>"${scripts.budget_discussion}"</strong></p>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${scripts.objection_responses ? `
+                    <div class="coaching-card priority-high" style="margin-bottom: 15px;">
+                        <div class="coaching-title">🛡️ Objection Handling Scripts</div>
+                        <div class="coaching-content">
+                            ${Object.entries(scripts.objection_responses).map(([objection, response]) => `
+                                <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                    <p style="color: var(--brand-pink); margin-bottom: 8px;"><strong>When they say:</strong> "${objection}"</p>
+                                    <p style="color: var(--brand-teal);"><strong>You respond:</strong> "${response}"</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+                `;
+            }
+
+            // Build role-play examples
+            let rolePlayHTML = '';
+            if (analysis.role_play_examples && analysis.role_play_examples.length > 0) {
+                rolePlayHTML = `
+                    <div class="coaching-card priority-low" style="margin-bottom: 15px;">
+                        <div class="coaching-title">🎭 Role-Play Practice Scenarios</div>
+                        <div class="coaching-content">
+                            ${analysis.role_play_examples.map((example, i) => `
+                                <div style="margin-bottom: 15px; padding: 12px; background: rgba(16, 195, 176, 0.1); border-radius: 8px;">
+                                    <strong style="color: var(--brand-aqua);">Scenario ${i + 1}:</strong>
+                                    <p style="margin-top: 8px; line-height: 1.6; white-space: pre-line;">${example}</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Build next call playbook
+            let nextCallHTML = '';
+            if (analysis.next_call_playbook && analysis.next_call_playbook.length > 0) {
+                nextCallHTML = `
+                    <div class="coaching-card priority-high" style="border: 2px solid var(--brand-gold);">
+                        <div class="coaching-title">🚀 Your Next Call Playbook - USE THESE!</div>
+                        <div class="coaching-content">
+                            <ol style="margin-left: 20px;">
+                                ${analysis.next_call_playbook.map(script => `
+                                    <li style="margin-bottom: 12px; font-size: 1.05rem; line-height: 1.6;">${script}</li>
+                                `).join('')}
+                            </ol>
+                        </div>
+                    </div>
+                `;
+            }
+
             container.innerHTML = `
                 <div style="background: linear-gradient(135deg, rgba(16, 195, 176, 0.2), rgba(61, 224, 210, 0.1)); padding: 25px; border-radius: 15px; margin-top: 20px;">
                     <h3 style="color: var(--brand-aqua); font-size: 1.5rem; margin-bottom: 15px;">
@@ -1517,6 +1928,11 @@ ONLY include observations you can PROVE from the transcript.
                         </div>
                     </div>
 
+                    <p style="margin-bottom: 20px; opacity: 0.8; font-size: 0.95rem;">
+                        <strong>Talk/Listen Ratio:</strong> You talked ${analysis.talk_percentage}% of the time.
+                        ${analysis.talk_percentage > 40 ? '⚠️ Target is 30%. Practice asking more questions and listening.' : '✅ Good balance!'}
+                    </p>
+
                     <div class="coaching-card priority-low" style="margin-bottom: 15px;">
                         <div class="coaching-title">✅ What You Did Well</div>
                         <div class="coaching-content">
@@ -1535,19 +1951,11 @@ ONLY include observations you can PROVE from the transcript.
                         </div>
                     </div>
 
-                    <div class="coaching-card priority-medium">
-                        <div class="coaching-title">💡 Specific Recommendations for Next Call</div>
-                        <div class="coaching-content">
-                            <ol style="margin-left: 20px;">
-                                ${analysis.recommendations.map(item => `<li>${item}</li>`).join('')}
-                            </ul>
-                        </div>
-                    </div>
+                    ${tacticalScriptsHTML}
 
-                    <p style="margin-top: 20px; opacity: 0.8; font-size: 0.9rem;">
-                        <strong>Talk/Listen Ratio:</strong> You talked ${analysis.talk_percentage}% of the time.
-                        ${analysis.talk_percentage > 40 ? '⚠️ Target is 30%. Practice asking more questions and listening.' : '✅ Good balance!'}
-                    </p>
+                    ${rolePlayHTML}
+
+                    ${nextCallHTML}
                 </div>
             `;
         }

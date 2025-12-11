@@ -31,11 +31,15 @@ serve(async (req) => {
       )
     }
 
-    // Build Sandler analysis prompt
+    // Build enhanced Sandler tactical coaching prompt
     const sandlerPrompt = `
-You are an expert Sandler Sales trainer analyzing a sales conversation.
+You are an expert Sandler Sales trainer and tactical coach. Your job is to analyze this conversation and provide SPECIFIC, ACTIONABLE scripts and alternatives.
 
-IMPORTANT: Be FACTUAL and EVIDENCE-BASED. Cite specific quotes from the transcript to support every observation.
+IMPORTANT:
+- Be FACTUAL and quote the actual transcript
+- Provide EXACT WORDS and SPECIFIC SCRIPTS for what to say next time
+- Give 2-3 ALTERNATIVE responses for key moments
+- Show ROLE-PLAY examples: "You say... They say... You say..."
 
 Conversation Type: ${callType}
 
@@ -47,48 +51,113 @@ CTA: "I'd love to show you how in a quick 15-minute online meeting. Do you have 
 TRANSCRIPT:
 ${transcript}
 
-ANALYZE using Sandler Sales System methodology + Script Adherence:
+DEEP SANDLER ANALYSIS WITH TACTICAL SCRIPTS:
 
-1. SCRIPT ADHERENCE (Score 1-10)
-   - Did they follow the opening structure?
-   - Did they mention local connection (Hamilton)?
-   - Did they state the value prop (20 hours saved, automation)?
-   - Did they use the soft CTA (15-minute meeting)?
-   - Quote evidence: [what they actually said]
+1. OPENING ANALYSIS
+   - What they said: [quote]
+   - Score: X/10
+   - What worked: [specific elements]
+   - Tactical improvement - Try these alternatives next time:
+     * Option 1: "[exact script]"
+     * Option 2: "[exact script with different angle]"
+     * Option 3: "[negative reverse version]"
+   - Sandler principle: [explain the rule being applied]
 
-2. UP-FRONT CONTRACT (Score 1-10)
-   - Did they set clear expectations at the start?
-   - Quote evidence: [exact quote]
+2. UP-FRONT CONTRACT
+   - What they said: [quote or "not used"]
+   - Score: X/10
+   - Tactical script for next time:
+     "Before we dive in, let me make sure this is worth your time. I'd like to ask you a few questions about [their pain]. At the end, you can tell me 'yes, let's move forward,' 'no, not a fit,' or 'let's talk later.' Fair enough?"
+   - Alternative if they're skeptical:
+     "I'm not sure if what we do is even relevant to you, but would it make sense to spend 10 minutes finding out? Worst case, we'll both know it's not a match."
 
-3. BONDING & RAPPORT (Score 1-10)
-   - Did they build trust before business?
-   - Quote evidence: [exact quote]
+3. BONDING & RAPPORT
+   - What they did: [quote]
+   - Score: X/10
+   - Missed opportunities: [specific moments]
+   - Tactical scripts to build rapport:
+     * "How's your day going?" [PAUSE and listen]
+     * "That sounds frustrating. Tell me more about that."
+     * "I appreciate you being straight with me."
+   - Mirroring technique: When they say "[their phrase]", echo it back: "So what I'm hearing is [their phrase]... is that right?"
 
-4. PAIN FUNNEL (Score 1-10)
-   - Did they uncover compelling pain?
-   - Pain questions asked: [list with quotes]
-   - Pain identified: Yes/No with evidence
+4. PAIN FUNNEL - THE GOLD MINE
+   - Questions they asked: [list with quotes]
+   - Questions they MISSED: [critical gaps]
+   - Score: X/10
 
-5. BUDGET (Score 1-10)
-   - Did they discuss budget/investment?
-   - Quote evidence: [exact quote]
+   TACTICAL PAIN FUNNEL SEQUENCE (Use in this order):
+   1. "Tell me about your current process for [their problem]..."
+   2. "How long has this been going on?"
+   3. "What have you tried to fix it?"
+   4. "How much is this costing you?" [time, money, frustration]
+   5. "What happens if you don't solve this?" [future pain]
+   6. "Have you given up on fixing it, or are you still looking for solutions?"
 
-6. DECISION PROCESS (Score 1-10)
-   - Did they identify decision-makers?
-   - Quote evidence: [exact quote]
+   CRITICAL: After each answer, ask: "Tell me more about that" or "Can you give me an example?"
 
-7. TALK/LISTEN RATIO (Score 1-10)
-   - Estimate: Rep talked X%, Prospect Y%
-   - Target: 30% rep / 70% prospect
+5. BUDGET DISCUSSION (NOT PRICE!)
+   - What they said: [quote or "avoided"]
+   - Score: X/10
+   - Tactical scripts (Sandler rule: "Talk budget before talking price"):
+     * "If I could show you a way to save 20 hours a week, what kind of investment would make sense for that?"
+     * "Most housing providers in your situation invest between X and Y for a solution like this. Is that in the ballpark?"
+     * "What budget have you set aside for solving this problem?"
+   - If they deflect: "I understand you might not have exact numbers, but just to make sure we're not wasting each other's time - is this a $1,000 problem, a $10,000 problem, or somewhere in between?"
 
-8. NEGATIVE REVERSE SELLING (Yes/No)
-   - Did they remove pressure?
-   - Quote evidence if used
+6. DECISION PROCESS
+   - What they uncovered: [quote]
+   - Score: X/10
+   - Tactical scripts:
+     * "Who else besides you would be involved in making this decision?"
+     * "Walk me through how decisions like this typically get made at [Company]."
+     * "What would stop this from moving forward, even if you love it?"
+   - Red flag script: If they say "I need to talk to my boss":
+     "I appreciate that. Help me understand - if this is perfect for you, what's the conversation you'll have with them? What questions will they ask that I should help you answer?"
 
-9. OBJECTION HANDLING (Score 1-10)
-   - If objections came up, how well handled?
-   - Did they follow script responses?
-   - Quote evidence
+7. TALK/LISTEN RATIO
+   - Estimate: Rep talked X%, Prospect talked Y%
+   - Target: 30% you / 70% them
+   - Score: X/10
+   - Tactical fix: After every statement, ask a question. After they answer, say: "Tell me more" or "What else?"
+
+8. NEGATIVE REVERSE SELLING (Remove Pressure)
+   - Used: Yes/No
+   - Quote: [if used]
+   - Score: X/10
+   - Tactical scripts to remove pressure:
+     * "I'm not sure if we're a fit, but would it make sense to explore that?"
+     * "You might decide this isn't for you, and that's perfectly okay."
+     * "I don't want you to buy anything today. I just want to see if this makes sense for you."
+     * When they show interest: "What makes you say that?" (forces them to sell themselves)
+
+9. OBJECTION HANDLING
+   - Objections raised: [list with quotes]
+   - How they handled: [quote]
+   - Score: X/10
+
+   TACTICAL OBJECTION RESPONSES:
+
+   "I need to think about it"
+   → "That's fair. What specifically do you need to think about? Is it the investment, the timing, or something else?"
+
+   "Send me some information"
+   → "Happy to. What specific information would be most helpful? And just so I don't waste your time, after you review it, what happens next?"
+
+   "We don't have budget right now"
+   → "I understand. Just curious - if budget weren't an issue, is this something you'd want to move forward with?" [Then deal with real objection]
+
+   "I'm too busy"
+   → "I get it. And that's exactly why I called - to potentially give you back 20 hours a week. If I could show you how in 15 minutes, would that be worth it?"
+
+10. TACTICAL PLAYBOOK FOR NEXT CALL
+
+Provide 3-5 SPECIFIC scripts to use next time:
+
+Example format:
+"When they say: '[common objection]'
+You respond: '[Sandler script]'
+Why it works: [Sandler principle]"
 
 Return JSON in this exact format:
 {
@@ -106,12 +175,26 @@ Return JSON in this exact format:
   "decision_makers_identified": true,
   "upfront_contract_set": false,
   "negative_reverse_used": true,
-  "what_went_well": ["item1", "item2"],
-  "areas_to_improve": ["item1", "item2"],
-  "recommendations": ["item1", "item2"]
+  "what_went_well": ["Specific thing with quote", "Another specific win"],
+  "areas_to_improve": ["Specific tactical fix", "Another specific fix"],
+  "tactical_scripts": {
+    "opening_alternatives": ["Script 1", "Script 2", "Script 3"],
+    "upfront_contract": "Exact script to use",
+    "pain_funnel_sequence": ["Question 1", "Question 2", "Question 3", "Question 4", "Question 5"],
+    "budget_discussion": "Script to use",
+    "objection_responses": {
+      "objection_1": "How to respond",
+      "objection_2": "How to respond"
+    }
+  },
+  "role_play_examples": [
+    "Scenario 1: You say... They say... You say...",
+    "Scenario 2: You say... They say... You say..."
+  ],
+  "next_call_playbook": ["Specific script 1 to use next time", "Specific script 2", "Specific script 3"]
 }
 
-ONLY include observations you can PROVE from the transcript.
+Be SPECIFIC. Quote the transcript. Provide EXACT WORDS for scripts. Make it immediately actionable.
 `
 
     // Call Claude API
@@ -124,7 +207,7 @@ ONLY include observations you can PROVE from the transcript.
       },
       body: JSON.stringify({
         model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 4000,
+        max_tokens: 8000,
         messages: [{
           role: 'user',
           content: sandlerPrompt

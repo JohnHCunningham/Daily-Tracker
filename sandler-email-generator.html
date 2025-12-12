@@ -796,7 +796,16 @@ Hamilton, ON
             document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.tab')[2].classList.add('active');
 
-            const variationsOutput = document.getElementById('variations-output') || document.getElementById('output-container');
+            // First display the variations tab to create the container
+            displayCurrentTab();
+
+            // Now get the variations output element
+            const variationsOutput = document.getElementById('variations-output');
+            if (!variationsOutput) {
+                console.error('Could not find variations-output element');
+                return;
+            }
+
             variationsOutput.innerHTML = '<div class="loading">Creating Sandler-based variations...</div>';
 
             // Create intelligent variations based on Sandler principles

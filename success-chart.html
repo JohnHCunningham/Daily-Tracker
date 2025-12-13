@@ -537,6 +537,77 @@
                 <button class="btn-primary" onclick="saveActivityGoals()">Save Goals</button>
             </div>
 
+            <!-- ICP (Ideal Customer Profile) Builder Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Ideal Customer Profile (ICP)</h2>
+                    <span class="card-icon">🎯</span>
+                </div>
+
+                <div class="input-group">
+                    <label>Target Industry</label>
+                    <input type="text" id="icp-industry" placeholder="e.g., Mixed-income housing providers, SaaS companies">
+                </div>
+
+                <div class="input-group">
+                    <label>Company Size</label>
+                    <input type="text" id="icp-company-size" placeholder="e.g., 50-500 employees, $10M-$100M revenue">
+                </div>
+
+                <div class="input-group">
+                    <label>Target Job Titles</label>
+                    <input type="text" id="icp-job-titles" placeholder="e.g., VP Sales, Sales Director, Head of Revenue">
+                </div>
+
+                <div class="input-group">
+                    <label>Key Pain Points</label>
+                    <textarea id="icp-pain-points" placeholder="e.g., Sandler-trained reps not executing methodology, inconsistent pipeline, low close rates" rows="3"></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>Typical Budget Range</label>
+                    <input type="text" id="icp-budget" placeholder="e.g., $500-$2,000/month, $5,000-$25,000/year">
+                </div>
+
+                <button class="btn-primary" onclick="saveICP()">Save ICP</button>
+
+                <div id="icp-display" style="margin-top: 20px; padding: 15px; background: rgba(16, 195, 176, 0.1); border-radius: 12px; display: none;">
+                    <h3 style="color: var(--brand-gold); font-size: 1rem; margin-bottom: 10px;">Your Ideal Customer:</h3>
+                    <div id="icp-summary" style="font-size: 0.9rem; line-height: 1.6;"></div>
+                </div>
+            </div>
+
+            <!-- Services/Products Manager Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Your Services/Products</h2>
+                    <span class="card-icon">📦</span>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <div class="input-group">
+                        <label>Service/Product Name</label>
+                        <input type="text" id="product-name" placeholder="e.g., AI Sandler Coaching - Monthly">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Price (CAD)</label>
+                        <input type="number" id="product-price" min="0" step="0.01" placeholder="5000">
+                    </div>
+
+                    <div class="input-group">
+                        <label>Description (Optional)</label>
+                        <textarea id="product-description" placeholder="Brief description of the service/product" rows="2"></textarea>
+                    </div>
+
+                    <button class="btn-primary" onclick="addProduct()">+ Add Product</button>
+                </div>
+
+                <div id="products-list" style="display: grid; gap: 10px;">
+                    <!-- Products will be listed here -->
+                </div>
+            </div>
+
             <!-- Daily Goal Progress Card -->
             <div class="card wide-card">
                 <div class="card-header">
@@ -557,26 +628,27 @@
                 </div>
 
                 <div class="input-group">
+                    <label>Select Product/Service</label>
+                    <select id="input-product" onchange="selectProduct()">
+                        <option value="">Select a product...</option>
+                        <!-- Products will be loaded dynamically -->
+                    </select>
+                    <small style="opacity: 0.7; font-size: 0.85rem; margin-top: 5px; display: block;">
+                        No products? Add them in "Your Services/Products" section above
+                    </small>
+                </div>
+
+                <div class="input-group">
                     <label>Sale Amount (CAD)</label>
                     <input type="number" id="input-amount" min="0" step="0.01" placeholder="0.00">
+                    <small style="opacity: 0.7; font-size: 0.85rem; margin-top: 5px; display: block;">
+                        Auto-filled from product, or enter custom amount
+                    </small>
                 </div>
 
                 <div class="input-group">
                     <label>Client Name</label>
                     <input type="text" id="input-client" placeholder="Client name">
-                </div>
-
-                <div class="input-group">
-                    <label>Service Type</label>
-                    <select id="input-service">
-                        <option value="">Select service...</option>
-                        <option value="Mixed Income Development">Mixed Income Development</option>
-                        <option value="Near Market Rentals">Near Market Rentals</option>
-                        <option value="AODA Compliance">AODA Compliance</option>
-                        <option value="Tenant Engagement">Tenant Engagement</option>
-                        <option value="Process Optimization">Process Optimization</option>
-                        <option value="Digital Solutions">Digital Solutions</option>
-                    </select>
                 </div>
 
                 <button class="btn-primary" onclick="recordSale()">Record Sale</button>
@@ -2486,6 +2558,205 @@ ONLY include observations you can PROVE from the transcript.
         }
 
         // ============================================
+        // ICP (IDEAL CUSTOMER PROFILE) FUNCTIONS
+        // ============================================
+
+        function saveICP() {
+            const icp = {
+                industry: document.getElementById('icp-industry').value.trim(),
+                companySize: document.getElementById('icp-company-size').value.trim(),
+                jobTitles: document.getElementById('icp-job-titles').value.trim(),
+                painPoints: document.getElementById('icp-pain-points').value.trim(),
+                budget: document.getElementById('icp-budget').value.trim()
+            };
+
+            if (!icp.industry && !icp.companySize && !icp.jobTitles) {
+                showAlert('Please fill in at least Industry, Company Size, or Job Titles', 'error');
+                return;
+            }
+
+            localStorage.setItem('icp', JSON.stringify(icp));
+            showAlert('✅ Ideal Customer Profile saved!', 'success');
+            displayICP();
+        }
+
+        function loadICP() {
+            const saved = localStorage.getItem('icp');
+            if (saved) {
+                const icp = JSON.parse(saved);
+                document.getElementById('icp-industry').value = icp.industry || '';
+                document.getElementById('icp-company-size').value = icp.companySize || '';
+                document.getElementById('icp-job-titles').value = icp.jobTitles || '';
+                document.getElementById('icp-pain-points').value = icp.painPoints || '';
+                document.getElementById('icp-budget').value = icp.budget || '';
+                displayICP();
+            }
+        }
+
+        function displayICP() {
+            const saved = localStorage.getItem('icp');
+            if (!saved) return;
+
+            const icp = JSON.parse(saved);
+            const display = document.getElementById('icp-display');
+            const summary = document.getElementById('icp-summary');
+
+            let html = '';
+            if (icp.industry) html += `<strong>Industry:</strong> ${icp.industry}<br>`;
+            if (icp.companySize) html += `<strong>Company Size:</strong> ${icp.companySize}<br>`;
+            if (icp.jobTitles) html += `<strong>Target Titles:</strong> ${icp.jobTitles}<br>`;
+            if (icp.painPoints) html += `<strong>Pain Points:</strong> ${icp.painPoints}<br>`;
+            if (icp.budget) html += `<strong>Budget Range:</strong> ${icp.budget}`;
+
+            if (html) {
+                summary.innerHTML = html;
+                display.style.display = 'block';
+            }
+        }
+
+        // ============================================
+        // PRODUCTS/SERVICES FUNCTIONS
+        // ============================================
+
+        function addProduct() {
+            const name = document.getElementById('product-name').value.trim();
+            const price = parseFloat(document.getElementById('product-price').value);
+            const description = document.getElementById('product-description').value.trim();
+
+            if (!name || !price || price <= 0) {
+                showAlert('Please enter a product name and valid price', 'error');
+                return;
+            }
+
+            const products = getProducts();
+            products.push({
+                id: Date.now().toString(),
+                name,
+                price,
+                description
+            });
+
+            localStorage.setItem('products', JSON.stringify(products));
+
+            // Clear form
+            document.getElementById('product-name').value = '';
+            document.getElementById('product-price').value = '';
+            document.getElementById('product-description').value = '';
+
+            showAlert('✅ Product added!', 'success');
+            loadProducts();
+        }
+
+        function getProducts() {
+            const saved = localStorage.getItem('products');
+            return saved ? JSON.parse(saved) : [];
+        }
+
+        function deleteProduct(productId) {
+            if (!confirm('Delete this product?')) return;
+
+            let products = getProducts();
+            products = products.filter(p => p.id !== productId);
+            localStorage.setItem('products', JSON.stringify(products));
+
+            showAlert('Product deleted', 'success');
+            loadProducts();
+        }
+
+        function loadProducts() {
+            const products = getProducts();
+            const listContainer = document.getElementById('products-list');
+            const productSelect = document.getElementById('input-product');
+
+            // Update products list display
+            if (products.length === 0) {
+                listContainer.innerHTML = '<p style="opacity: 0.7; text-align: center; padding: 20px;">No products added yet. Add your first product above!</p>';
+            } else {
+                listContainer.innerHTML = products.map(p => `
+                    <div style="background: rgba(255,255,255,0.05); padding: 15px; border-radius: 10px; display: grid; grid-template-columns: 1fr auto; gap: 10px; align-items: center;">
+                        <div>
+                            <div style="font-weight: 600; color: var(--brand-gold); font-size: 1rem;">${p.name}</div>
+                            <div style="font-size: 1.2rem; color: var(--brand-teal); margin: 5px 0;">$${p.price.toFixed(2)}</div>
+                            ${p.description ? `<div style="font-size: 0.85rem; opacity: 0.8;">${p.description}</div>` : ''}
+                        </div>
+                        <button onclick="deleteProduct('${p.id}')" style="background: var(--brand-pink); color: white; border: none; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-weight: 600;">Delete</button>
+                    </div>
+                `).join('');
+            }
+
+            // Update product select dropdown in sales form
+            productSelect.innerHTML = '<option value="">Select a product...</option>' +
+                products.map(p => `<option value="${p.id}">${p.name} - $${p.price.toFixed(2)}</option>`).join('');
+        }
+
+        function selectProduct() {
+            const productId = document.getElementById('input-product').value;
+            if (!productId) return;
+
+            const products = getProducts();
+            const product = products.find(p => p.id === productId);
+
+            if (product) {
+                document.getElementById('input-amount').value = product.price.toFixed(2);
+            }
+        }
+
+        // ============================================
+        // UPDATE RECORD SALE FUNCTION
+        // ============================================
+
+        async function recordSale() {
+            const amount = parseFloat(document.getElementById('input-amount').value);
+            const client = document.getElementById('input-client').value.trim();
+            const productId = document.getElementById('input-product').value;
+
+            if (!amount || amount <= 0) {
+                showAlert('Please enter a valid sale amount', 'error');
+                return;
+            }
+
+            if (!client) {
+                showAlert('Please enter client name', 'error');
+                return;
+            }
+
+            // Get product name
+            let productName = 'Custom Sale';
+            if (productId) {
+                const products = getProducts();
+                const product = products.find(p => p.id === productId);
+                if (product) productName = product.name;
+            }
+
+            try {
+                const { error } = await supabaseClient
+                    .from('Sales')
+                    .insert({
+                        amount_cad: amount,
+                        client_name: client,
+                        service_type: productName,
+                        date: new Date().toISOString().split('T')[0]
+                    });
+
+                if (error) throw error;
+
+                showAlert('✅ Sale recorded successfully!', 'success');
+
+                // Clear form
+                document.getElementById('input-amount').value = '';
+                document.getElementById('input-client').value = '';
+                document.getElementById('input-product').value = '';
+
+                // Refresh revenue data
+                loadRevenueSummary();
+
+            } catch (error) {
+                console.error('Error recording sale:', error);
+                showAlert('⚠️ Error recording sale. Please try again.', 'error');
+            }
+        }
+
+        // ============================================
         // INITIALIZE DASHBOARD
         // ============================================
 
@@ -2495,6 +2766,8 @@ ONLY include observations you can PROVE from the transcript.
             } else {
                 // Load saved settings
                 loadActivityGoalsForm();
+                loadICP();
+                loadProducts();
 
                 // Load monthly quota from localStorage if exists
                 const savedQuota = localStorage.getItem('monthlyQuota');

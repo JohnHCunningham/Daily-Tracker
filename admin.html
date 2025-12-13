@@ -1,0 +1,1325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - AI Advantage Solutions</title>
+
+    <!-- Chart.js for visualizations -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* --- BRAND COLOR PALETTE --- */
+        :root {
+            --brand-navy: #0C1030;
+            --brand-teal: #10C3B0;
+            --brand-aqua: #3DE0D2;
+            --brand-pink: #E64563;
+            --brand-gold: #F4B03A;
+            --brand-yellow: #F9C863;
+            --light-text: #F2F4F8;
+            --card-bg: #131a40;
+            --input-bg: #090c26;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--brand-navy) 0%, #050816 100%);
+            color: var(--light-text);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .admin-header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--brand-aqua), var(--brand-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .admin-header .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .last-updated {
+            font-size: 0.85rem;
+            opacity: 0.7;
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, var(--brand-pink), #c13752);
+            border: none;
+            padding: 10px 20px;
+            color: white;
+            font-weight: 700;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Quick Stats */
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(61, 224, 210, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--brand-teal), var(--brand-aqua));
+        }
+
+        .stat-icon {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: var(--brand-gold);
+            line-height: 1;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: var(--light-text);
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .stat-change {
+            font-size: 0.85rem;
+            margin-top: 10px;
+            padding: 5px 10px;
+            border-radius: 5px;
+            display: inline-block;
+        }
+
+        .stat-change.positive {
+            background: rgba(16, 195, 176, 0.2);
+            color: var(--brand-teal);
+        }
+
+        .stat-change.negative {
+            background: rgba(230, 69, 99, 0.2);
+            color: var(--brand-pink);
+        }
+
+        /* Filter Bar */
+        .filter-bar {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            display: flex;
+            gap: 15px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .filter-bar label {
+            color: var(--brand-aqua);
+            font-weight: 600;
+        }
+
+        .date-preset-btn {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            color: var(--light-text);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .date-preset-btn.active {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua));
+            color: var(--brand-navy);
+            border-color: transparent;
+        }
+
+        .date-preset-btn:hover:not(.active) {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .btn-export {
+            background: linear-gradient(135deg, var(--brand-gold), var(--brand-yellow));
+            border: none;
+            padding: 10px 20px;
+            color: var(--brand-navy);
+            font-weight: 700;
+            border-radius: 25px;
+            cursor: pointer;
+            margin-left: auto;
+        }
+
+        .btn-export:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 176, 58, 0.4);
+        }
+
+        /* Dashboard Grid */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(61, 224, 210, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--brand-teal), var(--brand-aqua));
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            color: var(--brand-aqua);
+            font-size: 1.3rem;
+            font-weight: 600;
+        }
+
+        .card-icon {
+            font-size: 2rem;
+        }
+
+        .wide-card {
+            grid-column: 1 / -1;
+        }
+
+        /* Table Styles */
+        .admin-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .admin-table thead {
+            background: rgba(16, 195, 176, 0.1);
+        }
+
+        .admin-table th {
+            padding: 12px;
+            text-align: left;
+            color: var(--brand-aqua);
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .admin-table th:hover {
+            background: rgba(16, 195, 176, 0.2);
+        }
+
+        .admin-table td {
+            padding: 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            font-size: 0.9rem;
+        }
+
+        .admin-table tr:hover {
+            background: rgba(255,255,255,0.03);
+        }
+
+        .engagement-score {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+
+        .engagement-high {
+            background: rgba(16, 195, 176, 0.2);
+            color: var(--brand-teal);
+        }
+
+        .engagement-medium {
+            background: rgba(244, 176, 58, 0.2);
+            color: var(--brand-gold);
+        }
+
+        .engagement-low {
+            background: rgba(230, 69, 99, 0.2);
+            color: var(--brand-pink);
+        }
+
+        /* Chart Container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        /* Login Modal */
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 8, 22, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .login-box {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 1px solid rgba(61, 224, 210, 0.2);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .login-box h2 {
+            color: var(--brand-aqua);
+            margin-bottom: 10px;
+        }
+
+        .login-box p {
+            color: var(--light-text);
+            opacity: 0.7;
+            margin-bottom: 30px;
+        }
+
+        .login-box input {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--brand-teal);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: var(--brand-aqua);
+            box-shadow: 0 0 0 3px rgba(61, 224, 210, 0.1);
+        }
+
+        .login-box button {
+            width: 100%;
+            background: linear-gradient(135deg, var(--brand-gold), var(--brand-yellow));
+            border: none;
+            padding: 12px;
+            color: var(--brand-navy);
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .login-box button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 176, 58, 0.4);
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .alert-success {
+            background: rgba(16, 195, 176, 0.2);
+            border: 1px solid var(--brand-teal);
+            color: var(--brand-aqua);
+        }
+
+        .alert-error {
+            background: rgba(230, 69, 99, 0.2);
+            border: 1px solid var(--brand-pink);
+            color: var(--brand-pink);
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--brand-teal);
+            font-size: 1.2rem;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        @media (max-width: 768px) {
+            .quick-stats {
+                grid-template-columns: 1fr;
+            }
+
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filter-bar {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+
+            .btn-export {
+                margin-left: 0;
+                width: 100%;
+            }
+        }
+
+        /* Funnel Styles */
+        .funnel-container {
+            margin-top: 20px;
+        }
+
+        .funnel-stage {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .funnel-stage-label {
+            font-size: 0.9rem;
+            color: var(--light-text);
+        }
+
+        .funnel-stage-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--brand-gold);
+        }
+
+        .funnel-stage-rate {
+            font-size: 0.8rem;
+            color: var(--brand-teal);
+            margin-left: 10px;
+        }
+
+        .input-group {
+            margin-bottom: 10px;
+        }
+
+        .input-group input[type="date"] {
+            background-color: var(--input-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--brand-teal);
+            padding: 8px 12px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .input-group input[type="date"]:focus {
+            outline: none;
+            border-color: var(--brand-aqua);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="login-modal hidden">
+        <div class="login-box">
+            <h2>Admin Login</h2>
+            <p>Enter the admin password to access the dashboard</p>
+            <div id="login-alert-container"></div>
+            <input type="password" id="admin-password" placeholder="Enter password" autofocus>
+            <button onclick="adminLogin()">Login</button>
+        </div>
+    </div>
+
+    <!-- Main Dashboard (hidden until authenticated) -->
+    <div id="main-dashboard" class="dashboard-container hidden">
+
+        <!-- Admin Header -->
+        <div class="admin-header">
+            <div>
+                <h1>Admin Dashboard</h1>
+                <p style="color: var(--brand-gold); margin-top: 5px;">AI Advantage Solutions</p>
+            </div>
+            <div class="header-actions">
+                <span class="last-updated" id="last-updated">Loading...</span>
+                <button class="btn-logout" onclick="adminLogout()">Logout</button>
+            </div>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Quick Stats -->
+        <div class="quick-stats">
+            <div class="stat-card">
+                <div class="stat-icon">💰</div>
+                <div class="stat-value" id="total-revenue">$0</div>
+                <div class="stat-label">Total Revenue</div>
+                <div class="stat-change" id="revenue-change">Loading...</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-value" id="total-clients">0</div>
+                <div class="stat-label">Active Clients</div>
+                <div class="stat-change" id="clients-change">Loading...</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📞</div>
+                <div class="stat-value" id="total-activity">0</div>
+                <div class="stat-label">Total Dials (30d)</div>
+                <div class="stat-change" id="activity-change">Loading...</div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-icon">📊</div>
+                <div class="stat-value" id="conversion-rate">0%</div>
+                <div class="stat-label">Dial-to-Sale Rate</div>
+                <div class="stat-change" id="conversion-change">Loading...</div>
+            </div>
+        </div>
+
+        <!-- Filter Bar -->
+        <div class="filter-bar">
+            <label>Date Range:</label>
+            <button class="date-preset-btn" data-range="7" onclick="setDateRange(7, this)">Last 7 Days</button>
+            <button class="date-preset-btn active" data-range="30" onclick="setDateRange(30, this)">Last 30 Days</button>
+            <button class="date-preset-btn" data-range="90" onclick="setDateRange(90, this)">Last 90 Days</button>
+            <button class="date-preset-btn" data-range="ytd" onclick="setDateRange('ytd', this)">Year to Date</button>
+
+            <div class="input-group" style="display: flex; gap: 10px; margin: 0;">
+                <input type="date" id="custom-start-date">
+                <input type="date" id="custom-end-date">
+                <button class="date-preset-btn" onclick="applyCustomRange()">Apply</button>
+            </div>
+
+            <button class="btn-export" onclick="exportDashboardData()">📥 Export Data</button>
+        </div>
+
+        <!-- Dashboard Grid -->
+        <div class="dashboard-grid">
+
+            <!-- Client Activity Table -->
+            <div class="card wide-card">
+                <div class="card-header">
+                    <h2 class="card-title">Client Activity</h2>
+                    <span class="card-icon">👥</span>
+                </div>
+                <div class="loading" id="client-table-loading">Loading client data</div>
+                <div id="client-table-container" class="hidden"></div>
+            </div>
+
+            <!-- Revenue Chart -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Revenue Trend</h2>
+                    <span class="card-icon">📈</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="revenue-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Service Type Revenue -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Revenue by Service</h2>
+                    <span class="card-icon">🎯</span>
+                </div>
+                <div class="chart-container">
+                    <canvas id="service-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Conversion Funnel -->
+            <div class="card wide-card">
+                <div class="card-header">
+                    <h2 class="card-title">Sales Funnel</h2>
+                    <span class="card-icon">⬇️</span>
+                </div>
+                <div class="chart-container" style="height: 350px;">
+                    <canvas id="funnel-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Activity Analytics -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Activity Metrics</h2>
+                    <span class="card-icon">📊</span>
+                </div>
+                <div id="activity-metrics">
+                    <div class="funnel-stage">
+                        <div>
+                            <div class="funnel-stage-label">Total Dials</div>
+                        </div>
+                        <div class="funnel-stage-value" id="metric-dials">0</div>
+                    </div>
+                    <div class="funnel-stage">
+                        <div>
+                            <div class="funnel-stage-label">Total Conversations</div>
+                        </div>
+                        <div class="funnel-stage-value" id="metric-conversations">0</div>
+                    </div>
+                    <div class="funnel-stage">
+                        <div>
+                            <div class="funnel-stage-label">Discovery Meetings</div>
+                        </div>
+                        <div class="funnel-stage-value" id="metric-meetings">0</div>
+                    </div>
+                    <div class="funnel-stage">
+                        <div>
+                            <div class="funnel-stage-label">Active Days</div>
+                        </div>
+                        <div class="funnel-stage-value" id="metric-active-days">0</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Email Campaign Metrics -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Email Campaigns</h2>
+                    <span class="card-icon">📧</span>
+                </div>
+                <div id="email-metrics">
+                    <div class="funnel-stage">
+                        <div>
+                            <div class="funnel-stage-label">Emails Sent</div>
+                        </div>
+                        <div class="funnel-stage-value" id="metric-emails-sent">0</div>
+                    </div>
+                    <div class="funnel-stage">
+                        <div>
+                            <div class="funnel-stage-label">Response Rate</div>
+                        </div>
+                        <div class="funnel-stage-value" id="metric-response-rate">0%</div>
+                    </div>
+                    <div class="funnel-stage">
+                        <div>
+                            <div class="funnel-stage-label">Meetings Booked</div>
+                        </div>
+                        <div class="funnel-stage-value" id="metric-meetings-booked">0</div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+
+        const SUPABASE_URL = 'https://qwqlsbccwnwrdpcaccjz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTA1MDQsImV4cCI6MjA4MDg4NjUwNH0.yWzSV2Nid_T1XiDE0RrskFob9mRUc-m6MbeIiT7huC4';
+
+        // Admin password (SHA-256 hash of "admin123" - CHANGE THIS IN PRODUCTION)
+        const ADMIN_PASSWORD_HASH = 'f865b53623b121fd34ee5426c792e5c33af8c227';
+        const SESSION_DURATION_HOURS = 1;
+
+        let supabaseClient;
+        let currentDateRange = { days: 30 };
+        let charts = {};
+
+        // Initialize Supabase
+        try {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (error) {
+            console.error('Supabase initialization error:', error);
+        }
+
+        // ============================================
+        // AUTHENTICATION FUNCTIONS
+        // ============================================
+
+        async function hashPassword(password) {
+            const encoder = new TextEncoder();
+            const data = encoder.encode(password);
+            const hashBuffer = await crypto.subtle.digest('SHA-1', data);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+
+        function checkAdminAccess() {
+            const sessionAuth = sessionStorage.getItem('admin_authenticated');
+            const authTimestamp = sessionStorage.getItem('admin_auth_time');
+
+            if (sessionAuth === 'true' && authTimestamp) {
+                const hoursSinceAuth = (Date.now() - parseInt(authTimestamp)) / (1000 * 60 * 60);
+                if (hoursSinceAuth < SESSION_DURATION_HOURS) {
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        async function adminLogin() {
+            const password = document.getElementById('admin-password').value;
+            const loginAlertContainer = document.getElementById('login-alert-container');
+
+            if (!password) {
+                loginAlertContainer.innerHTML = '<div class="alert alert-error">Please enter a password</div>';
+                return;
+            }
+
+            const hash = await hashPassword(password);
+
+            if (hash === ADMIN_PASSWORD_HASH) {
+                sessionStorage.setItem('admin_authenticated', 'true');
+                sessionStorage.setItem('admin_auth_time', Date.now().toString());
+
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('main-dashboard').classList.remove('hidden');
+
+                loadDashboard();
+            } else {
+                loginAlertContainer.innerHTML = '<div class="alert alert-error">Invalid password. Please try again.</div>';
+                document.getElementById('admin-password').value = '';
+            }
+        }
+
+        function adminLogout() {
+            sessionStorage.removeItem('admin_authenticated');
+            sessionStorage.removeItem('admin_auth_time');
+            location.reload();
+        }
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+
+        function showAlert(message, type = 'success') {
+            const container = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+
+            setTimeout(() => alert.remove(), 5000);
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-CA', {
+                style: 'currency',
+                currency: 'CAD'
+            }).format(amount);
+        }
+
+        function formatDate(dateString) {
+            return new Date(dateString).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        function getDateRange(days) {
+            const end = new Date();
+            const start = new Date();
+
+            if (days === 'ytd') {
+                start.setMonth(0, 1); // January 1st of current year
+            } else {
+                start.setDate(end.getDate() - days);
+            }
+
+            return {
+                start: start.toISOString().split('T')[0],
+                end: end.toISOString().split('T')[0]
+            };
+        }
+
+        function setDateRange(days, btn) {
+            // Update active button
+            document.querySelectorAll('.date-preset-btn').forEach(b => b.classList.remove('active'));
+            if (btn) btn.classList.add('active');
+
+            currentDateRange = { days };
+            loadDashboard();
+        }
+
+        function applyCustomRange() {
+            const start = document.getElementById('custom-start-date').value;
+            const end = document.getElementById('custom-end-date').value;
+
+            if (!start || !end) {
+                showAlert('Please select both start and end dates', 'error');
+                return;
+            }
+
+            currentDateRange = { start, end };
+
+            // Clear active preset buttons
+            document.querySelectorAll('.date-preset-btn').forEach(b => b.classList.remove('active'));
+
+            loadDashboard();
+        }
+
+        // ============================================
+        // DATA FETCHING FUNCTIONS
+        // ============================================
+
+        async function fetchClientActivitySummary(dateRange) {
+            try {
+                const { data: sales, error } = await supabaseClient
+                    .from('Sales')
+                    .select('*')
+                    .gte('date', dateRange.start)
+                    .lte('date', dateRange.end)
+                    .order('date', { ascending: false });
+
+                if (error) throw error;
+
+                // Group by client
+                const clientMap = {};
+                sales.forEach(sale => {
+                    const client = sale.client_name || 'Unknown';
+                    if (!clientMap[client]) {
+                        clientMap[client] = {
+                            name: client,
+                            totalRevenue: 0,
+                            salesCount: 0,
+                            services: new Set(),
+                            lastPurchaseDate: sale.date,
+                            sales: []
+                        };
+                    }
+
+                    clientMap[client].totalRevenue += parseFloat(sale.amount_cad);
+                    clientMap[client].salesCount++;
+                    if (sale.service_type) clientMap[client].services.add(sale.service_type);
+                    clientMap[client].sales.push(sale);
+
+                    // Track most recent purchase
+                    if (new Date(sale.date) > new Date(clientMap[client].lastPurchaseDate)) {
+                        clientMap[client].lastPurchaseDate = sale.date;
+                    }
+                });
+
+                // Convert to array and calculate metrics
+                const clients = Object.values(clientMap).map(client => ({
+                    ...client,
+                    avgSale: client.totalRevenue / client.salesCount,
+                    services: Array.from(client.services),
+                    engagementScore: calculateEngagementScore(client)
+                }));
+
+                // Sort by total revenue
+                clients.sort((a, b) => b.totalRevenue - a.totalRevenue);
+
+                return clients;
+            } catch (error) {
+                console.error('Error fetching client activity:', error);
+                return [];
+            }
+        }
+
+        function calculateEngagementScore(client) {
+            // Calculate engagement score (0-10)
+            const now = new Date();
+            const lastPurchase = new Date(client.lastPurchaseDate);
+            const daysSinceLastPurchase = Math.floor((now - lastPurchase) / (1000 * 60 * 60 * 24));
+
+            // Recency score (0-10): < 7 days = 10, > 90 days = 0
+            const recencyScore = Math.max(0, 10 - (daysSinceLastPurchase / 9));
+
+            // Frequency score (0-10): 1 purchase = 2, 5+ purchases = 10
+            const frequencyScore = Math.min(10, 2 + (client.salesCount - 1) * 2);
+
+            // Value score (0-10): normalized by max revenue
+            const valueScore = Math.min(10, (client.totalRevenue / 10000) * 10);
+
+            // Diversity score (0-10): 1 service = 5, 3+ services = 10
+            const diversityScore = Math.min(10, 5 + (client.services.length - 1) * 2.5);
+
+            // Weighted average
+            const score = (
+                recencyScore * 0.30 +
+                frequencyScore * 0.30 +
+                valueScore * 0.25 +
+                diversityScore * 0.15
+            );
+
+            return Math.round(score * 10) / 10;
+        }
+
+        async function fetchRevenueAnalytics(dateRange) {
+            try {
+                const { data: sales, error } = await supabaseClient
+                    .from('Sales')
+                    .select('*')
+                    .order('date', { ascending: true });
+
+                if (error) throw error;
+
+                // Group by month
+                const monthlyRevenue = {};
+                sales.forEach(sale => {
+                    const month = sale.date.substring(0, 7); // YYYY-MM
+                    if (!monthlyRevenue[month]) {
+                        monthlyRevenue[month] = 0;
+                    }
+                    monthlyRevenue[month] += parseFloat(sale.amount_cad);
+                });
+
+                // Group by service type
+                const serviceRevenue = {};
+                sales.forEach(sale => {
+                    const service = sale.service_type || 'Other';
+                    if (!serviceRevenue[service]) {
+                        serviceRevenue[service] = 0;
+                    }
+                    serviceRevenue[service] += parseFloat(sale.amount_cad);
+                });
+
+                return { monthlyRevenue, serviceRevenue, allSales: sales };
+            } catch (error) {
+                console.error('Error fetching revenue analytics:', error);
+                return { monthlyRevenue: {}, serviceRevenue: {}, allSales: [] };
+            }
+        }
+
+        async function fetchActivityMetrics(dateRange) {
+            try {
+                const { data: dailyActivity, error: activityError } = await supabaseClient
+                    .from('Daily_Tracker')
+                    .select('*')
+                    .gte('date', dateRange.start)
+                    .lte('date', dateRange.end)
+                    .order('date', { ascending: false });
+
+                if (activityError) throw activityError;
+
+                const { data: sales, error: salesError } = await supabaseClient
+                    .from('Sales')
+                    .select('*')
+                    .gte('date', dateRange.start)
+                    .lte('date', dateRange.end);
+
+                if (salesError) throw salesError;
+
+                const totalDials = dailyActivity.reduce((sum, day) => sum + (day.dials || 0), 0);
+                const totalConversations = dailyActivity.reduce((sum, day) => sum + (day.conversations || 0), 0);
+                const totalMeetings = dailyActivity.reduce((sum, day) => sum + (day.discovery_meetings || 0), 0);
+                const totalSales = sales.length;
+                const activeDays = dailyActivity.filter(day => (day.dials || 0) > 0).length;
+
+                return {
+                    totalDials,
+                    totalConversations,
+                    totalMeetings,
+                    totalSales,
+                    activeDays,
+                    dailyActivity
+                };
+            } catch (error) {
+                console.error('Error fetching activity metrics:', error);
+                return {
+                    totalDials: 0,
+                    totalConversations: 0,
+                    totalMeetings: 0,
+                    totalSales: 0,
+                    activeDays: 0,
+                    dailyActivity: []
+                };
+            }
+        }
+
+        async function fetchEmailAnalytics(dateRange) {
+            try {
+                const { data: emails, error } = await supabaseClient
+                    .from('Email_Tracking')
+                    .select('*')
+                    .gte('sent_date', dateRange.start)
+                    .lte('sent_date', dateRange.end);
+
+                if (error) throw error;
+
+                const totalSent = emails.length;
+                const responded = emails.filter(e => e.status === 'responded' || e.status === 'booked').length;
+                const booked = emails.filter(e => e.status === 'booked').length;
+                const responseRate = totalSent > 0 ? (responded / totalSent * 100).toFixed(1) : 0;
+
+                return {
+                    totalSent,
+                    responded,
+                    booked,
+                    responseRate
+                };
+            } catch (error) {
+                console.error('Error fetching email analytics:', error);
+                return {
+                    totalSent: 0,
+                    responded: 0,
+                    booked: 0,
+                    responseRate: 0
+                };
+            }
+        }
+
+        // ============================================
+        // RENDERING FUNCTIONS
+        // ============================================
+
+        function renderClientTable(clients) {
+            const container = document.getElementById('client-table-container');
+            const loading = document.getElementById('client-table-loading');
+
+            if (clients.length === 0) {
+                container.innerHTML = '<p style="text-align: center; opacity: 0.7; padding: 30px;">No client data available for this time period.</p>';
+                loading.classList.add('hidden');
+                container.classList.remove('hidden');
+                return;
+            }
+
+            const table = `
+                <table class="admin-table">
+                    <thead>
+                        <tr>
+                            <th>Client Name</th>
+                            <th>Total Revenue</th>
+                            <th>Sales Count</th>
+                            <th>Avg Sale</th>
+                            <th>Last Purchase</th>
+                            <th>Engagement</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${clients.map(client => {
+                            const scoreClass = client.engagementScore >= 7 ? 'engagement-high' :
+                                             client.engagementScore >= 5 ? 'engagement-medium' : 'engagement-low';
+
+                            return `
+                                <tr>
+                                    <td><strong>${client.name}</strong></td>
+                                    <td>${formatCurrency(client.totalRevenue)}</td>
+                                    <td>${client.salesCount}</td>
+                                    <td>${formatCurrency(client.avgSale)}</td>
+                                    <td>${formatDate(client.lastPurchaseDate)}</td>
+                                    <td><span class="engagement-score ${scoreClass}">${client.engagementScore}/10</span></td>
+                                </tr>
+                            `;
+                        }).join('')}
+                    </tbody>
+                </table>
+            `;
+
+            container.innerHTML = table;
+            loading.classList.add('hidden');
+            container.classList.remove('hidden');
+        }
+
+        function renderRevenueChart(monthlyRevenue) {
+            const ctx = document.getElementById('revenue-chart');
+
+            // Destroy existing chart if it exists
+            if (charts.revenue) {
+                charts.revenue.destroy();
+            }
+
+            const months = Object.keys(monthlyRevenue).sort();
+            const revenues = months.map(m => monthlyRevenue[m]);
+
+            charts.revenue = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: months.map(m => {
+                        const [year, month] = m.split('-');
+                        return new Date(year, month - 1).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
+                    }),
+                    datasets: [{
+                        label: 'Monthly Revenue',
+                        data: revenues,
+                        borderColor: '#10C3B0',
+                        backgroundColor: 'rgba(16, 195, 176, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#F2F4F8' }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            ticks: {
+                                color: '#F2F4F8',
+                                callback: value => formatCurrency(value)
+                            },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        x: {
+                            ticks: { color: '#F2F4F8' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderServiceChart(serviceRevenue) {
+            const ctx = document.getElementById('service-chart');
+
+            if (charts.service) {
+                charts.service.destroy();
+            }
+
+            const services = Object.keys(serviceRevenue);
+            const revenues = Object.values(serviceRevenue);
+
+            const colors = ['#10C3B0', '#3DE0D2', '#F4B03A', '#E64563', '#F9C863'];
+
+            charts.service = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: services,
+                    datasets: [{
+                        data: revenues,
+                        backgroundColor: colors.slice(0, services.length)
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#F2F4F8' },
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderFunnelChart(metrics) {
+            const ctx = document.getElementById('funnel-chart');
+
+            if (charts.funnel) {
+                charts.funnel.destroy();
+            }
+
+            charts.funnel = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: ['Dials', 'Conversations', 'Meetings', 'Sales'],
+                    datasets: [{
+                        label: 'Count',
+                        data: [
+                            metrics.totalDials,
+                            metrics.totalConversations,
+                            metrics.totalMeetings,
+                            metrics.totalSales
+                        ],
+                        backgroundColor: ['#0C1030', '#10C3B0', '#F4B03A', '#E64563']
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    indexAxis: 'y',
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#F2F4F8' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        },
+                        y: {
+                            ticks: { color: '#F2F4F8' },
+                            grid: { color: 'rgba(255,255,255,0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+
+        // ============================================
+        // DASHBOARD LOAD FUNCTION
+        // ============================================
+
+        async function loadDashboard() {
+            try {
+                const dateRange = currentDateRange.start ?
+                    currentDateRange :
+                    getDateRange(currentDateRange.days || 30);
+
+                // Update last updated time
+                document.getElementById('last-updated').textContent =
+                    `Updated: ${new Date().toLocaleTimeString()}`;
+
+                // Fetch all data in parallel
+                const [clients, revenue, activity, emailStats] = await Promise.all([
+                    fetchClientActivitySummary(dateRange),
+                    fetchRevenueAnalytics(dateRange),
+                    fetchActivityMetrics(dateRange),
+                    fetchEmailAnalytics(dateRange)
+                ]);
+
+                // Update quick stats
+                const totalRevenue = clients.reduce((sum, c) => sum + c.totalRevenue, 0);
+                document.getElementById('total-revenue').textContent = formatCurrency(totalRevenue);
+                document.getElementById('total-clients').textContent = clients.length;
+                document.getElementById('total-activity').textContent = activity.totalDials;
+
+                const conversionRate = activity.totalDials > 0 ?
+                    ((activity.totalSales / activity.totalDials) * 100).toFixed(1) : 0;
+                document.getElementById('conversion-rate').textContent = conversionRate + '%';
+
+                // Update change indicators (placeholder - would need historical data for real comparison)
+                document.getElementById('revenue-change').textContent = '↑ vs last period';
+                document.getElementById('revenue-change').className = 'stat-change positive';
+                document.getElementById('clients-change').textContent = `${clients.length} active`;
+                document.getElementById('activity-change').textContent = `${activity.activeDays} active days`;
+                document.getElementById('conversion-change').textContent = conversionRate >= 2 ? 'Above average' : 'Below average';
+                document.getElementById('conversion-change').className = conversionRate >= 2 ? 'stat-change positive' : 'stat-change negative';
+
+                // Render components
+                renderClientTable(clients);
+                renderRevenueChart(revenue.monthlyRevenue);
+                renderServiceChart(revenue.serviceRevenue);
+                renderFunnelChart(activity);
+
+                // Update activity metrics
+                document.getElementById('metric-dials').textContent = activity.totalDials;
+                document.getElementById('metric-conversations').textContent = activity.totalConversations;
+                document.getElementById('metric-meetings').textContent = activity.totalMeetings;
+                document.getElementById('metric-active-days').textContent = activity.activeDays;
+
+                // Update email metrics
+                document.getElementById('metric-emails-sent').textContent = emailStats.totalSent;
+                document.getElementById('metric-response-rate').textContent = emailStats.responseRate + '%';
+                document.getElementById('metric-meetings-booked').textContent = emailStats.booked;
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                showAlert('Failed to load dashboard data. Please refresh the page.', 'error');
+            }
+        }
+
+        // ============================================
+        // EXPORT FUNCTION
+        // ============================================
+
+        function exportDashboardData() {
+            showAlert('Export functionality coming soon!', 'success');
+            // TODO: Implement CSV export
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        window.addEventListener('DOMContentLoaded', () => {
+            if (checkAdminAccess()) {
+                document.getElementById('main-dashboard').classList.remove('hidden');
+                loadDashboard();
+            } else {
+                document.getElementById('login-modal').classList.remove('hidden');
+            }
+
+            // Allow Enter key to submit login
+            document.getElementById('admin-password').addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') {
+                    adminLogin();
+                }
+            });
+        });
+
+    </script>
+
+</body>
+</html>

@@ -509,10 +509,14 @@
     <div id="login-modal" class="login-modal hidden">
         <div class="login-box">
             <h2>Admin Login</h2>
-            <p>Enter the admin password to access the dashboard</p>
+            <p>Sign in with your admin account</p>
             <div id="login-alert-container"></div>
-            <input type="password" id="admin-password" placeholder="Enter password" autofocus>
-            <button onclick="adminLogin()">Login</button>
+            <input type="email" id="admin-email" placeholder="Email address" autofocus>
+            <input type="password" id="admin-password" placeholder="Password">
+            <button onclick="adminLogin()">Sign In</button>
+            <p style="margin-top: 15px; font-size: 0.85rem; opacity: 0.6;">
+                Powered by Supabase Auth
+            </p>
         </div>
     </div>
 
@@ -701,9 +705,13 @@
         const SUPABASE_URL = 'https://qwqlsbccwnwrdpcaccjz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTA1MDQsImV4cCI6MjA4MDg4NjUwNH0.yWzSV2Nid_T1XiDE0RrskFob9mRUc-m6MbeIiT7huC4';
 
-        // Admin password (SHA-256 hash of "admin123" - CHANGE THIS IN PRODUCTION)
-        const ADMIN_PASSWORD_HASH = 'f865b53623b121fd34ee5426c792e5c33af8c227';
-        const SESSION_DURATION_HOURS = 1;
+        // Admin email whitelist (add authorized admin emails here)
+        // For production: move this to database or environment variables
+        const ADMIN_EMAILS = [
+            'admin@aiadvantagesolutions.com',
+            'john@aiadvantagesolutions.com'
+            // Add more admin emails as needed
+        ];
 
         let supabaseClient;
         let currentDateRange = { days: 30 };
@@ -720,62 +728,116 @@
         // AUTHENTICATION FUNCTIONS
         // ============================================
 
-        async function hashPassword(password) {
-            const encoder = new TextEncoder();
-            const data = encoder.encode(password);
-            const hashBuffer = await crypto.subtle.digest('SHA-1', data);
-            const hashArray = Array.from(new Uint8Array(hashBuffer));
-            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-        }
+        async function checkAdminAccess() {
+            try {
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
 
-        function checkAdminAccess() {
-            const sessionAuth = sessionStorage.getItem('admin_authenticated');
-            const authTimestamp = sessionStorage.getItem('admin_auth_time');
-
-            if (sessionAuth === 'true' && authTimestamp) {
-                const hoursSinceAuth = (Date.now() - parseInt(authTimestamp)) / (1000 * 60 * 60);
-                if (hoursSinceAuth < SESSION_DURATION_HOURS) {
-                    return true;
+                if (error) {
+                    console.error('Session check error:', error);
+                    return false;
                 }
-            }
 
-            return false;
+                if (!session) {
+                    return false;
+                }
+
+                // Check if user email is in admin whitelist
+                const userEmail = session.user.email;
+                const isAdmin = ADMIN_EMAILS.includes(userEmail);
+
+                if (!isAdmin) {
+                    console.warn(`Unauthorized access attempt by: ${userEmail}`);
+                    await supabaseClient.auth.signOut();
+                    return false;
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Admin access check failed:', error);
+                return false;
+            }
         }
 
         async function adminLogin() {
+            const email = document.getElementById('admin-email').value;
             const password = document.getElementById('admin-password').value;
             const loginAlertContainer = document.getElementById('login-alert-container');
 
-            if (!password) {
-                loginAlertContainer.innerHTML = '<div class="alert alert-error">Please enter a password</div>';
+            if (!email || !password) {
+                loginAlertContainer.innerHTML = '<div class="alert alert-error">Please enter email and password</div>';
                 return;
             }
 
-            const hash = await hashPassword(password);
+            try {
+                // Sign in with Supabase Auth
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
 
-            if (hash === ADMIN_PASSWORD_HASH) {
-                sessionStorage.setItem('admin_authenticated', 'true');
-                sessionStorage.setItem('admin_auth_time', Date.now().toString());
+                if (error) {
+                    throw error;
+                }
 
+                // Check if user is in admin whitelist
+                if (!ADMIN_EMAILS.includes(email)) {
+                    await supabaseClient.auth.signOut();
+                    loginAlertContainer.innerHTML = '<div class="alert alert-error">Unauthorized: Not an admin account</div>';
+                    return;
+                }
+
+                // Success - show dashboard
                 document.getElementById('login-modal').classList.add('hidden');
                 document.getElementById('main-dashboard').classList.remove('hidden');
-
                 loadDashboard();
-            } else {
-                loginAlertContainer.innerHTML = '<div class="alert alert-error">Invalid password. Please try again.</div>';
+
+            } catch (error) {
+                console.error('Login error:', error);
+                loginAlertContainer.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
                 document.getElementById('admin-password').value = '';
             }
         }
 
-        function adminLogout() {
-            sessionStorage.removeItem('admin_authenticated');
-            sessionStorage.removeItem('admin_auth_time');
-            location.reload();
+        async function adminLogout() {
+            try {
+                await supabaseClient.auth.signOut();
+                location.reload();
+            } catch (error) {
+                console.error('Logout error:', error);
+                location.reload();
+            }
         }
 
         // ============================================
         // UTILITY FUNCTIONS
         // ============================================
+
+        // HTML sanitization to prevent XSS attacks
+        function escapeHtml(unsafe) {
+            if (unsafe === null || unsafe === undefined) {
+                return '';
+            }
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        // Safely set text content (prevents XSS)
+        function setTextContent(element, text) {
+            if (element && element.textContent !== undefined) {
+                element.textContent = text;
+            }
+        }
+
+        // Safely set HTML content (sanitizes input)
+        function setSafeHTML(element, html) {
+            if (element) {
+                element.innerHTML = escapeHtml(html);
+            }
+        }
 
         function showAlert(message, type = 'success') {
             const container = document.getElementById('alert-container');
@@ -1080,7 +1142,7 @@
 
                             return `
                                 <tr>
-                                    <td><strong>${client.name}</strong></td>
+                                    <td><strong>${escapeHtml(client.name)}</strong></td>
                                     <td>${formatCurrency(client.totalRevenue)}</td>
                                     <td>${client.salesCount}</td>
                                     <td>${formatCurrency(client.avgSale)}</td>
@@ -1303,20 +1365,26 @@
         // INITIALIZATION
         // ============================================
 
-        window.addEventListener('DOMContentLoaded', () => {
-            if (checkAdminAccess()) {
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check if user is already authenticated
+            const isAuthenticated = await checkAdminAccess();
+
+            if (isAuthenticated) {
                 document.getElementById('main-dashboard').classList.remove('hidden');
                 loadDashboard();
             } else {
                 document.getElementById('login-modal').classList.remove('hidden');
             }
 
-            // Allow Enter key to submit login
-            document.getElementById('admin-password').addEventListener('keypress', (e) => {
+            // Allow Enter key to submit login from email or password field
+            const handleEnterKey = (e) => {
                 if (e.key === 'Enter') {
                     adminLogin();
                 }
-            });
+            };
+
+            document.getElementById('admin-email').addEventListener('keypress', handleEnterKey);
+            document.getElementById('admin-password').addEventListener('keypress', handleEnterKey);
         });
 
     </script>

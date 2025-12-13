@@ -537,6 +537,36 @@
                 <button class="btn-primary" onclick="saveActivityGoals()">Save Goals</button>
             </div>
 
+            <!-- Sales Methodology Selector Card -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Your Sales Methodology</h2>
+                    <span class="card-icon">📚</span>
+                </div>
+
+                <div class="input-group">
+                    <label>Which sales framework do you use?</label>
+                    <select id="sales-methodology" onchange="saveMethodology()">
+                        <option value="sandler">Sandler Selling System</option>
+                        <option value="spin">SPIN Selling</option>
+                        <option value="challenger">The Challenger Sale</option>
+                        <option value="gap">Gap Selling</option>
+                        <option value="solution">Solution Selling</option>
+                        <option value="value">Value Selling</option>
+                        <option value="consultative">Consultative Selling</option>
+                        <option value="custom">Custom/None</option>
+                    </select>
+                </div>
+
+                <div id="methodology-description" style="margin-top: 15px; padding: 15px; background: rgba(16, 195, 176, 0.1); border-radius: 10px; font-size: 0.9rem; line-height: 1.6;">
+                    <!-- Methodology description will be inserted here -->
+                </div>
+
+                <div style="margin-top: 15px; padding: 12px; background: rgba(244, 176, 58, 0.1); border-radius: 8px; font-size: 0.85rem;">
+                    <strong>💡 White-Label Ready:</strong> This platform adapts to YOUR methodology. Coaching analysis and templates customize automatically.
+                </div>
+            </div>
+
             <!-- ICP (Ideal Customer Profile) Builder Card -->
             <div class="card">
                 <div class="card-header">
@@ -883,14 +913,14 @@
                 </div>
             </div>
 
-            <!-- Sandler Conversation Analysis -->
+            <!-- Sales Conversation Analysis -->
             <div class="card wide-card">
                 <div class="card-header">
-                    <h2 class="card-title">🎙️ Sandler Conversation Coach</h2>
+                    <h2 class="card-title">🎙️ Sales Conversation Coach</h2>
                     <span class="card-icon">📞</span>
                 </div>
 
-                <p style="opacity: 0.9; margin-bottom: 20px;">Upload a sales call recording or transcript to get detailed Sandler coaching on your conversation execution AND script adherence.</p>
+                <p style="opacity: 0.9; margin-bottom: 20px;">Upload a sales call recording or transcript to get detailed coaching on your conversation execution based on your selected sales methodology.</p>
 
                 <div class="input-group">
                     <label>Conversation Title</label>
@@ -919,7 +949,7 @@ Prospect: No problem, what's this about?
 Rep: I wanted to learn more about your housing operations..."></textarea>
                 </div>
 
-                <button class="btn-primary" onclick="analyzeConversation()">🎯 Analyze with Sandler Coach</button>
+                <button class="btn-primary" onclick="analyzeConversation()">🎯 Analyze Sales Conversation</button>
 
                 <div id="conversation-analysis-result" style="margin-top: 20px;"></div>
             </div>
@@ -2043,7 +2073,8 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 return;
             }
 
-            showAlert('🎯 Analyzing conversation with Sandler framework...', 'success');
+            const methodologyInfo = getMethodologyInfo();
+            showAlert(`🎯 Analyzing conversation with ${methodologyInfo.name}...`, 'success');
 
             try {
                 let finalTranscript = transcript;
@@ -2071,7 +2102,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                         }
 
                         finalTranscript = transcriptionData.transcript;
-                        showAlert('✅ Audio transcribed successfully! Now analyzing with Sandler framework...', 'success');
+                        showAlert(`✅ Audio transcribed successfully! Now analyzing with ${methodologyInfo.name}...`, 'success');
 
                         // Show the transcript to the user
                         document.getElementById('transcript-input').value = finalTranscript;
@@ -2083,8 +2114,9 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                     }
                 }
 
-                // Analyze transcript with Sandler methodology
-                const analysis = await analyzeSandlerConversation(finalTranscript, type);
+                // Analyze transcript with selected methodology
+                const methodology = getMethodology();
+                const analysis = await analyzeSalesConversation(finalTranscript, type, methodology);
 
                 // If no analysis (API key not configured), return early
                 if (!analysis) {
@@ -2144,12 +2176,12 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         }
 
         // Analyze conversation using Sandler methodology (with VERIFICATION)
-        async function analyzeSandlerConversation(transcript, callType) {
+        async function analyzeSalesConversation(transcript, callType, methodology = 'sandler') {
             // Use secure Edge Function for public deployment
             if (USE_EDGE_FUNCTION) {
                 try {
                     const { data, error } = await supabaseClient.functions.invoke('analyze-conversation', {
-                        body: { transcript, callType }
+                        body: { transcript, callType, methodology }
                     });
 
                     if (error) throw error;
@@ -2615,6 +2647,100 @@ ONLY include observations you can PROVE from the transcript.
         }
 
         // ============================================
+        // SALES METHODOLOGY FUNCTIONS
+        // ============================================
+
+        const METHODOLOGIES = {
+            sandler: {
+                name: 'Sandler Selling System',
+                description: 'Focus on Pain Funnel, Up-Front Contracts, Negative Reverse Selling, and Budget discussions. Talk 30%, listen 70%.',
+                keyPrinciples: ['Pain Funnel', 'Up-Front Contract', 'Negative Reverse Selling', 'Budget Before Presentation', 'Decision Before Presentation'],
+                coachingPrompt: 'Sandler Selling System methodology'
+            },
+            spin: {
+                name: 'SPIN Selling',
+                description: 'Use Situation, Problem, Implication, and Need-Payoff questions to uncover pain and build value.',
+                keyPrinciples: ['Situation Questions', 'Problem Questions', 'Implication Questions', 'Need-Payoff Questions'],
+                coachingPrompt: 'SPIN Selling methodology'
+            },
+            challenger: {
+                name: 'The Challenger Sale',
+                description: 'Teach prospects something new, tailor messaging to their situation, and take control of the sale.',
+                keyPrinciples: ['Teach for Differentiation', 'Tailor for Resonance', 'Take Control'],
+                coachingPrompt: 'Challenger Sale methodology'
+            },
+            gap: {
+                name: 'Gap Selling',
+                description: 'Focus on the gap between current state and future state. Problem-centric, not product-centric selling.',
+                keyPrinciples: ['Current State Analysis', 'Future State Vision', 'Gap Identification', 'Impact of Inaction'],
+                coachingPrompt: 'Gap Selling methodology'
+            },
+            solution: {
+                name: 'Solution Selling',
+                description: 'Diagnose before prescribing. Focus on solving business problems, not pushing products.',
+                keyPrinciples: ['Pain Sheet Development', 'Vision Processing', 'Control', 'Solution Development'],
+                coachingPrompt: 'Solution Selling methodology'
+            },
+            value: {
+                name: 'Value Selling',
+                description: 'Sell outcomes and business value, not features. Quantify ROI and business impact.',
+                keyPrinciples: ['Business Value Focus', 'ROI Quantification', 'Executive Alignment', 'Value Proposition'],
+                coachingPrompt: 'Value Selling methodology'
+            },
+            consultative: {
+                name: 'Consultative Selling',
+                description: 'Act as a trusted advisor. Deep discovery, problem-solving partnership, long-term relationship focus.',
+                keyPrinciples: ['Trust Building', 'Deep Discovery', 'Problem Solving', 'Partnership Mindset'],
+                coachingPrompt: 'Consultative Selling methodology'
+            },
+            custom: {
+                name: 'Custom/No Specific Methodology',
+                description: 'Track your sales activities without methodology-specific coaching.',
+                keyPrinciples: ['Activity Tracking', 'Performance Metrics', 'General Sales Best Practices'],
+                coachingPrompt: 'general sales best practices'
+            }
+        };
+
+        function saveMethodology() {
+            const methodology = document.getElementById('sales-methodology').value;
+            localStorage.setItem('salesMethodology', methodology);
+            displayMethodology();
+            showAlert(`✅ Methodology set to ${METHODOLOGIES[methodology].name}`, 'success');
+        }
+
+        function loadMethodology() {
+            const saved = localStorage.getItem('salesMethodology') || 'sandler';
+            document.getElementById('sales-methodology').value = saved;
+            displayMethodology();
+        }
+
+        function displayMethodology() {
+            const methodology = document.getElementById('sales-methodology').value;
+            const info = METHODOLOGIES[methodology];
+            const container = document.getElementById('methodology-description');
+
+            container.innerHTML = `
+                <h3 style="color: var(--brand-gold); font-size: 1rem; margin-bottom: 10px;">${info.name}</h3>
+                <p style="margin-bottom: 10px;">${info.description}</p>
+                <div style="margin-top: 10px;">
+                    <strong>Key Principles:</strong>
+                    <ul style="margin: 8px 0 0 20px; line-height: 1.8;">
+                        ${info.keyPrinciples.map(p => `<li>${p}</li>`).join('')}
+                    </ul>
+                </div>
+            `;
+        }
+
+        function getMethodology() {
+            return localStorage.getItem('salesMethodology') || 'sandler';
+        }
+
+        function getMethodologyInfo() {
+            const methodology = getMethodology();
+            return METHODOLOGIES[methodology];
+        }
+
+        // ============================================
         // PRODUCTS/SERVICES FUNCTIONS
         // ============================================
 
@@ -2766,6 +2892,7 @@ ONLY include observations you can PROVE from the transcript.
             } else {
                 // Load saved settings
                 loadActivityGoalsForm();
+                loadMethodology();
                 loadICP();
                 loadProducts();
 

@@ -22,7 +22,7 @@ serve(async (req) => {
 
   try {
     // Get request body
-    const { transcript, callType } = await req.json()
+    const { transcript, callType, methodology = 'sandler' } = await req.json()
 
     if (!transcript) {
       return new Response(
@@ -31,9 +31,73 @@ serve(async (req) => {
       )
     }
 
-    // Build enhanced Sandler tactical coaching prompt
-    const sandlerPrompt = `
-You are an expert Sandler Sales trainer and tactical coach. Your job is to analyze this conversation and provide SPECIFIC, ACTIONABLE scripts and alternatives.
+    // Build methodology-specific coaching prompt
+    const coachingPrompt = getMethodologyPrompt(methodology, transcript, callType)
+
+    // Call Claude API
+    const response = await fetch('https://api.anthropic.com/v1/messages', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'x-api-key': ANTHROPIC_API_KEY,
+        'anthropic-version': '2023-06-01'
+      },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5-20250929',
+        max_tokens: 8000,
+        messages: [{
+          role: 'user',
+          content: coachingPrompt
+        }]
+      })
+    })
+
+    if (!response.ok) {
+      const error = await response.text()
+      throw new Error(`Claude API error: ${response.status} ${error}`)
+    }
+
+    const data = await response.json()
+    const analysisText = data.content[0].text
+
+    // Parse JSON from Claude's response
+    const jsonMatch = analysisText.match(/\{[\s\S]*\}/)
+    if (!jsonMatch) {
+      throw new Error('Could not parse JSON from Claude response')
+    }
+
+    const analysis = JSON.parse(jsonMatch[0])
+
+    // Return the analysis
+    return new Response(
+      JSON.stringify(analysis),
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      }
+    )
+
+  } catch (error) {
+    console.error('Error:', error)
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      {
+        status: 500,
+        headers: {
+          'Content-Type': 'application/json',
+          'Access-Control-Allow-Origin': '*'
+        }
+      }
+    )
+  }
+})
+
+// Helper function to generate methodology-specific prompts
+function getMethodologyPrompt(methodology: string, transcript: string, callType: string): string {
+  const basePrompt = `
+You are an expert sales trainer and tactical coach. Your job is to analyze this conversation and provide SPECIFIC, ACTIONABLE scripts and alternatives.
 
 IMPORTANT:
 - Be FACTUAL and quote the actual transcript
@@ -43,15 +107,14 @@ IMPORTANT:
 
 Conversation Type: ${callType}
 
-REFERENCE SCRIPT (AI Advantage Solutions):
-Opening: "Hi [Person], this is John from AI Advantage Solutions here in Hamilton. I know I'm catching you cold, so I'll be brief."
-Value Prop: "I help mixed-income community providers like [Person] save up to 20 hours per week by automating repetitive tasks—things like maintenance requests, tenant communications, and compliance tracking."
-CTA: "I'd love to show you how in a quick 15-minute online meeting. Do you have your calendar handy, or would [Date] at [Time] work better?"
-
 TRANSCRIPT:
 ${transcript}
+`
 
-DEEP SANDLER ANALYSIS WITH TACTICAL SCRIPTS:
+  if (methodology === 'sandler') {
+    return basePrompt + `
+
+ANALYZE USING SANDLER SELLING SYSTEM:
 
 1. OPENING ANALYSIS
    - What they said: [quote]
@@ -196,63 +259,120 @@ Return JSON in this exact format:
 
 Be SPECIFIC. Quote the transcript. Provide EXACT WORDS for scripts. Make it immediately actionable.
 `
+  } else if (methodology === 'spin') {
+    return basePrompt + `
 
-    // Call Claude API
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': ANTHROPIC_API_KEY,
-        'anthropic-version': '2023-06-01'
-      },
-      body: JSON.stringify({
-        model: 'claude-sonnet-4-5-20250929',
-        max_tokens: 8000,
-        messages: [{
-          role: 'user',
-          content: sandlerPrompt
-        }]
-      })
-    })
+ANALYZE USING SPIN SELLING:
 
-    if (!response.ok) {
-      const error = await response.text()
-      throw new Error(`Claude API error: ${response.status} ${error}`)
-    }
+Focus on the quality of Situation, Problem, Implication, and Need-Payoff questions.
 
-    const data = await response.json()
-    const analysisText = data.content[0].text
+1. SITUATION QUESTIONS (Background/Context)
+   - Questions asked: [list with quotes]
+   - Effectiveness: X/10
+   - Suggested improvements: [specific better questions]
 
-    // Parse JSON from Claude's response
-    const jsonMatch = analysisText.match(/\{[\s\S]*\}/)
-    if (!jsonMatch) {
-      throw new Error('Could not parse JSON from Claude response')
-    }
+2. PROBLEM QUESTIONS (Difficulties/Dissatisfactions)
+   - Questions asked: [list with quotes]
+   - Problems uncovered: [list]
+   - Score: X/10
+   - Missing questions: [what should have been asked]
 
-    const analysis = JSON.parse(jsonMatch[0])
+3. IMPLICATION QUESTIONS (Consequences/Effects)
+   - Used: Yes/No [with quotes]
+   - Impact explored: [what consequences were discussed]
+   - Score: X/10
+   - Tactical scripts: "What happens if this problem continues for another 6 months?" "How does this affect your team's productivity?"
 
-    // Return the analysis
-    return new Response(
-      JSON.stringify(analysis),
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      }
-    )
+4. NEED-PAYOFF QUESTIONS (Value/Benefits)
+   - Used: Yes/No [with quotes]
+   - Value built: [how benefits were positioned]
+   - Score: X/10
+   - Tactical scripts: "How would solving this help you personally?" "What would be different if this problem went away?"
 
-  } catch (error) {
-    console.error('Error:', error)
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      {
-        status: 500,
-        headers: {
-          'Content-Type': 'application/json',
-          'Access-Control-Allow-Origin': '*'
-        }
-      }
-    )
+Return JSON with scores and tactical scripts for improvement.
+`
+  } else if (methodology === 'challenger') {
+    return basePrompt + `
+
+ANALYZE USING THE CHALLENGER SALE:
+
+Evaluate how well they Teach, Tailor, and Take Control.
+
+1. TEACH (Did they teach something new?)
+   - Insight provided: [quote or "none"]
+   - Reframe attempted: Yes/No
+   - Score: X/10
+   - Tactical improvement: "Here's what we're seeing with companies like yours... [unexpected insight]"
+
+2. TAILOR (Personalized to their situation?)
+   - Company-specific references: [quotes]
+   - Resonance: X/10
+   - Tactical improvement: Research their specific challenges and reference them
+
+3. TAKE CONTROL (Assertive guidance?)
+   - Push-back handled: [how]
+   - Control maintained: X/10
+   - Tactical scripts for constructive tension
+
+Return JSON with scores and specific coaching on teaching, tailoring, and taking control.
+`
+  } else if (methodology === 'gap') {
+    return basePrompt + `
+
+ANALYZE USING GAP SELLING:
+
+Focus on Current State, Future State, and Gap identification.
+
+1. CURRENT STATE ANALYSIS
+   - Problems identified: [list with quotes]
+   - Root causes explored: Yes/No
+   - Score: X/10
+
+2. FUTURE STATE VISION
+   - Vision created: [quote or "not done"]
+   - Impact quantified: Yes/No
+   - Score: X/10
+   - Tactical script: "What would success look like 6 months from now?"
+
+3. GAP IDENTIFICATION
+   - Gap explicitly stated: Yes/No
+   - Impact of inaction discussed: Yes/No
+   - Score: X/10
+   - Tactical script: "So the gap between where you are (current state) and where you need to be (future state) is... [summarize]. What's the cost of leaving this gap open?"
+
+Return JSON with scores and gap-focused tactical scripts.
+`
+  } else {
+    // Generic sales coaching for solution/value/consultative/custom
+    return basePrompt + `
+
+ANALYZE USING SALES BEST PRACTICES:
+
+1. DISCOVERY QUALITY
+   - Questions asked: [count and quality]
+   - Pain/needs uncovered: [list]
+   - Score: X/10
+
+2. VALUE COMMUNICATION
+   - How value was presented: [quote]
+   - Tied to customer needs: Yes/No
+   - Score: X/10
+
+3. OBJECTION HANDLING
+   - Objections raised: [list]
+   - How handled: [quotes]
+   - Score: X/10
+
+4. NEXT STEPS
+   - Clear next steps defined: Yes/No
+   - Commitment secured: [what kind]
+   - Score: X/10
+
+5. TALK/LISTEN RATIO
+   - Estimate: Rep X% / Prospect Y%
+   - Score: X/10
+
+Return JSON with scores and tactical scripts for improvement based on general sales best practices.
+`
   }
-})
+}

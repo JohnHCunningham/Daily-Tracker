@@ -151,32 +151,55 @@ const Hero = () => {
             transition={{ duration: 0.6, delay: 0.3 }}
             className="relative"
           >
-            {/* Dashboard mockup placeholder */}
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-teal/20 border border-teal/20">
-              <div className="bg-navy-light p-8">
-                <div className="space-y-4">
-                  {/* Mock dashboard header */}
-                  <div className="flex items-center justify-between">
-                    <div className="h-8 w-32 bg-teal/20 rounded animate-pulse" />
-                    <div className="h-8 w-24 bg-gold/20 rounded animate-pulse" />
+            {/* Dashboard mockup with actual content */}
+            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-teal/20 border border-teal/30 bg-gradient-to-br from-navy-light to-navy">
+              <div className="p-6">
+                {/* Dashboard header */}
+                <div className="flex items-center justify-between mb-6">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-teal rounded-full animate-pulse" />
+                    <span className="text-light font-semibold text-sm">Live Analysis</span>
                   </div>
-
-                  {/* Mock charts */}
-                  <div className="grid grid-cols-3 gap-4 mt-6">
-                    {[1, 2, 3].map((i) => (
-                      <div key={i} className="bg-navy/50 rounded-lg p-4">
-                        <div className="h-4 w-16 bg-light/10 rounded mb-2" />
-                        <div className="h-8 w-full bg-gradient-teal/20 rounded" />
-                      </div>
-                    ))}
+                  <div className="px-3 py-1 bg-gold/20 border border-gold/30 rounded-full">
+                    <span className="text-gold text-xs font-bold">94% Score</span>
                   </div>
+                </div>
 
-                  {/* Mock conversation analysis */}
-                  <div className="bg-navy/50 rounded-lg p-4 mt-6">
-                    <div className="h-4 w-48 bg-light/10 rounded mb-4" />
-                    {[1, 2, 3, 4].map((i) => (
-                      <div key={i} className="h-3 bg-light/5 rounded mb-2" />
-                    ))}
+                {/* Stats cards */}
+                <div className="grid grid-cols-3 gap-3 mb-6">
+                  <div className="bg-navy-light/50 backdrop-blur border border-teal/20 rounded-lg p-3">
+                    <div className="text-light-muted text-xs mb-1">Close Rate</div>
+                    <div className="text-teal text-xl font-bold">+28%</div>
+                  </div>
+                  <div className="bg-navy-light/50 backdrop-blur border border-aqua/20 rounded-lg p-3">
+                    <div className="text-light-muted text-xs mb-1">Methodology</div>
+                    <div className="text-aqua text-xl font-bold">MEDDIC</div>
+                  </div>
+                  <div className="bg-navy-light/50 backdrop-blur border border-gold/20 rounded-lg p-3">
+                    <div className="text-light-muted text-xs mb-1">Calls Today</div>
+                    <div className="text-gold text-xl font-bold">24</div>
+                  </div>
+                </div>
+
+                {/* Conversation snippet */}
+                <div className="bg-navy-light/30 backdrop-blur border border-teal/10 rounded-lg p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="w-6 h-6 bg-gradient-to-br from-teal to-aqua rounded-full flex items-center justify-center text-xs">✓</div>
+                    <span className="text-light font-semibold text-sm">Pain Points Identified</span>
+                  </div>
+                  <div className="space-y-2 text-xs text-light-muted">
+                    <div className="flex items-start gap-2">
+                      <div className="w-1 h-1 bg-teal rounded-full mt-1.5 flex-shrink-0" />
+                      <span>"Current process takes 3x longer"</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-1 h-1 bg-teal rounded-full mt-1.5 flex-shrink-0" />
+                      <span>"Team struggling with adoption"</span>
+                    </div>
+                    <div className="flex items-start gap-2">
+                      <div className="w-1 h-1 bg-teal rounded-full mt-1.5 flex-shrink-0" />
+                      <span>"Budget approved for Q1"</span>
+                    </div>
                   </div>
                 </div>
               </div>

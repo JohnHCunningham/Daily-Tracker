@@ -142,7 +142,7 @@ const Hero = () => {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.3 }}
-            className="relative"
+            className="relative p-8 md:p-10"
           >
             {/* Dashboard mockup with actual content */}
             <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-teal/20 border border-teal/30 bg-gradient-to-br from-navy-light to-navy">
@@ -199,17 +199,17 @@ const Hero = () => {
 
               {/* Floating badges */}
               <motion.div
-                animate={{ y: [0, -10, 0] }}
-                transition={{ duration: 3, repeat: Infinity }}
-                className="absolute -top-4 -right-4 bg-gold text-navy px-4 py-2 rounded-full font-bold shadow-lg"
+                animate={{ y: [0, -12, 0] }}
+                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                className="absolute -top-5 -right-5 bg-gold text-navy px-4 py-2 rounded-full font-bold shadow-lg shadow-gold/30"
               >
                 ✨ AI-Powered
               </motion.div>
 
               <motion.div
-                animate={{ y: [0, 10, 0] }}
-                transition={{ duration: 3, repeat: Infinity, delay: 1 }}
-                className="absolute -bottom-4 -left-4 bg-teal text-white px-4 py-2 rounded-full font-bold shadow-lg"
+                animate={{ y: [0, 12, 0] }}
+                transition={{ duration: 2.5, repeat: Infinity, delay: 1.25, ease: "easeInOut" }}
+                className="absolute -bottom-5 -left-5 bg-teal text-white px-4 py-2 rounded-full font-bold shadow-lg shadow-teal/30"
               >
                 🎯 Instant Coaching
               </motion.div>

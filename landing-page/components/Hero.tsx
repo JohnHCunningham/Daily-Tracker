@@ -36,19 +36,12 @@ const Hero = () => {
         })
       }
 
-      // TODO: Replace with your actual API endpoint
-      const response = await fetch('/api/signup', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
+      toast.success('🎉 Redirecting to book your demo...')
 
-      if (response.ok) {
-        toast.success('🎉 Success! Check your email to get started.')
-        reset()
-      } else {
-        throw new Error('Signup failed')
-      }
+      // Redirect to TidyCal
+      setTimeout(() => {
+        window.location.href = 'https://tidycal.com/aiautomations/sales-coach'
+      }, 800)
     } catch (error) {
       toast.error('Something went wrong. Please try again.')
     }

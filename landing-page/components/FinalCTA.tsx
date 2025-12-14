@@ -39,18 +39,20 @@ const FinalCTA = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
-            <Link
-              href="#pricing"
+            <a
+              href="https://tidycal.com/aiautomations/sales-coach"
               className="btn-primary text-lg"
             >
               Start Your Free Trial
-            </Link>
-            <Link
-              href="#contact"
+            </a>
+            <a
+              href="https://tidycal.com/aiautomations/sales-coach"
+              target="_blank"
+              rel="noopener noreferrer"
               className="btn-secondary text-lg"
             >
               Schedule a Demo
-            </Link>
+            </a>
           </div>
 
           {/* Trust badges */}

@@ -45,18 +45,18 @@ const Navbar = () => {
 
           {/* Right Side CTAs */}
           <div className="hidden md:flex items-center space-x-4">
-            <Link
-              href="/login"
+            <a
+              href="https://daily-tracker-xi.vercel.app/"
               className="text-light hover:text-teal px-3 py-2 rounded-md text-sm font-medium transition-colors"
             >
               Login
-            </Link>
-            <Link
-              href="#pricing"
+            </a>
+            <a
+              href="https://tidycal.com/aiautomations/sales-coach"
               className="bg-gradient-to-r from-gold to-gold-bright hover:from-gold-bright hover:to-gold text-navy font-bold py-2 px-6 rounded-lg transition-all duration-200 shadow-lg shadow-gold/20 hover:-translate-y-0.5"
             >
               Start Free Trial
-            </Link>
+            </a>
           </div>
 
           {/* Mobile menu button */}
@@ -101,20 +101,18 @@ const Navbar = () => {
             >
               Pricing
             </Link>
-            <Link
-              href="/login"
+            <a
+              href="https://daily-tracker-xi.vercel.app/"
               className="text-light-muted hover:text-teal block px-3 py-2 rounded-md text-base font-medium"
-              onClick={() => setMobileMenuOpen(false)}
             >
               Login
-            </Link>
-            <Link
-              href="#pricing"
+            </a>
+            <a
+              href="https://tidycal.com/aiautomations/sales-coach"
               className="bg-gradient-gold text-navy font-bold block px-3 py-2 rounded-md text-base text-center mt-2"
-              onClick={() => setMobileMenuOpen(false)}
             >
               Start Free Trial
-            </Link>
+            </a>
           </div>
         </motion.div>
       )}

@@ -140,8 +140,8 @@ const Pricing = () => {
                 ))}
               </ul>
 
-              <Link
-                href={tier.name === 'ENTERPRISE' ? '/contact' : '#pricing'}
+              <a
+                href="https://tidycal.com/aiautomations/sales-coach"
                 onClick={() => handlePricingClick(tier.name)}
                 className={`block w-full text-center font-bold py-3 px-6 rounded-lg transition-all ${
                   tier.highlighted
@@ -150,7 +150,7 @@ const Pricing = () => {
                 }`}
               >
                 {tier.cta}
-              </Link>
+              </a>
             </motion.div>
           ))}
         </div>

@@ -1215,6 +1215,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 const { data, error } = await supabaseClient
                     .from('Daily_Tracker')
                     .upsert({
+                        user_id: currentUser.id,
                         date: today,
                         dials: dials,
                         conversations: conversations,
@@ -1256,6 +1257,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 const { data, error } = await supabaseClient
                     .from('Sales')
                     .insert({
+                        user_id: currentUser.id,
                         date: today,
                         amount_cad: amount,
                         client_name: client,
@@ -2029,6 +2031,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 // Save insights to database
                 for (const insight of insights) {
                     await supabaseClient.from('Coaching_Insights').insert({
+                        user_id: currentUser.id,
                         date: new Date().toISOString().split('T')[0],
                         insight_type: insight.type,
                         title: insight.title,
@@ -2270,6 +2273,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 const { data, error } = await supabaseClient
                     .from('Conversation_Analyses')
                     .insert({
+                        user_id: currentUser.id,
                         date: new Date().toISOString().split('T')[0],
                         conversation_title: title,
                         conversation_type: type,
@@ -2995,6 +2999,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 const { error } = await supabaseClient
                     .from('Sales')
                     .insert({
+                        user_id: currentUser.id,
                         amount_cad: amount,
                         client_name: client,
                         service_type: productName,

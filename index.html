@@ -1722,9 +1722,21 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 const totalSales = salesData.length;
 
                 // Calculate conversion rates (with minimum data validation)
-                const dialToConvRate = totalDials > 0 ? totalConversations / totalDials : 0.25; // default 25%
-                const convToMeetingRate = totalConversations > 0 ? totalMeetings / totalConversations : 0.30; // default 30%
-                const meetingToSaleRate = totalMeetings > 0 ? totalSales / totalMeetings : 0.25; // default 25%
+                // Ensure we never divide by zero - use defaults if insufficient data
+                let dialToConvRate = 0.25; // default 25%
+                if (totalDials > 0 && totalConversations > 0) {
+                    dialToConvRate = Math.max(totalConversations / totalDials, 0.05); // minimum 5%
+                }
+
+                let convToMeetingRate = 0.30; // default 30%
+                if (totalConversations > 0 && totalMeetings > 0) {
+                    convToMeetingRate = Math.max(totalMeetings / totalConversations, 0.05); // minimum 5%
+                }
+
+                let meetingToSaleRate = 0.25; // default 25%
+                if (totalMeetings > 0 && totalSales > 0) {
+                    meetingToSaleRate = Math.max(totalSales / totalMeetings, 0.05); // minimum 5%
+                }
 
                 // Get monthly quota and calculate average sale value
                 const monthlyQuota = parseFloat(document.getElementById('monthly-quota').value) || 10000;
@@ -2529,11 +2541,18 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                     .order('date', { ascending: false })
                     .limit(10);
 
-                if (error) throw error;
+                if (error) {
+                    // Check if table doesn't exist (common for new users)
+                    if (error.message && error.message.includes('does not exist')) {
+                        document.getElementById('conversation-history').innerHTML = '<p style="opacity: 0.7;">Conversation analysis feature coming soon! This will analyze your sales calls using your chosen methodology.</p>';
+                        return;
+                    }
+                    throw error;
+                }
 
                 const container = document.getElementById('conversation-history');
 
-                if (data.length === 0) {
+                if (!data || data.length === 0) {
                     container.innerHTML = '<p style="opacity: 0.7;">No conversations analyzed yet. Upload your first call above!</p>';
                     return;
                 }
@@ -2558,7 +2577,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 `).join('');
             } catch (error) {
                 console.error('Error loading conversation history:', error);
-                document.getElementById('conversation-history').innerHTML = '<p style="color: var(--brand-pink);">Unable to load conversation history.</p>';
+                document.getElementById('conversation-history').innerHTML = '<p style="opacity: 0.7;">No conversation data available yet.</p>';
             }
         }
 

@@ -61,20 +61,21 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
                 <HiMail className="text-teal text-xl flex-shrink-0 mt-0.5" />
-                <a href="mailto:support@salesai.coach" className="text-light-muted hover:text-teal transition-colors">
-                  support@salesai.coach
+                <a href="mailto:john@aiadvantagesolutions.ca" className="text-light-muted hover:text-teal transition-colors">
+                  john@aiadvantagesolutions.ca
                 </a>
               </li>
               <li className="flex items-start gap-2">
                 <HiPhone className="text-teal text-xl flex-shrink-0 mt-0.5" />
-                <a href="tel:1-800-XXX-XXXX" className="text-light-muted hover:text-teal transition-colors">
-                  1-800-XXX-XXXX
+                <a href="tel:+19055198983" className="text-light-muted hover:text-teal transition-colors">
+                  (905) 519-8983
                 </a>
               </li>
               <li className="flex items-start gap-2">
                 <HiLocationMarker className="text-teal text-xl flex-shrink-0 mt-0.5" />
                 <span className="text-light-muted">
-                  Hamilton, ON, Canada
+                  1880 Main St. West Suite 303<br />
+                  Hamilton, ON L8S 4P8
                 </span>
               </li>
             </ul>
@@ -87,9 +88,9 @@ const Footer = () => {
             © {currentYear} SalesAI.coach. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm">
-            <Link href="#" className="text-light-muted hover:text-teal transition-colors">Privacy Policy</Link>
-            <Link href="#" className="text-light-muted hover:text-teal transition-colors">Terms of Service</Link>
-            <Link href="#" className="text-light-muted hover:text-teal transition-colors">Security</Link>
+            <Link href="/privacy" className="text-light-muted hover:text-teal transition-colors">Privacy Policy</Link>
+            <Link href="/terms" className="text-light-muted hover:text-teal transition-colors">Terms of Service</Link>
+            <Link href="#contact" className="text-light-muted hover:text-teal transition-colors">Contact</Link>
           </div>
         </div>
       </div>

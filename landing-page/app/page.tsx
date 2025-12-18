@@ -13,6 +13,7 @@ import TheScience from '@/components/TheScience'
 import Pricing from '@/components/Pricing'
 import Testimonials from '@/components/Testimonials'
 import FAQ from '@/components/FAQ'
+import Contact from '@/components/Contact'
 import FinalCTA from '@/components/FinalCTA'
 import Footer from '@/components/Footer'
 
@@ -32,6 +33,7 @@ export default function LandingPage() {
       <Pricing />
       <Testimonials />
       <FAQ />
+      <Contact />
       <FinalCTA />
       <Footer />
     </div>

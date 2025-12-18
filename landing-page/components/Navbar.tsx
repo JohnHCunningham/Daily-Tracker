@@ -40,6 +40,12 @@ const Navbar = () => {
               >
                 Pricing
               </Link>
+              <Link
+                href="/blog"
+                className="text-light-muted hover:text-teal transition-colors px-3 py-2 rounded-md text-sm font-medium"
+              >
+                Blog
+              </Link>
             </div>
           </div>
 
@@ -100,6 +106,13 @@ const Navbar = () => {
               onClick={() => setMobileMenuOpen(false)}
             >
               Pricing
+            </Link>
+            <Link
+              href="/blog"
+              className="text-light-muted hover:text-teal block px-3 py-2 rounded-md text-base font-medium"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Blog
             </Link>
             <a
               href="https://daily-tracker-xi.vercel.app/"

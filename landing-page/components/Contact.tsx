@@ -35,7 +35,7 @@ const Contact = () => {
 
     try {
       // Send to n8n webhook for email notification
-      const response = await fetch('https://aiadvantagesolutions.app.n8n.cloud/webhook/contact-form', {
+      const response = await fetch('https://aiadvantagesolutions.app.n8n.cloud/webhook/e58280f2-f704-4517-bcf2-1395ef44edad', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

@@ -48,9 +48,31 @@ const Features = () => {
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             Everything You Need to Drive{' '}
-            <span className="text-teal">Methodology Adoption</span>
+            <span className="text-teal">Sales Performance</span>
           </h2>
+          <p className="text-xl text-light-muted max-w-3xl mx-auto mb-12">
+            Complete platform for tracking, reporting, coaching, and growing your sales team
+          </p>
         </motion.div>
+
+        {/* Feature Infographic */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          className="mb-20"
+        >
+          <img
+            src="/daily-tracker-infographic.png"
+            alt="Daily Tracker Complete Feature Overview - Track, Admin Reports, Coach, and Grow"
+            className="w-full max-w-6xl mx-auto rounded-2xl shadow-2xl border border-teal/20"
+          />
+        </motion.div>
+
+        {/* Detailed Feature Cards */}
+        <h3 className="text-3xl font-bold text-center mb-12">
+          Dive Deeper Into Our <span className="text-teal">Core Features</span>
+        </h3>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {features.map((feature, index) => {

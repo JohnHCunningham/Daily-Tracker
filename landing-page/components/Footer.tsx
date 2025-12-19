@@ -88,6 +88,7 @@ const Footer = () => {
             © {currentYear} SalesAI.coach. All rights reserved.
           </p>
           <div className="flex gap-6 text-sm">
+            <Link href="/security" className="text-light-muted hover:text-teal transition-colors">Security</Link>
             <Link href="/privacy" className="text-light-muted hover:text-teal transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="text-light-muted hover:text-teal transition-colors">Terms of Service</Link>
             <Link href="#contact" className="text-light-muted hover:text-teal transition-colors">Contact</Link>

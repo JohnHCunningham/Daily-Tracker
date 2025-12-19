@@ -12,6 +12,8 @@ const contactSchema = z.object({
   name: z.string().min(2, 'Name must be at least 2 characters'),
   email: z.string().email('Please enter a valid email'),
   company: z.string().min(2, 'Company name is required'),
+  website: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
+  linkedin: z.string().url('Please enter a valid URL').optional().or(z.literal('')),
   phone: z.string().optional(),
   message: z.string().min(10, 'Message must be at least 10 characters'),
 })
@@ -193,6 +195,38 @@ const Contact = () => {
                 />
                 {errors.company && (
                   <p className="mt-1 text-sm text-pink">{errors.company.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="website" className="block text-sm font-medium text-light mb-2">
+                  Company Website (Optional)
+                </label>
+                <input
+                  {...register('website')}
+                  type="url"
+                  id="website"
+                  className="w-full px-4 py-3 bg-navy border border-navy-light rounded-lg text-light placeholder-light-muted focus:border-teal focus:ring-2 focus:ring-teal/20 outline-none transition-colors"
+                  placeholder="https://yourcompany.com"
+                />
+                {errors.website && (
+                  <p className="mt-1 text-sm text-pink">{errors.website.message}</p>
+                )}
+              </div>
+
+              <div>
+                <label htmlFor="linkedin" className="block text-sm font-medium text-light mb-2">
+                  LinkedIn Profile (Optional)
+                </label>
+                <input
+                  {...register('linkedin')}
+                  type="url"
+                  id="linkedin"
+                  className="w-full px-4 py-3 bg-navy border border-navy-light rounded-lg text-light placeholder-light-muted focus:border-teal focus:ring-2 focus:ring-teal/20 outline-none transition-colors"
+                  placeholder="https://linkedin.com/in/yourprofile"
+                />
+                {errors.linkedin && (
+                  <p className="mt-1 text-sm text-pink">{errors.linkedin.message}</p>
                 )}
               </div>
 

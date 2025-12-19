@@ -5,11 +5,13 @@ import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import SocialProof from '@/components/SocialProof'
 import Problem from '@/components/Problem'
+import UVP from '@/components/UVP'
 import Solution from '@/components/Solution'
 import Features from '@/components/Features'
 import HowItWorks from '@/components/HowItWorks'
 import Methodologies from '@/components/Methodologies'
 import TheScience from '@/components/TheScience'
+import Qualification from '@/components/Qualification'
 import Pricing from '@/components/Pricing'
 import Testimonials from '@/components/Testimonials'
 import FAQ from '@/components/FAQ'
@@ -25,11 +27,13 @@ export default function LandingPage() {
       <Hero />
       <SocialProof />
       <Problem />
+      <UVP />
       <Solution />
       <Features />
       <HowItWorks />
       <Methodologies />
       <TheScience />
+      <Qualification />
       <Pricing />
       <Testimonials />
       <FAQ />

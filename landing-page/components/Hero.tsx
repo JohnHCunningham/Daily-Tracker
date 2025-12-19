@@ -69,27 +69,45 @@ const Hero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              Turn Every Sales Call Into a{' '}
+              Your Sales Methodology Isn't the Problem.{' '}
               <span className="bg-gradient-to-r from-teal to-aqua bg-clip-text text-transparent">
-                Coaching Opportunity
+                Execution Is.
               </span>
             </motion.h1>
 
             <motion.p
-              className="text-xl md:text-2xl text-light-muted mb-8 leading-relaxed"
+              className="text-xl md:text-2xl text-light-muted mb-4 leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              AI-powered conversation analysis that trains your team to execute your
-              methodology—MEDDIC, Sandler, Challenger, SPIN, or Gap Selling—with precision.
+              SalesAI.Coach turns your sales framework into daily, visible, coachable behavior—no matter which methodology you use.
+            </motion.p>
+
+            <motion.div
+              className="mb-8 text-lg text-light-muted"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+            >
+              <p className="mb-2 font-semibold text-teal">Supported frameworks:</p>
+              <p className="text-light">Sandler • Challenger • SPIN • GAP Selling • MEDDICC • Custom</p>
+            </motion.div>
+
+            <motion.p
+              className="text-lg text-light-muted mb-8 italic"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.6 }}
+            >
+              See how your team is <span className="text-teal font-semibold">actually selling</span> — not how they say they are.
             </motion.p>
 
             {/* Email Signup Form */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.6 }}
+              transition={{ delay: 0.7 }}
             >
               <form onSubmit={handleSubmit(onSubmit)} className="flex flex-col sm:flex-row gap-4 mb-6">
                 <div className="flex-1">

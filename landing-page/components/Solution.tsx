@@ -4,19 +4,19 @@ import { motion } from 'framer-motion'
 
 const solutions = [
   {
-    title: 'Instant Analysis',
-    description: 'Upload a call transcript or recording. Our AI analyzes it against YOUR methodology (Sandler, MEDDIC, Challenger—you choose) and YOUR scripts in under 30 seconds.',
+    title: 'Track Behavior (Not Just Results)',
+    description: 'Most tools show you what went wrong. We show you WHY. Track methodology execution in real-time: upfront contracts set, pain identified, budget discussed—the behaviors that actually drive revenue.',
     icon: '🎯'
   },
   {
-    title: 'Tactical Scripts, Not Generic Advice',
-    description: 'No fluff. Get specific, word-for-word scripts: "When they say \'send me info,\' respond with..." Reps know exactly what to say on their next call.',
-    icon: '📝'
+    title: 'Manager Visibility Into Execution',
+    description: 'Dashboards that show which reps follow your framework and which cut corners. See team-wide patterns, rep-by-rep execution, and exactly where discipline breaks down.',
+    icon: '👁️'
   },
   {
-    title: 'Track What Matters',
-    description: 'See which methodology principles your team executes well (and which they skip). Identify patterns: Are reps talking too much? Skipping budget discussions? Data tells the story.',
-    icon: '📈'
+    title: 'Coach Before Deals Are Lost',
+    description: 'Real-time insights mean real-time coaching. Give feedback on specific behaviors—not vague "do better" advice—while the deal is still live.',
+    icon: '💬'
   }
 ]
 
@@ -31,14 +31,14 @@ const Solution = () => {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            AI That Coaches Your Team{' '}
+            SalesAI.Coach Is the{' '}
             <span className="bg-gradient-to-r from-teal to-aqua bg-clip-text text-transparent">
-              Like You Would
+              Execution Layer
             </span>
-            —But for Every Single Call
+            {' '}Beneath Your Sales Framework
           </h2>
           <p className="text-xl text-light-muted max-w-3xl mx-auto">
-            Upload a sales conversation. Get instant, methodology-specific coaching with exact scripts to use next time.
+            Instead of replacing your methodology, we operationalize it—making your framework visible, measurable, coachable, and enforceable.
           </p>
         </motion.div>
 

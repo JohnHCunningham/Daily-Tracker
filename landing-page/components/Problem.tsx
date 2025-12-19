@@ -4,19 +4,19 @@ import { motion } from 'framer-motion'
 
 const problems = [
   {
-    title: 'Inconsistent Execution',
-    description: 'Your reps attended the training. They have the playbook. But on actual calls, they forget the pain funnel, skip the up-front contract, and jump straight to pitching.',
-    icon: '❌'
+    title: 'Training Works. Daily Reinforcement Doesn\'t.',
+    description: 'Your reps know the methodology—they just don\'t execute it consistently. You need daily behavioral reinforcement, not another training session.',
+    icon: '📚'
   },
   {
-    title: 'Coaching That Doesn\'t Scale',
-    description: 'You can\'t listen to every call. Manual call reviews take hours. By the time you give feedback, the opportunity is already lost.',
-    icon: '⏰'
+    title: 'Manager Visibility Is the Real Gap',
+    description: 'Managers can\'t coach what they can\'t see. By the time you review calls, the deal is already lost. You need real-time visibility into execution.',
+    icon: '👁️'
   },
   {
-    title: 'No Visibility Into What\'s Working',
-    description: 'You see the numbers (dials, meetings, close rate) but you don\'t know WHY deals are won or lost. Which part of your methodology is breaking down?',
-    icon: '🔍'
+    title: 'You Track Results. Not Behavior.',
+    description: 'Most tools show you what already went wrong (lost deals, low close rates). SalesAI.Coach shows you WHY—which behaviors are breaking down before revenue drops.',
+    icon: '🎯'
   }
 ]
 
@@ -31,9 +31,12 @@ const Problem = () => {
           className="text-center mb-16"
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Your Sales Team Knows the Methodology.{' '}
-            <span className="text-teal">But Are They Actually Using It?</span>
+            Sales Training Works.{' '}
+            <span className="text-teal">What Fails Is Execution.</span>
           </h2>
+          <p className="text-xl text-light-muted max-w-3xl mx-auto">
+            This isn't a motivation problem. It's a <span className="text-teal font-semibold">visibility problem</span>.
+          </p>
         </motion.div>
 
         <div className="grid md:grid-cols-3 gap-8">

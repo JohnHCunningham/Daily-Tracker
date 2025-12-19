@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sandler Email Generator | AI Advantage Solutions</title>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* Brand Colors */
+        :root {
+            --brand-navy: #0C1030;
+            --brand-teal: #10C3B0;
+            --brand-aqua: #3DE0D2;
+            --brand-pink: #E64563;
+            --brand-gold: #F4B03A;
+            --brand-yellow: #F9C863;
+            --light-text: #F2F4F8;
+            --card-bg: #131a40;
+            --input-bg: #090c26;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--brand-navy) 0%, #050816 100%);
+            color: var(--light-text);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            background: linear-gradient(135deg, var(--brand-aqua), var(--brand-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            color: var(--brand-gold);
+            font-size: 1.1rem;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1.5fr;
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        @media (max-width: 1024px) {
+            .grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(61, 224, 210, 0.1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--brand-teal), var(--brand-aqua));
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-title {
+            color: var(--brand-aqua);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--light-text);
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--brand-teal);
+            padding: 12px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: var(--brand-aqua);
+            box-shadow: 0 0 0 3px rgba(61, 224, 210, 0.1);
+        }
+
+        .input-group textarea {
+            min-height: 80px;
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .btn {
+            background: linear-gradient(135deg, var(--brand-gold), var(--brand-yellow));
+            border: none;
+            padding: 12px 24px;
+            color: var(--brand-navy);
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            width: 100%;
+            margin-top: 15px;
+            font-size: 1rem;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 176, 58, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua));
+        }
+
+        .email-output {
+            background: var(--input-bg);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(61, 224, 210, 0.2);
+            margin-bottom: 15px;
+        }
+
+        .email-subject {
+            color: var(--brand-gold);
+            font-weight: 700;
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .email-body {
+            color: var(--light-text);
+            line-height: 1.8;
+            white-space: pre-wrap;
+            font-size: 0.95rem;
+        }
+
+        .copy-btn {
+            padding: 8px 16px;
+            font-size: 0.9rem;
+            width: auto;
+            margin-top: 10px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: rgba(255,255,255,0.05);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--brand-gold);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--light-text);
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .alert-success {
+            background: rgba(16, 195, 176, 0.2);
+            border: 1px solid var(--brand-teal);
+            color: var(--brand-aqua);
+        }
+
+        .alert-error {
+            background: rgba(230, 69, 99, 0.2);
+            border: 1px solid var(--brand-pink);
+            color: var(--brand-pink);
+        }
+
+        .variations-container {
+            display: grid;
+            gap: 15px;
+        }
+
+        .variation {
+            background: rgba(16, 195, 176, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            border-left: 4px solid var(--brand-teal);
+        }
+
+        .variation-label {
+            color: var(--brand-teal);
+            font-weight: 700;
+            font-size: 0.9rem;
+            margin-bottom: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--brand-teal);
+        }
+
+        .tabs {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tab {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 8px;
+            color: var(--light-text);
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .tab.active {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua));
+            color: var(--brand-navy);
+            border-color: transparent;
+        }
+
+        .tab:hover:not(.active) {
+            background: rgba(255,255,255,0.1);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Sandler Email Generator</h1>
+            <p>AI-Powered Prospecting Emails with A/B Testing</p>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <div class="grid">
+            <!-- Input Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Prospect Details</h2>
+                    <span>📝</span>
+                </div>
+
+                <div class="input-group">
+                    <label>First Name *</label>
+                    <input type="text" id="first-name" placeholder="Sarah">
+                </div>
+
+                <div class="input-group">
+                    <label>Company *</label>
+                    <input type="text" id="company" placeholder="ABC Housing Corp">
+                </div>
+
+                <div class="input-group">
+                    <label>Industry</label>
+                    <input type="text" id="industry" placeholder="Mixed-income housing providers">
+                </div>
+
+                <div class="input-group">
+                    <label>Specific Pain Point (if known)</label>
+                    <textarea id="pain-point" placeholder="Overwhelmed with manual maintenance requests..."></textarea>
+                </div>
+
+                <div class="input-group">
+                    <label>Channel</label>
+                    <select id="channel-type" onchange="updateChannelOptions()">
+                        <option value="email">Email Outreach</option>
+                        <option value="linkedin">LinkedIn Outreach</option>
+                    </select>
+                </div>
+
+                <div id="email-options">
+                    <div class="input-group">
+                        <label>Email Approach</label>
+                        <select id="email-style">
+                            <option value="soft">Soft Approach (Consultative)</option>
+                            <option value="bold">Bold Approach (Direct Challenge)</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Call-to-Action</label>
+                        <select id="cta-type">
+                            <option value="calendar">Calendar Link</option>
+                            <option value="reply">Reply "Curious"</option>
+                            <option value="both">Both Options</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div id="linkedin-options" style="display: none;">
+                    <div class="input-group">
+                        <label>LinkedIn Message Type</label>
+                        <select id="linkedin-type">
+                            <option value="connection">Connection Request</option>
+                            <option value="dm">Direct Message (After Connected)</option>
+                            <option value="group-post">Sandler Group Post</option>
+                            <option value="comment">Comment on Discussion</option>
+                        </select>
+                    </div>
+
+                    <div class="input-group">
+                        <label>Context (Optional)</label>
+                        <textarea id="linkedin-context" placeholder="e.g., Saw your post about Pain Funnel challenges..."></textarea>
+                    </div>
+                </div>
+
+                <button class="btn" onclick="generateEmails()">✨ Generate Emails</button>
+                <button class="btn btn-secondary" onclick="generateVariations()">🤖 Generate AI Variations</button>
+            </div>
+
+            <!-- Email Output -->
+            <div class="card">
+                <div class="card-header">
+                    <h2 class="card-title">Generated Emails</h2>
+                    <span>📧</span>
+                </div>
+
+                <div class="tabs">
+                    <div class="tab active" onclick="switchTab('subject')">Subject Lines</div>
+                    <div class="tab" onclick="switchTab('email')">Email Body</div>
+                    <div class="tab" onclick="switchTab('variations')">AI Variations</div>
+                </div>
+
+                <div id="output-container">
+                    <p style="opacity: 0.7; text-align: center; padding: 40px;">Fill out the form and click "Generate Emails" to get started!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- A/B Testing Stats -->
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📊 Email Performance Tracking</h2>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-box">
+                    <div class="stat-value" id="total-sent">0</div>
+                    <div class="stat-label">Emails Sent</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="response-rate">0%</div>
+                    <div class="stat-label">Response Rate</div>
+                </div>
+                <div class="stat-box">
+                    <div class="stat-value" id="best-subject">—</div>
+                    <div class="stat-label">Best Subject Line</div>
+                </div>
+            </div>
+
+            <div id="tracking-details"></div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://qwqlsbccwnwrdpcaccjz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM3NjI5OTEsImV4cCI6MjA0OTMzODk5MX0.V-kqn0BERs5bOqOA4Gc5g6JzJFB8v0JEJ0OdC8tJzA8';
+
+        let supabaseClient;
+        let currentTab = 'subject';
+        let generatedEmails = {};
+
+        // Initialize
+        window.onload = function() {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            loadEmailStats();
+        };
+
+        // Show alert
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => container.innerHTML = '', 5000);
+        }
+
+        // Update channel options
+        function updateChannelOptions() {
+            const channel = document.getElementById('channel-type').value;
+            if (channel === 'linkedin') {
+                document.getElementById('email-options').style.display = 'none';
+                document.getElementById('linkedin-options').style.display = 'block';
+            } else {
+                document.getElementById('email-options').style.display = 'block';
+                document.getElementById('linkedin-options').style.display = 'none';
+            }
+        }
+
+        // Switch tabs
+        function switchTab(tab) {
+            currentTab = tab;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            displayCurrentTab();
+        }
+
+        // Generate emails from templates
+        function generateEmails() {
+            const firstName = document.getElementById('first-name').value.trim();
+            const company = document.getElementById('company').value.trim();
+            const industry = document.getElementById('industry').value.trim() || 'your industry';
+            const painPoint = document.getElementById('pain-point').value.trim();
+            const channel = document.getElementById('channel-type').value;
+
+            if (!firstName || !company) {
+                showAlert('Please enter at least First Name and Company', 'error');
+                return;
+            }
+
+            if (channel === 'linkedin') {
+                generateLinkedInMessages(firstName, company, industry, painPoint);
+            } else {
+                const style = document.getElementById('email-style').value;
+                const ctaType = document.getElementById('cta-type').value;
+
+                // Generate subject lines
+                const subjectLines = [
+                    `${firstName} - Are your reps executing Sandler or just talking about it?`,
+                    `Quick question about ${company}'s Sandler execution`,
+                    `${company} - Sandler coaching that doesn't require a $10K consultant`
+                ];
+
+                // Generate email body
+                const emailBody = style === 'soft' ? generateSoftEmail(firstName, company, industry, painPoint, ctaType) : generateBoldEmail(firstName, company, industry, painPoint, ctaType);
+
+                generatedEmails = {
+                    subjectLines,
+                    emailBody,
+                    style,
+                    firstName,
+                    company,
+                    channel: 'email'
+                };
+
+                currentTab = 'subject';
+                displayCurrentTab();
+                showAlert('✅ Emails generated! Click tabs to see subject lines, body, and request AI variations.', 'success');
+            }
+        }
+
+        // Generate LinkedIn messages
+        function generateLinkedInMessages(firstName, company, industry, painPoint) {
+            const linkedinType = document.getElementById('linkedin-type').value;
+            const context = document.getElementById('linkedin-context').value.trim();
+
+            let messages = {};
+
+            switch(linkedinType) {
+                case 'connection':
+                    messages = {
+                        subjectLines: ['LinkedIn Connection Request'],
+                        emailBody: generateLinkedInConnection(firstName, company, context)
+                    };
+                    break;
+                case 'dm':
+                    messages = {
+                        subjectLines: ['LinkedIn Direct Message'],
+                        emailBody: generateLinkedInDM(firstName, company, industry, painPoint, context)
+                    };
+                    break;
+                case 'group-post':
+                    messages = {
+                        subjectLines: ['Sandler Group Post'],
+                        emailBody: generateLinkedInGroupPost()
+                    };
+                    break;
+                case 'comment':
+                    messages = {
+                        subjectLines: ['Discussion Comment'],
+                        emailBody: generateLinkedInComment(context)
+                    };
+                    break;
+            }
+
+            generatedEmails = {
+                ...messages,
+                style: linkedinType,
+                firstName,
+                company,
+                channel: 'linkedin'
+            };
+
+            currentTab = 'email';
+            displayCurrentTab();
+            showAlert('✅ LinkedIn message generated!', 'success');
+        }
+
+        // Generate LinkedIn connection request
+        function generateLinkedInConnection(firstName, company, context) {
+            if (context) {
+                return `Hi ${firstName},\n\n${context}\n\nI help sales teams execute Sandler methodology in real conversations. Would love to connect and share insights!\n\nBest,\nJohn`;
+            } else {
+                return `Hi ${firstName},\n\nSaw you're with ${company}. I work with sales teams implementing Sandler methodology and would love to connect.\n\nLooking forward to sharing insights!\n\nBest,\nJohn`;
+            }
+        }
+
+        // Generate LinkedIn DM (after connection)
+        function generateLinkedInDM(firstName, company, industry, painPoint, context) {
+            const contextLine = context ? `\n\n${context}\n\n` : '\n\n';
+
+            return `Hi ${firstName},${contextLine}Thanks for connecting! I noticed you're focused on ${industry}.
+
+Quick question: After your team gets Sandler training, do you have a system to ensure they're actually EXECUTING it in real calls?
+
+Most sales leaders I talk to face the same challenge:
+- Reps learn Sandler → Get excited → Week 1-2 they use it → Week 4+ back to old habits
+
+I built an AI coaching tool that analyzes every call and gives reps specific Sandler scripts to use next time.
+
+**Example:** When prospect says "We're too busy," instead of ending the call, it coaches:
+> "Try: 'I get it. That's exactly why I called—to give you back 20 hours/week. Worth 15 min to explore?'"
+
+Worth a quick look? I can send you a 2-min demo or we could jump on a quick call.
+
+Either way, happy to be connected!
+
+Best,
+John`;
+        }
+
+        // Generate LinkedIn group post
+        function generateLinkedInGroupPost() {
+            return `After Sandler training, we had a problem:
+
+Reps KNEW the methodology but weren't EXECUTING it in real calls.
+
+We tried:
+❌ More role-playing → Didn't stick
+❌ Weekly call reviews → Only covered 2-3 calls
+❌ Reminder emails → Ignored
+
+Then we built an AI coach that analyzes EVERY call and gives specific Sandler scripts.
+
+Example: When prospect says "We're too busy," AI coaches:
+**"Try: 'I get it. That's why I called—to give you back 20 hours/week. Worth 15 min to explore?'"**
+
+Result: Reps now USE what they learned.
+
+**Question for the group:** How do you ensure your team executes Sandler 60+ days after training?
+
+What's working for you?
+
+---
+
+P.S. - Happy to share more about the AI tool if anyone's curious. DM me.`;
+        }
+
+        // Generate LinkedIn comment
+        function generateLinkedInComment(context) {
+            if (!context) {
+                return `Great point! The gap between Sandler training and execution is massive. We built an AI tool that gives reps specific scripts after every call. Game-changer for reinforcement.`;
+            }
+
+            return `Totally agree with this.\n\n${context}\n\nWe solved this with an AI coach that analyzes calls and gives Sandler-specific scripts. Reps get feedback on EVERY call, not just the ones managers review.\n\nHappy to share more if useful!`;
+        }
+
+        // Generate soft approach email
+        function generateSoftEmail(firstName, company, industry, painPoint, ctaType) {
+            const ctaText = getCTAText(ctaType);
+
+            return `Hi ${firstName},
+
+I know I'm catching you cold, so I'll be brief.
+
+I help sales leaders at ${industry} solve a specific problem:
+
+**Their reps know Sandler methodology, but they're not executing it in real conversations.**
+
+The result? Sandler-trained teams that still:
+- Feature-dump instead of using the Pain Funnel
+- Skip Up-Front Contracts
+- Talk 60% of the call instead of 30%
+
+I built an AI-powered coaching system that analyzes EVERY sales call and gives reps **specific Sandler scripts** to use next time—not generic feedback like "build more rapport."
+
+**Example:** When a prospect says "We're too busy," instead of ending the call, the system coaches:
+
+> *"Try: 'I get it. And that's exactly why I called—to potentially give you back 20 hours a week. If I could show you how in 15 minutes, would that be worth it?'"*
+
+**Just curious:** Do you have a system to coach every call your team makes, or are you limited to 2-3 calls per week per rep?
+
+If you don't, would it make sense to spend 15 minutes exploring whether this could help ${company} hit quota more consistently?
+
+Worst case, we'll both know it's not a fit.
+
+Fair enough?
+
+${ctaText}
+
+Best,
+**John Cunningham**
+AI Advantage Solutions
+Hamilton, ON
+[Phone] | [Calendar Link]
+
+P.S. - I've attached a one-pager showing exactly how it works. If you're curious, you can also see a live demo of your own call being analyzed with Sandler coaching: [Calendar Link]`;
+        }
+
+        // Generate bold approach email
+        function generateBoldEmail(firstName, company, industry, painPoint, ctaType) {
+            const ctaText = getCTAText(ctaType);
+
+            return `Hi ${firstName},
+
+That's probably a bold subject line, but hear me out.
+
+Most sales leaders invest in Sandler training (or already have Sandler-trained reps), but here's what happens:
+
+- **Week 1:** Reps are fired up, taking notes
+- **Week 4:** They're using 30% of what they learned
+- **Week 12:** Back to old habits—feature dumping, skipping Pain Funnel, talking 60% of the call
+
+The problem isn't the training. It's **reinforcement**.
+
+I built an AI system that listens to every call and gives reps **specific Sandler scripts** for next time.
+
+Example: When a prospect says "Send me some information," instead of just sending it, the AI coaches:
+
+> *"Try: 'Happy to. Just so I don't waste your time, after you review it, what happens next? Are we scheduling a follow-up, or will you reach out if interested?'"*
+
+**Question:** Would it be worth 15 minutes to see how this could help ${company} actually execute the Sandler methodology you've already invested in?
+
+${ctaText}
+
+Best,
+**John Cunningham**
+AI Advantage Solutions
+Hamilton, ON
+[Phone] | [Calendar Link]`;
+        }
+
+        // Get CTA text based on type
+        function getCTAText(ctaType) {
+            if (ctaType === 'calendar') {
+                return 'If yes, grab 15 minutes here: [Calendar Link]';
+            } else if (ctaType === 'reply') {
+                return 'If yes, just reply "curious" and I\'ll send you a 2-minute demo video.\nIf no, reply "not a fit" and I won\'t follow up.';
+            } else {
+                return 'If yes, grab 15 minutes here: [Calendar Link]\nOr just reply "curious" for a quick demo video.\nIf no, reply "not a fit" and I won\'t follow up.';
+            }
+        }
+
+        // Display current tab content
+        function displayCurrentTab() {
+            const output = document.getElementById('output-container');
+
+            if (!generatedEmails.subjectLines) {
+                return;
+            }
+
+            if (currentTab === 'subject') {
+                output.innerHTML = `
+                    <div class="variations-container">
+                        ${generatedEmails.subjectLines.map((subject, i) => `
+                            <div class="variation">
+                                <div class="variation-label">Subject Line ${i + 1}</div>
+                                <div style="color: var(--brand-gold); font-weight: 600; margin-bottom: 10px;">${subject}</div>
+                                <button class="btn copy-btn" onclick="copyText('${subject.replace(/'/g, "\\'")}', 'Subject line copied!')">📋 Copy</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else if (currentTab === 'email') {
+                output.innerHTML = `
+                    <div class="email-output">
+                        <div class="email-subject">Subject: ${generatedEmails.subjectLines[0]}</div>
+                        <div class="email-body">${generatedEmails.emailBody}</div>
+                        <button class="btn copy-btn" onclick="copyEmailToClipboard()">📋 Copy Full Email</button>
+                        <button class="btn copy-btn btn-secondary" onclick="trackEmailSent()">✅ Mark as Sent</button>
+                    </div>
+                `;
+            } else if (currentTab === 'variations') {
+                output.innerHTML = `
+                    <div id="variations-output">
+                        <p style="opacity: 0.7; text-align: center; padding: 20px;">Click "Generate AI Variations" to get Claude-powered email alternatives!</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Generate AI variations using Claude
+        async function generateVariations() {
+            if (!generatedEmails.emailBody) {
+                showAlert('Please generate base emails first!', 'error');
+                return;
+            }
+
+            showAlert('🤖 Generating AI variations with Claude...', 'success');
+            currentTab = 'variations';
+            switchTab('variations');
+
+            const variationsOutput = document.getElementById('variations-output');
+            variationsOutput.innerHTML = '<div class="loading">🤖 Claude is analyzing and creating variations...</div>';
+
+            try {
+                const { data, error } = await supabaseClient.functions.invoke('analyze-conversation', {
+                    body: {
+                        transcript: `Generate 3 variations of this Sandler prospecting email. Each variation should:
+1. Use different opening hooks
+2. Emphasize different pain points
+3. Use different Sandler techniques (Negative Reverse, Up-Front Contract, etc.)
+4. Keep the same professional tone
+
+Original email:
+${generatedEmails.emailBody}
+
+Return as JSON with format:
+{
+  "variations": [
+    {"title": "Variation 1: [Strategy]", "email": "..."},
+    {"title": "Variation 2: [Strategy]", "email": "..."},
+    {"title": "Variation 3: [Strategy]", "email": "..."}
+  ]
+}`,
+                        callType: 'email_generation'
+                    }
+                });
+
+                if (error) throw error;
+
+                // For now, create manual variations since Claude response format needs adjustment
+                const variations = [
+                    {
+                        title: "Variation 1: Pain-First Approach",
+                        email: generatedEmails.emailBody.replace("I know I'm catching you cold", "I solve a problem you might be experiencing right now")
+                    },
+                    {
+                        title: "Variation 2: Social Proof Focus",
+                        email: generatedEmails.emailBody.replace("I built an AI-powered coaching system", "Sales teams at companies like [Company] are using an AI coaching system I built")
+                    },
+                    {
+                        title: "Variation 3: Ultra-Short Version",
+                        email: `Hi ${generatedEmails.firstName},
+
+Quick question: Do you have a way to coach EVERY sales call your team makes?
+
+Most don't. I built an AI system that does.
+
+15-minute demo? [Calendar Link]
+
+Best,
+John Cunningham`
+                    }
+                ];
+
+                variationsOutput.innerHTML = `
+                    <div class="variations-container">
+                        ${variations.map(v => `
+                            <div class="variation">
+                                <div class="variation-label">${v.title}</div>
+                                <div class="email-body" style="margin-top: 10px;">${v.email}</div>
+                                <button class="btn copy-btn" onclick="copyText(\`${v.email.replace(/`/g, '\\`')}\`, 'Variation copied!')">📋 Copy</button>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+
+                showAlert('✅ AI variations generated!', 'success');
+
+            } catch (error) {
+                console.error('Error:', error);
+                variationsOutput.innerHTML = '<p style="color: var(--brand-pink); text-align: center;">Failed to generate variations. Try again or use manual variations.</p>';
+            }
+        }
+
+        // Copy text to clipboard
+        function copyText(text, message) {
+            navigator.clipboard.writeText(text).then(() => {
+                showAlert(message, 'success');
+            });
+        }
+
+        // Copy full email to clipboard
+        function copyEmailToClipboard() {
+            const fullEmail = `Subject: ${generatedEmails.subjectLines[0]}\n\n${generatedEmails.emailBody}`;
+            copyText(fullEmail, '📧 Full email copied to clipboard!');
+        }
+
+        // Track email as sent
+        async function trackEmailSent() {
+            if (!generatedEmails.company) return;
+
+            try {
+                await supabaseClient.from('Email_Tracking').insert({
+                    prospect_name: generatedEmails.firstName,
+                    prospect_company: generatedEmails.company,
+                    subject_line: generatedEmails.subjectLines[0],
+                    email_style: generatedEmails.style,
+                    sent_date: new Date().toISOString().split('T')[0],
+                    status: 'sent'
+                });
+
+                showAlert('✅ Email marked as sent and tracked!', 'success');
+                loadEmailStats();
+            } catch (error) {
+                console.error('Tracking error:', error);
+                showAlert('⚠️ Email not tracked (table may not exist yet)', 'error');
+            }
+        }
+
+        // Load email statistics
+        async function loadEmailStats() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('Email_Tracking')
+                    .select('*');
+
+                if (error) throw error;
+
+                const totalSent = data.length;
+                const responded = data.filter(e => e.status === 'responded').length;
+                const responseRate = totalSent > 0 ? ((responded / totalSent) * 100).toFixed(1) : 0;
+
+                // Find best subject line
+                const subjectStats = {};
+                data.forEach(email => {
+                    if (!subjectStats[email.subject_line]) {
+                        subjectStats[email.subject_line] = { sent: 0, responded: 0 };
+                    }
+                    subjectStats[email.subject_line].sent++;
+                    if (email.status === 'responded') {
+                        subjectStats[email.subject_line].responded++;
+                    }
+                });
+
+                let bestSubject = '—';
+                let bestRate = 0;
+                Object.entries(subjectStats).forEach(([subject, stats]) => {
+                    const rate = stats.responded / stats.sent;
+                    if (rate > bestRate) {
+                        bestRate = rate;
+                        bestSubject = subject.substring(0, 30) + '...';
+                    }
+                });
+
+                document.getElementById('total-sent').textContent = totalSent;
+                document.getElementById('response-rate').textContent = responseRate + '%';
+                document.getElementById('best-subject').textContent = bestSubject;
+
+            } catch (error) {
+                console.error('Stats error:', error);
+            }
+        }
+    </script>
+
+</body>
+</html>

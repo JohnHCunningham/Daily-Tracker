@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { HiX, HiChatBubbleLeftRight, HiPaperAirplane } from 'react-icons/hi2'
+import { HiXMark, HiChatBubbleLeftRight, HiPaperAirplane } from 'react-icons/hi2'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -151,7 +151,7 @@ const Chatbot = () => {
                 className="text-white hover:bg-white/20 p-2 rounded-full transition-colors"
                 aria-label="Close chat"
               >
-                <HiX className="text-2xl" />
+                <HiXMark className="text-2xl" />
               </button>
             </div>
 

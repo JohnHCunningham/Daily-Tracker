@@ -103,7 +103,7 @@ export async function POST(request: Request) {
 
     // Check if lead was captured
     const leadCaptureMatch = assistantMessage.match(/\[LEAD_CAPTURED\]([\s\S]*?)\[\/LEAD_CAPTURED\]/)
-    let leadData = null
+    let leadData: { name?: string; email?: string; company?: string } | null = null
     let cleanMessage = assistantMessage
 
     if (leadCaptureMatch) {

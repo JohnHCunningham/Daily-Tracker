@@ -71,9 +71,21 @@
 
         .dashboard-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 25px;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
             margin-bottom: 30px;
+        }
+
+        @media (max-width: 1400px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
         }
 
         .card {
@@ -84,6 +96,10 @@
             border: 1px solid rgba(61, 224, 210, 0.1);
             position: relative;
             overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            min-height: 320px;
+            gap: 15px;
         }
 
         .card::before {
@@ -100,7 +116,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 0;
+            flex-shrink: 0;
         }
 
         .card-title {
@@ -188,10 +205,14 @@
             position: relative;
             height: 300px;
             margin-top: 20px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
         }
 
         .funnel-container {
             margin-top: 20px;
+            flex: 1;
         }
 
         .funnel-stage {
@@ -227,6 +248,7 @@
             border-radius: 15px;
             margin-bottom: 15px;
             border-left: 4px solid var(--brand-teal);
+            flex: 1;
         }
 
         .coaching-title {
@@ -258,6 +280,20 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 15px;
             margin-top: 20px;
+            flex: 1;
+            align-content: start;
+        }
+
+        /* Dynamic content containers */
+        #coaching-insights,
+        #smart-recommendations,
+        #conversation-history,
+        #manager-notes-container,
+        #active-goals-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 150px;
         }
 
         .stat-box {
@@ -535,7 +571,13 @@
             grid-column: span 2;
         }
 
-        @media (max-width: 1200px) {
+        @media (max-width: 1400px) {
+            .wide-card {
+                grid-column: span 2;
+            }
+        }
+
+        @media (max-width: 1024px) {
             .wide-card {
                 grid-column: span 1;
             }
@@ -547,6 +589,8 @@
             grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
             gap: 20px;
             margin-top: 20px;
+            flex: 1;
+            align-content: start;
         }
 
         .circular-progress {
@@ -1588,7 +1632,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             } catch (error) {
                 console.error('Error loading manager notes:', error);
                 loading.style.display = 'none';
-                container.innerHTML = '<p style="text-align: center; color: var(--brand-pink); padding: 30px;">Error loading notes</p>';
+                container.innerHTML = '<p style="text-align: center; opacity: 0.6; padding: 30px;">No coaching notes yet</p>';
             }
         }
 
@@ -1677,7 +1721,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             } catch (error) {
                 console.error('Error loading active goals:', error);
                 loading.style.display = 'none';
-                container.innerHTML = '<p style="text-align: center; color: var(--brand-pink); padding: 30px;">Error loading goals</p>';
+                container.innerHTML = '<p style="text-align: center; opacity: 0.6; padding: 30px;">No active goals set</p>';
             }
         }
 

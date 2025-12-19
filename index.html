@@ -101,18 +101,6 @@
             min-height: 320px;
             gap: 15px;
             justify-content: center;
-            text-align: center;
-        }
-
-        /* Cards with more content should be left-aligned and top-justified */
-        .card:has(.chart-container),
-        .card:has(.funnel-container),
-        .card:has(.input-group),
-        .card:has(.goal-progress-container),
-        .card:has(.coaching-card),
-        .card:has(.stats-grid) {
-            justify-content: flex-start;
-            text-align: left;
         }
 
         .card::before {
@@ -149,12 +137,14 @@
             color: var(--brand-gold);
             line-height: 1;
             margin: 10px 0;
+            text-align: center;
         }
 
         .metric-label {
             color: var(--light-text);
             opacity: 0.7;
             font-size: 0.9rem;
+            text-align: center;
         }
 
         .input-group {
@@ -307,6 +297,8 @@
             display: flex;
             flex-direction: column;
             min-height: 150px;
+            justify-content: center;
+            align-items: center;
         }
 
         .stat-box {

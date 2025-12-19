@@ -100,6 +100,19 @@
             flex-direction: column;
             min-height: 320px;
             gap: 15px;
+            justify-content: center;
+            text-align: center;
+        }
+
+        /* Cards with more content should be left-aligned and top-justified */
+        .card:has(.chart-container),
+        .card:has(.funnel-container),
+        .card:has(.input-group),
+        .card:has(.goal-progress-container),
+        .card:has(.coaching-card),
+        .card:has(.stats-grid) {
+            justify-content: flex-start;
+            text-align: left;
         }
 
         .card::before {

@@ -11,6 +11,7 @@ interface Message {
 }
 
 const Chatbot = () => {
+  console.log('🤖 Chatbot component is rendering!')
   const [isOpen, setIsOpen] = useState(false)
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')

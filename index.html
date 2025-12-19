@@ -669,10 +669,14 @@
 
     <div class="dashboard-container">
         <div class="header">
-            <h1>AI Advantage Solutions Success Chart</h1>
-            <p>Performance Analytics & AI Coaching</p>
-            <div style="margin-top: 15px;">
-                <a href="sandler-email-generator.html" style="display: inline-block; background: linear-gradient(135deg, var(--brand-gold), var(--brand-yellow)); color: var(--brand-navy); padding: 10px 20px; border-radius: 25px; text-decoration: none; font-weight: 700; transition: transform 0.2s ease; position: relative; z-index: 10; pointer-events: auto;">
+            <div>
+                <h1>AI Advantage Solutions Success Chart</h1>
+                <p>Performance Analytics & AI Coaching</p>
+            </div>
+
+            <!-- Button Container -->
+            <div id="header-buttons" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 20px;">
+                <a href="sandler-email-generator.html" style="display: inline-block; background: linear-gradient(135deg, var(--brand-gold), var(--brand-yellow)); color: var(--brand-navy); padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: 700; transition: all 0.2s ease; position: relative; z-index: 10; pointer-events: auto; box-shadow: 0 2px 8px rgba(244, 176, 58, 0.3);">
                     📧 Open Email Generator
                 </a>
             </div>
@@ -1345,8 +1349,8 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
 
         // Add logout button to page
         function addLogoutButton() {
-            const header = document.querySelector('.header');
-            if (header) {
+            const buttonContainer = document.getElementById('header-buttons');
+            if (buttonContainer) {
                 // Check if user is admin
                 const adminEmails = ['admin@aiadvantagesolutions.com', 'admin@aiadvantagesolutions.ca', 'john@aiadvantagesolutions.com'];
                 const isAdmin = adminEmails.includes(userEmail);
@@ -1356,17 +1360,15 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                     const adminBtn = document.createElement('a');
                     adminBtn.href = 'admin-team.html';
                     adminBtn.textContent = '👥 Team Dashboard';
-                    adminBtn.className = 'btn';
-                    adminBtn.style.cssText = 'position: absolute; top: 20px; right: 120px; padding: 8px 16px; background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua)); color: white; text-decoration: none; border-radius: 8px; font-weight: 700;';
-                    document.body.appendChild(adminBtn);
+                    adminBtn.style.cssText = 'display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua)); color: white; text-decoration: none; border-radius: 25px; font-weight: 700; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(16, 195, 176, 0.3); position: relative; z-index: 10; pointer-events: auto;';
+                    buttonContainer.appendChild(adminBtn);
                 }
 
                 const logoutBtn = document.createElement('button');
                 logoutBtn.textContent = 'Logout';
-                logoutBtn.className = 'btn btn-danger';
-                logoutBtn.style.cssText = 'position: absolute; top: 20px; right: 20px; padding: 8px 16px;';
+                logoutBtn.style.cssText = 'padding: 12px 24px; background: white; color: var(--brand-navy); border: 2px solid var(--brand-navy); border-radius: 25px; font-weight: 700; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(255, 255, 255, 0.2); position: relative; z-index: 10; pointer-events: auto;';
                 logoutBtn.onclick = handleLogout;
-                document.body.appendChild(logoutBtn);
+                buttonContainer.appendChild(logoutBtn);
             }
         }
 

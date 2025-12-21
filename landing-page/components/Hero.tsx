@@ -163,7 +163,7 @@ const Hero = () => {
             className="relative p-8 md:p-10"
           >
             {/* Dashboard mockup with actual content */}
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-teal/20 border border-teal/30 bg-gradient-to-br from-navy-light to-navy">
+            <div className="relative rounded-2xl shadow-2xl shadow-teal/20 border border-teal/30 bg-gradient-to-br from-navy-light to-navy">
               <div className="p-6">
                 {/* Dashboard header */}
                 <div className="flex items-center justify-between mb-6">
@@ -217,16 +217,16 @@ const Hero = () => {
 
               {/* Floating badges */}
               <motion.div
-                animate={{ y: [0, -12, 0] }}
-                transition={{ duration: 2.5, repeat: Infinity, ease: "easeInOut" }}
+                animate={{ y: [0, -20, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
                 className="absolute -top-5 -right-5 bg-gold text-navy px-4 py-2 rounded-full font-bold shadow-lg shadow-gold/30"
               >
                 ✨ AI-Powered
               </motion.div>
 
               <motion.div
-                animate={{ y: [0, 12, 0] }}
-                transition={{ duration: 2.5, repeat: Infinity, delay: 1.25, ease: "easeInOut" }}
+                animate={{ y: [0, 20, 0] }}
+                transition={{ duration: 3, repeat: Infinity, delay: 1.5, ease: "easeInOut" }}
                 className="absolute -bottom-5 -left-5 bg-teal text-white px-4 py-2 rounded-full font-bold shadow-lg shadow-teal/30"
               >
                 🎯 Instant Coaching

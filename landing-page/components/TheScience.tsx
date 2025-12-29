@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion'
 import { HiLightningBolt, HiEye, HiRefresh, HiTrendingUp } from 'react-icons/hi'
+import Image from 'next/image'
 
 const scientificPrinciples = [
   {
@@ -165,6 +166,34 @@ const TheScience = () => {
                 </ul>
               </motion.div>
             ))}
+          </div>
+        </motion.div>
+
+        {/* Psychology of Accountability */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          className="max-w-5xl mx-auto mb-16"
+        >
+          <h3 className="text-3xl font-bold text-center mb-8">
+            The Psychology of <span className="text-teal">Accountability</span>
+          </h3>
+          <div className="card bg-navy-light/50 border-teal/20">
+            <div className="rounded-xl overflow-hidden mb-6">
+              <Image
+                src="/accountability-psychology.jpg"
+                alt="The Psychology of Accountability - Alone vs With Others vs With Mirror"
+                width={1200}
+                height={400}
+                className="w-full h-auto"
+              />
+            </div>
+            <p className="text-xl text-light-muted text-center leading-relaxed">
+              <strong className="text-light">When observed, behavior changes.</strong> Even a mirror works.
+              SalesAI.Coach creates that "mirror effect" for every sales conversation—your team executes better
+              when they know methodology compliance is visible.
+            </p>
           </div>
         </motion.div>
 

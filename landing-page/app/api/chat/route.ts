@@ -1,10 +1,6 @@
 import { NextResponse } from 'next/server'
 import OpenAI from 'openai'
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-})
-
 const SYSTEM_PROMPT = `You are a friendly, knowledgeable sales assistant for SalesAI.Coach - a behavioral accountability system that helps sales teams execute their methodology with discipline.
 
 ## Your Role:
@@ -86,6 +82,11 @@ Keep responses under 3 sentences when possible. Be helpful, not pushy.`
 export async function POST(request: Request) {
   try {
     const { messages } = await request.json()
+
+    // Initialize OpenAI client at request time (not build time)
+    const openai = new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
 
     // Call OpenAI API
     const completion = await openai.chat.completions.create({

@@ -4,6 +4,7 @@ import AnnouncementBanner from '@/components/AnnouncementBanner'
 import Navbar from '@/components/Navbar'
 import Hero from '@/components/Hero'
 import SocialProof from '@/components/SocialProof'
+import RevenueFactoryVision from '@/components/RevenueFactoryVision'
 import Problem from '@/components/Problem'
 import UVP from '@/components/UVP'
 import Solution from '@/components/Solution'
@@ -27,6 +28,7 @@ export default function LandingPage() {
       <Navbar />
       <Hero />
       <SocialProof />
+      <RevenueFactoryVision />
       <Problem />
       <UVP />
       <Solution />

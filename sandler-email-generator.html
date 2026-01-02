@@ -346,6 +346,15 @@
                     <span>📝</span>
                 </div>
 
+                <!-- ICP Context Display -->
+                <div id="icp-context" style="display: none; margin-bottom: 20px; padding: 15px; background: rgba(61, 224, 210, 0.1); border-radius: 10px; border-left: 4px solid var(--brand-teal);">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <strong style="color: var(--brand-teal); font-size: 0.9rem;">🎯 Using Your ICP Profile</strong>
+                        <a href="index.html#icp" style="color: var(--brand-gold); font-size: 0.85rem; text-decoration: none;">Edit ICP →</a>
+                    </div>
+                    <div id="icp-summary" style="font-size: 0.85rem; line-height: 1.6; opacity: 0.9;"></div>
+                </div>
+
                 <div class="input-group">
                     <label>First Name *</label>
                     <input type="text" id="first-name" placeholder="Sarah">
@@ -472,7 +481,55 @@
         window.onload = function() {
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             loadEmailStats();
+            loadICPData(); // Auto-populate from ICP
         };
+
+        // Load ICP data from localStorage and auto-populate form
+        function loadICPData() {
+            const savedICP = localStorage.getItem('icp');
+            if (savedICP) {
+                try {
+                    const icp = JSON.parse(savedICP);
+
+                    // Auto-populate industry field
+                    if (icp.industry) {
+                        document.getElementById('industry').value = icp.industry;
+                    }
+
+                    // Auto-populate pain point field
+                    if (icp.painPoints) {
+                        document.getElementById('pain-point').value = icp.painPoints;
+                    }
+
+                    // Display ICP summary panel
+                    const icpContext = document.getElementById('icp-context');
+                    const icpSummary = document.getElementById('icp-summary');
+
+                    if (icpContext && icpSummary) {
+                        let summaryHTML = '';
+                        if (icp.industry) summaryHTML += `<strong>Target:</strong> ${icp.industry}<br>`;
+                        if (icp.companySize) summaryHTML += `<strong>Size:</strong> ${icp.companySize}<br>`;
+                        if (icp.jobTitles) summaryHTML += `<strong>Titles:</strong> ${icp.jobTitles}<br>`;
+                        if (icp.characteristics) {
+                            const shortCharacteristics = icp.characteristics.substring(0, 150) + (icp.characteristics.length > 150 ? '...' : '');
+                            summaryHTML += `<strong>Key Characteristics:</strong> ${shortCharacteristics}`;
+                        }
+
+                        if (summaryHTML) {
+                            icpSummary.innerHTML = summaryHTML;
+                            icpContext.style.display = 'block';
+                        }
+                    }
+
+                    // Show success message
+                    if (icp.industry || icp.painPoints) {
+                        showAlert('✅ ICP data loaded! Industry and Pain Points auto-filled from your profile.', 'success');
+                    }
+                } catch (error) {
+                    console.error('Error loading ICP data:', error);
+                }
+            }
+        }
 
         // Show alert
         function showAlert(message, type) {

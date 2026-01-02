@@ -69,10 +69,10 @@ const Hero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              Your Sales Methodology Isn't the Problem.{' '}
-              <span className="bg-gradient-to-r from-teal to-aqua bg-clip-text text-transparent">
-                Execution Is.
-              </span>
+              <span className="bg-gradient-to-r from-gold to-teal bg-clip-text text-transparent">
+                The Revenue Factory:
+              </span>{' '}
+              Complete AI Sales System
             </motion.h1>
 
             <motion.p
@@ -81,7 +81,7 @@ const Hero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.4 }}
             >
-              SalesAI.Coach turns your sales framework into daily, visible, coachable behavior—no matter which methodology you use.
+              Attract leads with AI. Execute with methodology coaching. Complete deals faster. Your end-to-end revenue engine.
             </motion.p>
 
             <motion.div
@@ -90,8 +90,9 @@ const Hero = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.5 }}
             >
-              <p className="mb-2 font-semibold text-teal">Supported frameworks:</p>
-              <p className="text-light">Sandler • Challenger • SPIN • GAP Selling • MEDDICC • Custom</p>
+              <p className="mb-2 font-semibold text-teal">3-Stage System:</p>
+              <p className="text-light">Attraction → Execution (Available Now) → Completion</p>
+              <p className="text-sm text-light-muted mt-2">Supports: Sandler • Challenger • SPIN • GAP • MEDDICC • Custom</p>
             </motion.div>
 
             <motion.p

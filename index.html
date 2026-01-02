@@ -807,6 +807,14 @@
                 </div>
 
                 <div class="input-group">
+                    <label>Company Characteristics (Qualifiers & Disqualifiers)</label>
+                    <textarea id="icp-characteristics" placeholder="e.g., ✓ Uses Sandler/MEDDIC methodology ✓ Invested in sales training ✓ Modern sales tools (Gong, Salesforce) ✗ <5 sales reps ✗ B2C companies ✗ No formal methodology" rows="4"></textarea>
+                    <small style="opacity: 0.7; font-size: 0.85rem; margin-top: 5px; display: block;">
+                        What makes them a good fit? What disqualifies them? Use ✓ for qualifiers, ✗ for disqualifiers.
+                    </small>
+                </div>
+
+                <div class="input-group">
                     <label>Key Pain Points</label>
                     <textarea id="icp-pain-points" placeholder="e.g., Sales reps not executing methodology, inconsistent pipeline, low close rates" rows="3"></textarea>
                 </div>
@@ -901,6 +909,14 @@
                     <textarea id="script-business-description" placeholder="e.g., I help mixed-income community housing providers in Hamilton save up to 20 hours per week by automating repetitive tasks like maintenance requests, tenant communications, and compliance tracking." rows="3"></textarea>
                     <small style="opacity: 0.7; font-size: 0.85rem; margin-top: 5px; display: block;">
                         What do you do? Who do you help? What problems do you solve?
+                    </small>
+                </div>
+
+                <div class="input-group">
+                    <label>Ideal Customer Profile (ICP)</label>
+                    <textarea id="script-icp" placeholder="e.g., Company Size: 50-200 employees, Sales Team: 10-50 reps, Revenue: $10M-$100M, Industry: B2B SaaS, Uses methodology: Sandler/MEDDIC, Modern sales tools: Salesforce/Gong" rows="4"></textarea>
+                    <small style="opacity: 0.7; font-size: 0.85rem; margin-top: 5px; display: block;">
+                        Who is your ideal customer? Company characteristics, qualifiers, and disqualifiers.
                     </small>
                 </div>
 
@@ -1349,13 +1365,26 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
 
         let supabaseClient;
 
-        // Initialize Supabase client
-        try {
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } catch (error) {
-            console.error('Supabase initialization error:', error);
-            showAlert('Please configure your Supabase credentials in the code.', 'error');
+        // Initialize Supabase client (with proper error handling)
+        function initializeSupabase() {
+            try {
+                if (typeof window.supabase === 'undefined') {
+                    console.error('Supabase library not loaded');
+                    showAlert('Supabase library failed to load. Please refresh the page.', 'error');
+                    return false;
+                }
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase client initialized successfully');
+                return true;
+            } catch (error) {
+                console.error('Supabase initialization error:', error);
+                showAlert('Please configure your Supabase credentials in the code.', 'error');
+                return false;
+            }
         }
+
+        // Initialize immediately (will be called again in DOMContentLoaded as backup)
+        initializeSupabase();
 
         // ============================================
         // AUTHENTICATION CHECK
@@ -1878,20 +1907,25 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         }
 
         // Save activity goals to localStorage
-        function saveActivityGoals() {
-            const goals = {
-                dials: parseInt(document.getElementById('goal-dials').value) || 15,
-                conversations: parseInt(document.getElementById('goal-conversations').value) || 5,
-                meetings: parseInt(document.getElementById('goal-meetings').value) || 2,
-                sales: parseInt(document.getElementById('goal-sales').value) || 1
-            };
+        async function saveActivityGoals() {
+            try {
+                const goals = {
+                    dials: parseInt(document.getElementById('goal-dials').value) || 15,
+                    conversations: parseInt(document.getElementById('goal-conversations').value) || 5,
+                    meetings: parseInt(document.getElementById('goal-meetings').value) || 2,
+                    sales: parseInt(document.getElementById('goal-sales').value) || 1
+                };
 
-            localStorage.setItem('activityGoals', JSON.stringify(goals));
-            showAlert('Activity goals saved successfully!', 'success');
+                localStorage.setItem('activityGoals', JSON.stringify(goals));
+                showAlert('Activity goals saved successfully!', 'success');
 
-            // Refresh goal progress display
-            loadGoalProgress();
-            calculateSmartRecommendations();
+                // Refresh goal progress display (async but don't await to avoid blocking)
+                loadGoalProgress().catch(err => console.error('Error loading goal progress:', err));
+                calculateSmartRecommendations().catch(err => console.error('Error calculating recommendations:', err));
+            } catch (error) {
+                console.error('Error saving activity goals:', error);
+                showAlert('Failed to save activity goals. Please try again.', 'error');
+            }
         }
 
         // Get activity goals from localStorage
@@ -3131,6 +3165,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 industry: document.getElementById('icp-industry').value.trim(),
                 companySize: document.getElementById('icp-company-size').value.trim(),
                 jobTitles: document.getElementById('icp-job-titles').value.trim(),
+                characteristics: document.getElementById('icp-characteristics').value.trim(),
                 painPoints: document.getElementById('icp-pain-points').value.trim(),
                 budget: document.getElementById('icp-budget').value.trim()
             };
@@ -3152,6 +3187,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 document.getElementById('icp-industry').value = icp.industry || '';
                 document.getElementById('icp-company-size').value = icp.companySize || '';
                 document.getElementById('icp-job-titles').value = icp.jobTitles || '';
+                document.getElementById('icp-characteristics').value = icp.characteristics || '';
                 document.getElementById('icp-pain-points').value = icp.painPoints || '';
                 document.getElementById('icp-budget').value = icp.budget || '';
                 displayICP();
@@ -3170,6 +3206,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             if (icp.industry) html += `<strong>Industry:</strong> ${icp.industry}<br>`;
             if (icp.companySize) html += `<strong>Company Size:</strong> ${icp.companySize}<br>`;
             if (icp.jobTitles) html += `<strong>Target Titles:</strong> ${icp.jobTitles}<br>`;
+            if (icp.characteristics) html += `<strong>Characteristics:</strong> ${icp.characteristics}<br>`;
             if (icp.painPoints) html += `<strong>Pain Points:</strong> ${icp.painPoints}<br>`;
             if (icp.budget) html += `<strong>Budget Range:</strong> ${icp.budget}`;
 
@@ -3183,17 +3220,43 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         // SALES SCRIPTS FUNCTIONS
         // ============================================
 
-        function saveScripts() {
-            const scripts = {
-                businessDescription: document.getElementById('script-business-description').value.trim(),
-                opening: document.getElementById('script-opening').value.trim(),
-                valueProp: document.getElementById('script-value-prop').value.trim(),
-                cta: document.getElementById('script-cta').value.trim(),
-                objections: document.getElementById('script-objections').value.trim()
-            };
+        async function saveScripts() {
+            try {
+                // Verify all elements exist
+                const elements = {
+                    businessDescription: document.getElementById('script-business-description'),
+                    icp: document.getElementById('script-icp'),
+                    opening: document.getElementById('script-opening'),
+                    valueProp: document.getElementById('script-value-prop'),
+                    cta: document.getElementById('script-cta'),
+                    objections: document.getElementById('script-objections')
+                };
 
-            localStorage.setItem('salesScripts', JSON.stringify(scripts));
-            showAlert('✅ Scripts saved successfully!', 'success');
+                // Check if any elements are missing
+                const missingElements = Object.entries(elements)
+                    .filter(([key, element]) => !element)
+                    .map(([key]) => key);
+
+                if (missingElements.length > 0) {
+                    throw new Error(`Missing form elements: ${missingElements.join(', ')}`);
+                }
+
+                const scripts = {
+                    businessDescription: elements.businessDescription.value.trim(),
+                    icp: elements.icp.value.trim(),
+                    opening: elements.opening.value.trim(),
+                    valueProp: elements.valueProp.value.trim(),
+                    cta: elements.cta.value.trim(),
+                    objections: elements.objections.value.trim()
+                };
+
+                localStorage.setItem('salesScripts', JSON.stringify(scripts));
+                showAlert('✅ Scripts saved successfully!', 'success');
+                console.log('Scripts saved to localStorage:', scripts);
+            } catch (error) {
+                console.error('Error saving scripts:', error);
+                showAlert('❌ Failed to save scripts: ' + error.message, 'error');
+            }
         }
 
         function loadScripts() {
@@ -3201,6 +3264,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             if (saved) {
                 const scripts = JSON.parse(saved);
                 document.getElementById('script-business-description').value = scripts.businessDescription || '';
+                document.getElementById('script-icp').value = scripts.icp || '';
                 document.getElementById('script-opening').value = scripts.opening || '';
                 document.getElementById('script-value-prop').value = scripts.valueProp || '';
                 document.getElementById('script-cta').value = scripts.cta || '';
@@ -3217,6 +3281,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             // Return default scripts if none saved
             return {
                 businessDescription: 'AI Advantage Solutions - helping businesses automate tasks and save time',
+                icp: 'Company Size: 50-200 employees, Industry: B2B SaaS, Uses CRM/sales tools, Growing sales team',
                 opening: 'Hi [Name], this is John from AI Advantage Solutions here in Hamilton. I know I\'m catching you cold, so I\'ll be brief.',
                 valueProp: 'I help mixed-income community providers like [Company] save up to 20 hours per week by automating repetitive tasks—things like maintenance requests, tenant communications, and compliance tracking.',
                 cta: 'I\'d love to show you how in a quick 15-minute online meeting. Do you have your calendar handy, or would [Date] at [Time] work better?',
@@ -3225,19 +3290,34 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         }
 
         async function rewriteScriptsWithAI() {
-            const businessDescription = document.getElementById('script-business-description').value.trim();
-            const statusDiv = document.getElementById('scripts-rewrite-status');
-
-            if (!businessDescription) {
-                showAlert('Please enter a business description first', 'error');
-                return;
-            }
-
-            // Show loading state
-            statusDiv.style.display = 'block';
-            statusDiv.innerHTML = '<div class="loading">✨ Claude is rewriting your scripts...</div>';
-
             try {
+                const businessDescriptionEl = document.getElementById('script-business-description');
+                const statusDiv = document.getElementById('scripts-rewrite-status');
+
+                if (!businessDescriptionEl) {
+                    throw new Error('Business description field not found');
+                }
+
+                const businessDescription = businessDescriptionEl.value.trim();
+
+                if (!businessDescription) {
+                    showAlert('⚠️ Please enter a business description first', 'error');
+                    return;
+                }
+
+                if (!statusDiv) {
+                    throw new Error('Status display element not found');
+                }
+
+                // Show loading state
+                statusDiv.style.display = 'block';
+                statusDiv.innerHTML = '<div class="loading">✨ Claude is rewriting your scripts...</div>';
+
+                // Check if Supabase client is initialized
+                if (!supabaseClient) {
+                    throw new Error('Supabase client not initialized. Using demo mode.');
+                }
+
                 // Call Supabase Edge Function to generate scripts
                 const { data, error } = await supabaseClient.functions.invoke('generate-scripts', {
                     body: {
@@ -3257,15 +3337,24 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
 
                     statusDiv.innerHTML = '<div class="alert alert-success">✅ Scripts rewritten successfully! Review and save them below.</div>';
                     celebrateWithConfetti('default');
+                    showAlert('✅ Scripts rewritten successfully!', 'success');
                 } else {
                     throw new Error('No scripts returned from AI');
                 }
 
             } catch (error) {
                 console.error('Script rewriting error:', error);
-                statusDiv.innerHTML = `<div class="alert alert-error">❌ Failed to rewrite scripts: ${error.message}. Using demo mode instead.</div>`;
+                const statusDiv = document.getElementById('scripts-rewrite-status');
+
+                if (statusDiv) {
+                    statusDiv.style.display = 'block';
+                    statusDiv.innerHTML = `<div class="alert alert-error">⚠️ AI rewrite unavailable. Using demo templates instead.</div>`;
+                }
+
+                showAlert('⚠️ AI rewrite unavailable. Using demo templates instead.', 'error');
 
                 // Fallback: Generate demo scripts locally
+                const businessDescription = document.getElementById('script-business-description').value.trim();
                 generateDemoScripts(businessDescription);
             }
         }

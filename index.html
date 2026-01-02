@@ -1349,13 +1349,26 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
 
         let supabaseClient;
 
-        // Initialize Supabase client
-        try {
-            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        } catch (error) {
-            console.error('Supabase initialization error:', error);
-            showAlert('Please configure your Supabase credentials in the code.', 'error');
+        // Initialize Supabase client (with proper error handling)
+        function initializeSupabase() {
+            try {
+                if (typeof window.supabase === 'undefined') {
+                    console.error('Supabase library not loaded');
+                    showAlert('Supabase library failed to load. Please refresh the page.', 'error');
+                    return false;
+                }
+                supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                console.log('Supabase client initialized successfully');
+                return true;
+            } catch (error) {
+                console.error('Supabase initialization error:', error);
+                showAlert('Please configure your Supabase credentials in the code.', 'error');
+                return false;
+            }
         }
+
+        // Initialize immediately (will be called again in DOMContentLoaded as backup)
+        initializeSupabase();
 
         // ============================================
         // AUTHENTICATION CHECK

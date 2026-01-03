@@ -346,6 +346,19 @@
                     <span>📝</span>
                 </div>
 
+                <!-- Your Scripts Reference -->
+                <div id="scripts-reference" style="margin-bottom: 20px; padding: 15px; background: rgba(244, 176, 58, 0.1); border-radius: 10px; border-left: 4px solid var(--brand-gold);">
+                    <details>
+                        <summary style="cursor: pointer; font-weight: 700; color: var(--brand-gold); font-size: 0.95rem; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
+                            <span>📋 Your Cold Call Scripts</span>
+                            <a href="index.html#scripts" style="color: var(--brand-teal); font-size: 0.85rem; text-decoration: none;" onclick="event.stopPropagation();">Edit Scripts →</a>
+                        </summary>
+                        <div id="scripts-display" style="font-size: 0.85rem; line-height: 1.6; opacity: 0.9; margin-top: 10px;">
+                            <p style="opacity: 0.7; font-style: italic;">Loading your scripts...</p>
+                        </div>
+                    </details>
+                </div>
+
                 <!-- ICP Context Display -->
                 <div id="icp-context" style="display: none; margin-bottom: 20px; padding: 15px; background: rgba(61, 224, 210, 0.1); border-radius: 10px; border-left: 4px solid var(--brand-teal);">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
@@ -584,6 +597,7 @@
             supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
             loadEmailStats();
             loadICPData(); // Auto-populate from ICP
+            loadScriptsReference(); // Load cold call scripts
         };
 
         // Load ICP data from localStorage and auto-populate form
@@ -630,6 +644,49 @@
                 } catch (error) {
                     console.error('Error loading ICP data:', error);
                 }
+            }
+        }
+
+        // Load scripts from daily tracker for reference
+        function loadScriptsReference() {
+            const scriptsDisplay = document.getElementById('scripts-display');
+            const saved = localStorage.getItem('salesScripts');
+
+            if (!saved) {
+                scriptsDisplay.innerHTML = `<p style="opacity: 0.7; font-style: italic;">No scripts saved yet. <a href="index.html#scripts" style="color: var(--brand-teal);">Create your scripts →</a></p>`;
+                return;
+            }
+
+            try {
+                const scripts = JSON.parse(saved);
+
+                let html = '';
+
+                if (scripts.opening) {
+                    html += `<div style="margin-bottom: 15px;">
+                        <strong style="color: var(--brand-aqua);">📞 Opening:</strong>
+                        <p style="margin: 5px 0 0 0; padding-left: 10px; border-left: 2px solid rgba(61, 224, 210, 0.3);">${scripts.opening}</p>
+                    </div>`;
+                }
+
+                if (scripts.valueProp) {
+                    html += `<div style="margin-bottom: 15px;">
+                        <strong style="color: var(--brand-aqua);">💡 Value Proposition:</strong>
+                        <p style="margin: 5px 0 0 0; padding-left: 10px; border-left: 2px solid rgba(61, 224, 210, 0.3);">${scripts.valueProp}</p>
+                    </div>`;
+                }
+
+                if (scripts.cta) {
+                    html += `<div style="margin-bottom: 15px;">
+                        <strong style="color: var(--brand-aqua);">🎯 Call to Action:</strong>
+                        <p style="margin: 5px 0 0 0; padding-left: 10px; border-left: 2px solid rgba(61, 224, 210, 0.3);">${scripts.cta}</p>
+                    </div>`;
+                }
+
+                scriptsDisplay.innerHTML = html || `<p style="opacity: 0.7; font-style: italic;">No script content available.</p>`;
+            } catch (error) {
+                console.error('Error loading scripts:', error);
+                scriptsDisplay.innerHTML = `<p style="opacity: 0.7; color: var(--brand-pink);">Error loading scripts.</p>`;
             }
         }
 

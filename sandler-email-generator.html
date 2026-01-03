@@ -774,16 +774,34 @@
 
         // Generate LinkedIn Execution Value Post
         function generateLinkedInExecutionPost() {
+            const icpSelector = document.getElementById('icp-selector').value;
+            const icpData = ICPDatabase[icpSelector] || {};
+
+            // Get ICP-specific pain points
+            const pains = icpData.executionPains || [
+                'Reps know the methodology but don\'t execute it consistently',
+                'Training ROI drops off after 2-3 weeks',
+                'Can only coach 2-3 calls per rep per week'
+            ];
+            const solution = icpData.executionSolution || 'AI analyzes every call and gives methodology-specific scripts';
+
+            // Format pain points for LinkedIn
+            const topPain = pains[0];
+            const painsList = pains.slice(0, 3).map(p => `❌ ${p}`).join('\n');
+
             return `After investing $50K+ in sales methodology training (Sandler, MEDDIC, Challenger, etc.), we had a problem:
 
 Reps KNEW the methodology but weren't EXECUTING it in real calls.
 
-We tried:
+The specific challenges:
+${painsList}
+
+We tried the usual fixes:
 ❌ More role-playing → Didn't stick
 ❌ Weekly call reviews → Only covered 2-3 calls
 ❌ Reminder emails → Ignored
 
-Then we built an AI coach that analyzes EVERY call and gives methodology-specific scripts.
+Then we built an AI coach that solves this: ${solution}
 
 Example: When prospect says "We're too busy," AI coaches:
 "Try: I get it. That's why I called—to give you back 20 hours/week. Worth 15 min?"
@@ -801,16 +819,36 @@ Want to learn more? DM me or comment below and I'll share details.`;
 
         // Generate LinkedIn Attraction Value Post
         function generateLinkedInAttractionPost() {
+            const icpSelector = document.getElementById('icp-selector').value;
+            const icpData = ICPDatabase[icpSelector] || {};
+
+            // Get ICP-specific pain points
+            const pains = icpData.attractionPains || [
+                'Pipeline inconsistent month-to-month',
+                'Cold calling yields 2-3% response rates',
+                'Manual prospecting takes too much time'
+            ];
+            const solution = icpData.attractionSolution || 'AI identifies ideal prospects and generates personalized outreach that gets 15-20% response rates';
+
+            // Format pain points for LinkedIn
+            const topPain = pains[0];
+            const painsList = pains.slice(0, 3).map(p => `❌ ${p}`).join('\n');
+
             return `Most sales teams struggle with the same problem:
 
 Not enough qualified leads in the pipeline.
 
+The specific challenges I hear:
+${painsList}
+
 The usual suspects aren't working:
-❌ Cold calling → 2-3% response rates, rep burnout
-❌ Marketing leads → Inconsistent, often unqualified
+❌ More cold calls → Rep burnout, minimal ROI
+❌ Marketing campaigns → Expensive, inconsistent results
 ❌ Manual prospecting → Takes 60% of the day
 
-We built an AI system that solves this:
+We built an AI system that solves this: ${solution}
+
+How it works:
 ✅ Identifies ideal prospects automatically
 ✅ Generates personalized outreach (not templates)
 ✅ Gets 15-20% response rates vs. 2-3% industry average
@@ -818,7 +856,7 @@ We built an AI system that solves this:
 Result: 3x more qualified meetings per month. Pipeline stays full.
 
 Example AI-generated outreach:
-"Noticed your company is expanding in [industry]. Most teams in your space struggle with pipeline consistency. We've helped similar companies 3x their qualified meetings. Worth exploring?"
+"Noticed your company is expanding. Most teams in your space struggle with pipeline consistency. We've helped similar companies 3x their qualified meetings. Worth exploring?"
 
 Question for the group: How are you filling your pipeline in 2026?
 

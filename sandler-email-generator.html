@@ -348,9 +348,9 @@
 
                 <!-- Your Scripts Reference -->
                 <div id="scripts-reference" style="margin-bottom: 20px; padding: 15px; background: rgba(244, 176, 58, 0.1); border-radius: 10px; border-left: 4px solid var(--brand-gold);">
-                    <details>
+                    <details open>
                         <summary style="cursor: pointer; font-weight: 700; color: var(--brand-gold); font-size: 0.95rem; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center;">
-                            <span>📋 Your Cold Call Scripts</span>
+                            <span>📋 Your Call Scripts (Methodology-Based)</span>
                             <a href="index.html#scripts" style="color: var(--brand-teal); font-size: 0.85rem; text-decoration: none;" onclick="event.stopPropagation();">Edit Scripts →</a>
                         </summary>
                         <div id="scripts-display" style="font-size: 0.85rem; line-height: 1.6; opacity: 0.9; margin-top: 10px;">
@@ -647,10 +647,36 @@
             }
         }
 
+        // Methodology definitions
+        const METHODOLOGIES = {
+            meddic: {
+                name: 'MEDDIC/MEDDPICC',
+                keyPrinciples: ['Metrics', 'Economic Buyer', 'Decision Criteria', 'Decision Process', 'Identify Pain', 'Champion']
+            },
+            challenger: {
+                name: 'Challenger Sale',
+                keyPrinciples: ['Teach', 'Tailor', 'Take Control']
+            },
+            sandler: {
+                name: 'Sandler Selling System',
+                keyPrinciples: ['Pain Funnel', 'Up-Front Contract', 'Negative Reverse Selling', 'Budget', 'Decision']
+            },
+            spin: {
+                name: 'SPIN Selling',
+                keyPrinciples: ['Situation', 'Problem', 'Implication', 'Need-Payoff']
+            },
+            gap: {
+                name: 'Gap Selling',
+                keyPrinciples: ['Current State', 'Future State', 'Gap', 'Impact']
+            }
+        };
+
         // Load scripts from daily tracker for reference
         function loadScriptsReference() {
             const scriptsDisplay = document.getElementById('scripts-display');
             const saved = localStorage.getItem('salesScripts');
+            const methodology = localStorage.getItem('salesMethodology') || 'meddic';
+            const methodologyInfo = METHODOLOGIES[methodology];
 
             if (!saved) {
                 scriptsDisplay.innerHTML = `<p style="opacity: 0.7; font-style: italic;">No scripts saved yet. <a href="index.html#scripts" style="color: var(--brand-teal);">Create your scripts →</a></p>`;
@@ -661,6 +687,12 @@
                 const scripts = JSON.parse(saved);
 
                 let html = '';
+
+                // Show methodology being used
+                html += `<div style="margin-bottom: 15px; padding: 10px; background: rgba(244, 176, 58, 0.15); border-radius: 8px;">
+                    <strong style="color: var(--brand-gold);">📚 Methodology: ${methodologyInfo.name}</strong>
+                    <p style="margin: 5px 0 0 0; font-size: 0.8rem; opacity: 0.8;">Focus: ${methodologyInfo.keyPrinciples.join(' → ')}</p>
+                </div>`;
 
                 if (scripts.opening) {
                     html += `<div style="margin-bottom: 15px;">

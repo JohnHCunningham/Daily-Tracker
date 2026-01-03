@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sandler Email Generator | AI Advantage Solutions</title>
+    <title>Sales Content Generator | AI Advantage Solutions</title>
 
     <!-- Supabase Client -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -327,7 +327,7 @@
 
     <div class="container">
         <div class="header">
-            <h1>🎯 Sandler Email Generator</h1>
+            <h1>🎯 Sales Content Generator</h1>
             <p>AI-Powered Prospecting Emails with A/B Testing</p>
             <div style="margin-top: 15px;">
                 <a href="index.html" class="back-btn">
@@ -726,9 +726,9 @@
                     ];
                 } else {
                     subjectLines = [
-                        `${firstName} - Are your reps executing Sandler or just talking about it?`,
-                        `Quick question about ${company}'s Sandler execution`,
-                        `${company} - Sandler coaching that doesn't require a $10K consultant`
+                        `${firstName} - Are your reps executing their methodology or just talking about it?`,
+                        `Quick question about ${company}'s methodology execution`,
+                        `${company} - Sales coaching that doesn't require a $10K consultant`
                     ];
                 }
 
@@ -960,12 +960,12 @@ John`;
 
             return `Hi ${firstName},${contextLine}Thanks for connecting! I noticed you're focused on ${industry}.
 
-Quick question: After your team gets Sandler training, do you have a system to ensure they're actually EXECUTING it in real calls?
+Quick question: After your team gets methodology training, do you have a system to ensure they're actually EXECUTING it in real calls?
 
 Most sales leaders I talk to face the same challenge:
-- Reps learn Sandler → Get excited → Week 1-2 they use it → Week 4+ back to old habits
+- Reps learn the methodology → Get excited → Week 1-2 they use it → Week 4+ back to old habits
 
-I built an AI coaching tool that analyzes every call and gives reps specific Sandler scripts to use next time.
+I built an AI coaching tool that analyzes every call and gives reps specific methodology-based scripts to use next time.
 
 Example: When prospect says "We're too busy," instead of ending the call, it coaches:
 "Try: I get it. That's exactly why I called—to give you back 20 hours/week. Worth 15 min to explore?"
@@ -988,10 +988,10 @@ John`;
             }
 
             if (!context) {
-                return `Great point! The gap between Sandler training and execution is massive. We built an AI tool that gives reps specific scripts after every call. Game-changer for reinforcement.`;
+                return `Great point! The gap between methodology training and execution is massive. We built an AI tool that gives reps specific scripts after every call. Game-changer for reinforcement.`;
             }
 
-            return `Totally agree with this.\n\n${context}\n\nWe solved this with an AI coach that analyzes calls and gives Sandler-specific scripts. Reps get feedback on EVERY call, not just the ones managers review.\n\nHappy to share more if useful!`;
+            return `Totally agree with this.\n\n${context}\n\nWe solved this with an AI coach that analyzes calls and gives methodology-specific scripts. Reps get feedback on EVERY call, not just the ones managers review.\n\nHappy to share more if useful!`;
         }
 
         // Generate soft approach email
@@ -1276,7 +1276,7 @@ AI Advantage Solutions`;
             }
         }
 
-        // Generate smart variations using different Sandler strategies
+        // Generate smart variations using different sales strategies
         function generateVariations() {
             if (!generatedEmails.emailBody) {
                 showAlert('Please generate base emails first!', 'error');
@@ -1302,7 +1302,7 @@ AI Advantage Solutions`;
 
             const loadingText = generatedEmails.valueProp === 'attraction'
                 ? 'Creating Attraction-based variations...'
-                : 'Creating Sandler-based variations...';
+                : 'Creating methodology-based variations...';
             variationsOutput.innerHTML = `<div class="loading">${loadingText}</div>`;
 
             // Create intelligent variations based on value proposition
@@ -1329,7 +1329,7 @@ AI Advantage Solutions`;
             showAlert('✅ 4 strategic variations generated!', 'success');
         }
 
-        // Generate Execution-focused variations (original Sandler-based)
+        // Generate Execution-focused variations (methodology-based)
         function generateExecutionVariations() {
             return [
                 {
@@ -1338,11 +1338,11 @@ AI Advantage Solutions`;
 
 I'm not sure if this is relevant to ${generatedEmails.company}, but I'll take 30 seconds.
 
-Most sales leaders tell me their reps learned Sandler... but don't actually USE it in real conversations.
+Most sales leaders tell me their reps learned the methodology... but don't actually USE it in real conversations.
 
 Sound familiar?
 
-If it does, I built something that might help: An AI coach that gives your reps specific Sandler scripts after every call.
+If it does, I built something that might help: An AI coach that gives your reps specific methodology-based scripts after every call.
 
 Example: When a prospect says "We're too busy," it coaches:
 "Try: I get it. That's why I called—to give you back 20 hours/week. Worth 15 min?"
@@ -1364,18 +1364,18 @@ AI Advantage Solutions
 
 Quick question about ${generatedEmails.company}:
 
-After your team gets Sandler training, how long does it take before they're back to old habits?
+After your team gets methodology training, how long does it take before they're back to old habits?
 
 Here's what I typically hear:
-- Week 1-2: They use the Pain Funnel
+- Week 1-2: They use the framework
 - Week 4: Using maybe 30% of it
 - Week 8: Back to feature-dumping
 
 The problem? No real-time reinforcement.
 
-I built an AI system that analyzes EVERY call and coaches reps with specific Sandler scripts.
+I built an AI system that analyzes EVERY call and coaches reps with methodology-specific scripts.
 
-Here's my question: If I could show you a way to make Sandler stick for 90+ days instead of 14 days, would 15 minutes be a good investment?
+Here's my question: If I could show you a way to make the methodology stick for 90+ days instead of 14 days, would 15 minutes be a good investment?
 
 If yes: [Calendar Link]
 If no: Just tell me "not interested" and I'll stop here.
@@ -1389,7 +1389,7 @@ Hamilton, ON`
                     title: "Variation 3: Ultra-Brief (Mobile Optimized)",
                     email: `${generatedEmails.firstName} -
 
-Problem: Your reps learned Sandler but don't execute it.
+Problem: Your reps learned the methodology but don't execute it.
 
 Solution: AI coach gives them specific scripts after EVERY call.
 
@@ -1408,19 +1408,19 @@ AI Advantage Solutions`
                     title: "Variation 4: Social Proof Version",
                     email: `Hi ${generatedEmails.firstName},
 
-I work with Sandler-trained sales teams at companies like ${generatedEmails.company}.
+I work with methodology-trained sales teams at companies like ${generatedEmails.company}.
 
 Common challenge they share: Reps know the methodology but don't execute it consistently.
 
 We solved this with an AI coaching system that:
 - Analyzes 100% of calls (not just 2-3/week)
-- Gives reps exact Sandler scripts for next time
-- Reinforces Pain Funnel, Up-Front Contract, Budget discussion, etc.
+- Gives reps exact methodology-based scripts for next time
+- Reinforces their framework consistently in every conversation
 
 Real example: When prospect says "Send me info," AI coaches:
 "Try: Happy to. After you review it, what happens? Should we book 15 min to discuss, or will you reach out?"
 
-Teams using this are seeing 40%+ improvement in Sandler execution scores.
+Teams using this are seeing 40%+ improvement in methodology execution scores.
 
 Would it make sense to see if this could work for ${generatedEmails.company}?
 

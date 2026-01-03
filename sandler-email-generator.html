@@ -785,36 +785,39 @@
             ];
             const solution = icpData.executionSolution || 'AI analyzes every call and gives methodology-specific scripts';
 
-            // Format pain points for LinkedIn
-            const topPain = pains[0];
-            const painsList = pains.slice(0, 3).map(p => `❌ ${p}`).join('\n');
+            // Create attention-grabbing headline
+            const topPain = pains[0].toLowerCase();
 
-            return `After investing $50K+ in sales methodology training (Sandler, MEDDIC, Challenger, etc.), we had a problem:
+            return `Your $50K sales training investment? Wasted by week 4.
 
-Reps KNEW the methodology but weren't EXECUTING it in real calls.
+Here's the data from 200+ sales orgs:
 
-The specific challenges:
-${painsList}
+Week 1: 85% methodology execution
+Week 2: 64% execution
+Week 4: 31% execution
+Week 12: Back to winging it
 
-We tried the usual fixes:
-❌ More role-playing → Didn't stick
-❌ Weekly call reviews → Only covered 2-3 calls
-❌ Reminder emails → Ignored
+The problem isn't the training. It's what happens AFTER.
 
-Then we built an AI coach that solves this: ${solution}
+Real issue: ${topPain}
 
-Example: When prospect says "We're too busy," AI coaches:
-"Try: I get it. That's why I called—to give you back 20 hours/week. Worth 15 min?"
+Here's what actually works (tested with 47 teams):
 
-Result: 40%+ improvement in execution scores. Reps now USE what they learned.
+Instead of hoping reps remember training, give them real-time coaching on EVERY call.
 
-Question for the group: How do you ensure your team executes their sales methodology 60+ days after training?
+Example:
+Rep hears: "We're too busy right now."
+AI coaches: "Try this: I get it. That's exactly why I called—to give you back 20 hours/week. Worth 15 min to explore?"
 
-Drop a comment - what's working for you?
+Result: Methodology execution stays above 70% for 90+ days.
+
+The lesson: Reinforcement beats training. Real-time beats delayed.
+
+Question: What's your team's execution rate 60 days after training? (Be honest 👇)
 
 ---
 
-Want to learn more? DM me or comment below and I'll share details.`;
+P.S. - If you're struggling with this, comment "execution" and I'll share what we learned from 200+ implementations.`;
         }
 
         // Generate LinkedIn Attraction Value Post
@@ -830,41 +833,44 @@ Want to learn more? DM me or comment below and I'll share details.`;
             ];
             const solution = icpData.attractionSolution || 'AI identifies ideal prospects and generates personalized outreach that gets 15-20% response rates';
 
-            // Format pain points for LinkedIn
-            const topPain = pains[0];
-            const painsList = pains.slice(0, 3).map(p => `❌ ${p}`).join('\n');
+            // Create attention-grabbing headline
+            const topPain = pains[0].toLowerCase();
 
-            return `Most sales teams struggle with the same problem:
+            return `Cold calling costs $75 per connect. Here's the math:
 
-Not enough qualified leads in the pipeline.
+100 dials → 10 connects → 1 meeting
+Rep cost: $60/hour
+Time: 5 hours
+Cost per meeting: $300+
 
-The specific challenges I hear:
-${painsList}
+And that's if you're GOOD at it.
 
-The usual suspects aren't working:
-❌ More cold calls → Rep burnout, minimal ROI
-❌ Marketing campaigns → Expensive, inconsistent results
-❌ Manual prospecting → Takes 60% of the day
+The real problem: ${topPain}
 
-We built an AI system that solves this: ${solution}
+Here's what I learned testing outreach with 89 B2B companies:
 
-How it works:
-✅ Identifies ideal prospects automatically
-✅ Generates personalized outreach (not templates)
-✅ Gets 15-20% response rates vs. 2-3% industry average
+Personalization beats volume. Every. Single. Time.
 
-Result: 3x more qualified meetings per month. Pipeline stays full.
+Generic cold call: 2-3% response rate
+Personalized outreach: 15-20% response rate
 
-Example AI-generated outreach:
-"Noticed your company is expanding. Most teams in your space struggle with pipeline consistency. We've helped similar companies 3x their qualified meetings. Worth exploring?"
+That's not a small difference. That's 7x better.
 
-Question for the group: How are you filling your pipeline in 2026?
+The key: Stop spraying and praying. Start precision targeting.
 
-Drop a comment - what's working for you?
+Example approach:
+Instead of: "Hi, I'd love to schedule 15 minutes..."
+Try: "Noticed [specific trigger]. Most companies in [industry] struggle with [exact pain]. We helped [similar company] [specific result]. Worth a conversation?"
+
+Result: Same effort, 7x more meetings.
+
+The lesson: Work smarter, not harder. Precision beats volume.
+
+Question: What's your current response rate on cold outreach? Drop a % below 👇
 
 ---
 
-Curious about the AI system? Comment below or DM me and I'll share details.`;
+P.S. - If you're stuck at <5% response rates, comment "pipeline" and I'll share the exact framework we use.`;
         }
 
         // Generate LinkedIn connection request
@@ -1491,21 +1497,21 @@ AI Advantage Solutions`
         // Copy a variation by index
         function copyVariation(index) {
             if (currentVariations[index]) {
-                copyText(currentVariations[index].email, `Variation ${index + 1} copied!`);
+                copyText(currentVariations[index].email, '✅ Copied!');
             }
         }
 
         // Copy text to clipboard
         function copyText(text, message) {
             navigator.clipboard.writeText(text).then(() => {
-                showAlert(message, 'success');
+                showAlert(message || '✅ Copied!', 'success');
             });
         }
 
         // Copy full email to clipboard
         function copyEmailToClipboard() {
             const fullEmail = `Subject: ${generatedEmails.subjectLines[0]}\n\n${generatedEmails.emailBody}`;
-            copyText(fullEmail, '📧 Full email copied to clipboard!');
+            copyText(fullEmail, '✅ Copied!');
         }
 
         // Track email as sent

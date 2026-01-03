@@ -2550,6 +2550,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 // Reload insights display
                 await loadCoachingInsights();
                 showAlert('Coaching insights generated!', 'success');
+                celebrateWithConfetti('default');
             } catch (error) {
                 console.error('Error generating insights:', error);
                 showAlert('Failed to generate insights.', 'error');
@@ -3177,6 +3178,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
 
             localStorage.setItem('icp', JSON.stringify(icp));
             showAlert('✅ Ideal Customer Profile saved!', 'success');
+            celebrateWithConfetti('default');
             displayICP();
         }
 
@@ -3480,6 +3482,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             document.getElementById('product-description').value = '';
 
             showAlert('✅ Product added!', 'success');
+            celebrateWithConfetti('default');
             loadProducts();
         }
 

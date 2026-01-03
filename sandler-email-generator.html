@@ -366,13 +366,26 @@
                 </div>
 
                 <div class="input-group">
-                    <label>Industry</label>
-                    <input type="text" id="industry" placeholder="Mixed-income housing providers">
+                    <label>Ideal Customer Profile (ICP) *</label>
+                    <select id="icp-selector" onchange="updateICPContext()">
+                        <option value="">Select ICP...</option>
+                        <option value="saas-sales-leader">SaaS Sales Leader (5+ reps, using Sandler/MEDDIC)</option>
+                        <option value="tech-vp-sales">Tech VP Sales (10-50 reps, struggling with execution)</option>
+                        <option value="services-sales-manager">Professional Services Sales Manager (methodology trained team)</option>
+                        <option value="smb-sales-owner">SMB Sales Owner (3-10 reps, need more pipeline)</option>
+                        <option value="enterprise-cro">Enterprise CRO (50+ reps, scaling challenges)</option>
+                        <option value="consulting-partner">Consulting Partner (selling to sales teams)</option>
+                    </select>
                 </div>
 
                 <div class="input-group">
-                    <label>Specific Pain Point (if known)</label>
-                    <textarea id="pain-point" placeholder="Overwhelmed with manual maintenance requests..."></textarea>
+                    <label>Industry</label>
+                    <input type="text" id="industry" placeholder="e.g., B2B SaaS, Professional Services">
+                </div>
+
+                <div class="input-group" id="custom-pain-point-group">
+                    <label>Additional Context (optional)</label>
+                    <textarea id="pain-point" placeholder="Any specific challenges you know about..."></textarea>
                 </div>
 
                 <div class="input-group">
@@ -492,6 +505,79 @@
         let currentTab = 'subject';
         let generatedEmails = {};
         let currentVariations = [];
+
+        // ICP-specific pain points and solutions database
+        const ICPDatabase = {
+            'saas-sales-leader': {
+                industry: 'B2B SaaS',
+                attractionPains: ['Pipeline inconsistent month-to-month', 'Cold calling yields 2-3% response rates', 'Marketing leads often unqualified', 'Reps spend 60% of day prospecting'],
+                executionPains: ['Reps know Sandler/MEDDIC but don\'t use it consistently', 'Training ROI drops off after 2-3 weeks', 'Can only coach 2-3 calls per rep per week', 'Discovery calls missing key qualification questions'],
+                attractionSolution: 'AI identifies ideal prospects and generates personalized outreach that gets 15-20% response rates',
+                executionSolution: 'AI analyzes every call and gives reps specific Sandler/MEDDIC scripts to use next time',
+                companySize: '5-20 sales reps',
+                dealSize: '$10K-$100K ACV'
+            },
+            'tech-vp-sales': {
+                industry: 'Technology/Software',
+                attractionPains: ['Team can\'t scale outbound without hiring more SDRs', 'Speed to lead >5 minutes causes lost opportunities', 'Inconsistent pipeline across reps', 'High cost per lead'],
+                executionPains: ['Methodology execution drops to 30% by week 4', 'Can\'t measure ROI on $50K+ training investment', 'Manager overwhelm - can\'t coach 20+ reps individually', 'Deals stalling in discovery due to poor qualification'],
+                attractionSolution: 'AI-powered prospecting generates 3x more qualified meetings without adding headcount',
+                executionSolution: 'AI coaches every call with methodology-specific scripts, ensuring consistent execution',
+                companySize: '10-50 sales reps',
+                dealSize: '$25K-$250K ACV'
+            },
+            'services-sales-manager': {
+                industry: 'Professional Services',
+                attractionPains: ['Too reliant on referrals and word-of-mouth', 'Outbound efforts feel scattershot', 'Hard to identify ideal prospects', 'Low meeting-to-proposal ratio'],
+                executionPains: ['Consultative selling skills inconsistent across team', 'Reps skip discovery questions under time pressure', 'Value prop conversations don\'t differentiate', 'Proposals sent without proper qualification'],
+                attractionSolution: 'AI identifies high-fit prospects and creates personalized outreach based on their specific needs',
+                executionSolution: 'AI ensures reps ask critical discovery questions and build value before proposing',
+                companySize: '5-15 consultants',
+                dealSize: '$50K-$500K project value'
+            },
+            'smb-sales-owner': {
+                industry: 'SMB / Small Business',
+                attractionPains: ['Pipeline too thin to hit quota consistently', 'Can\'t afford dedicated SDR team', 'Manual prospecting takes too much time', 'Limited marketing budget for lead gen'],
+                executionPains: ['No formal sales process or methodology', 'Reps wing it on calls', 'Inconsistent qualification leads to bad deals', 'Coaching happens ad-hoc, not systematically'],
+                attractionSolution: 'AI automates prospecting and generates personalized outreach, filling pipeline without hiring',
+                executionSolution: 'AI provides real-time coaching scripts so every rep sells like your best rep',
+                companySize: '3-10 sales reps',
+                dealSize: '$5K-$50K deals'
+            },
+            'enterprise-cro': {
+                industry: 'Enterprise',
+                attractionPains: ['ABM campaigns not generating enough pipeline', 'Long sales cycles need constant pipeline injection', 'SDR team expensive but ROI unclear', 'Can\'t personalize at scale'],
+                executionPains: ['Inconsistent execution across global teams', 'Complex sales methodology (MEDDIC, Challenger) hard to scale', 'Coaching doesn\'t reach all reps', 'Revenue forecasting unreliable due to poor qualification'],
+                attractionSolution: 'AI-powered ABM outreach generates executive-level meetings at scale',
+                executionSolution: 'AI ensures methodology compliance across global teams with real-time coaching',
+                companySize: '50-200+ sales reps',
+                dealSize: '$100K-$1M+ deals'
+            },
+            'consulting-partner': {
+                industry: 'Sales Consulting / Training',
+                attractionPains: ['Hard to prove ROI to prospective clients', 'Competing with in-house enablement teams', 'Difficult to generate qualified leads', 'Long sales cycles for consulting engagements'],
+                executionPains: ['Clients don\'t stick with methodology after training ends', 'No way to measure behavior change', 'Consulting doesn\'t scale without more consultants', 'Hard to show tangible results'],
+                attractionSolution: 'AI-powered platform you can white-label and offer to clients as part of your training programs',
+                executionSolution: 'AI extends your training impact by coaching reps 24/7 long after you leave',
+                companySize: 'Varies by client',
+                dealSize: '$25K-$250K consulting engagements'
+            }
+        };
+
+        // Update context when ICP is selected
+        function updateICPContext() {
+            const icpSelector = document.getElementById('icp-selector');
+            const selectedICP = icpSelector.value;
+            const industryField = document.getElementById('industry');
+
+            if (selectedICP && ICPDatabase[selectedICP]) {
+                const icpData = ICPDatabase[selectedICP];
+                // Auto-fill industry
+                if (industryField && !industryField.value) {
+                    industryField.value = icpData.industry;
+                }
+            }
+        }
 
         // Initialize
         window.onload = function() {
@@ -688,7 +774,7 @@
 
         // Generate LinkedIn Execution Value Post
         function generateLinkedInExecutionPost() {
-            return `After investing $50K+ in Sandler training, we had a problem:
+            return `After investing $50K+ in sales methodology training (Sandler, MEDDIC, Challenger, etc.), we had a problem:
 
 Reps KNEW the methodology but weren't EXECUTING it in real calls.
 
@@ -697,20 +783,20 @@ We tried:
 ❌ Weekly call reviews → Only covered 2-3 calls
 ❌ Reminder emails → Ignored
 
-Then we built an AI coach that analyzes EVERY call and gives specific Sandler scripts.
+Then we built an AI coach that analyzes EVERY call and gives methodology-specific scripts.
 
 Example: When prospect says "We're too busy," AI coaches:
 "Try: I get it. That's why I called—to give you back 20 hours/week. Worth 15 min?"
 
 Result: 40%+ improvement in execution scores. Reps now USE what they learned.
 
-Question for the group: How do you ensure your team executes Sandler 60+ days after training?
+Question for the group: How do you ensure your team executes their sales methodology 60+ days after training?
 
-What's working for you?
+Drop a comment - what's working for you?
 
 ---
 
-P.S. - Happy to share more about the AI tool if anyone's curious. DM me.`;
+Want to learn more? DM me or comment below and I'll share details.`;
         }
 
         // Generate LinkedIn Attraction Value Post
@@ -732,15 +818,15 @@ We built an AI system that solves this:
 Result: 3x more qualified meetings per month. Pipeline stays full.
 
 Example AI-generated outreach:
-"Hi [Name], noticed your company is expanding. Most teams in your space struggle with pipeline consistency. We've helped similar companies 3x their meetings. Worth exploring?"
+"Noticed your company is expanding in [industry]. Most teams in your space struggle with pipeline consistency. We've helped similar companies 3x their qualified meetings. Worth exploring?"
 
 Question for the group: How are you filling your pipeline in 2026?
 
-What's working for you?
+Drop a comment - what's working for you?
 
 ---
 
-P.S. - Happy to share more details if anyone's interested. DM me.`;
+Curious about the AI system? Comment below or DM me and I'll share details.`;
         }
 
         // Generate LinkedIn connection request
@@ -1010,11 +1096,11 @@ AI Advantage Solutions`;
         // Get CTA text based on type
         function getCTAText(ctaType) {
             if (ctaType === 'calendar') {
-                return 'If yes, grab 15 minutes here: [Calendar Link]';
+                return 'If yes, book an Execution Exploration call (20 min, no pitch):\nhttps://tidycal.com/aiautomations/execution-exploration';
             } else if (ctaType === 'reply') {
-                return 'If yes, just reply "curious" and I\'ll send you a 2-minute demo video.\nIf no, reply "not a fit" and I won\'t follow up.';
+                return 'If yes, just reply "interested" and I\'ll send you more details.\nIf no, reply "not a fit" and I won\'t follow up.';
             } else {
-                return 'If yes, grab 15 minutes here: [Calendar Link]\nOr just reply "curious" for a quick demo video.\nIf no, reply "not a fit" and I won\'t follow up.';
+                return 'If yes, book an Execution Exploration call:\nhttps://tidycal.com/aiautomations/execution-exploration\n\nOr just reply "interested" for more details first.\nIf not a fit, just say so and I won\'t follow up.';
             }
         }
 

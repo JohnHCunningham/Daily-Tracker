@@ -910,15 +910,25 @@ John`;
         function generateSoftEmail(firstName, company, industry, painPoint, ctaType) {
             const ctaText = getCTAText(ctaType);
             const emailType = document.getElementById('email-type').value;
+            const icpSelector = document.getElementById('icp-selector').value;
+            const icpData = ICPDatabase[icpSelector] || {};
+
+            // Get ICP-specific pain points
+            const pains = icpData.executionPains || [
+                'Reps know the methodology but don\'t use it consistently',
+                'Training ROI drops off after 2-3 weeks',
+                'Can only coach 2-3 calls per rep per week'
+            ];
+            const solution = icpData.executionSolution || 'AI analyzes every call and gives reps methodology-specific scripts';
 
             if (emailType === 'followup') {
                 return `Hi ${firstName},
 
-Not sure if you saw my note below about Sandler execution coaching.
+Not sure if you saw my note below about sales methodology execution.
 
 Quick question: Do you have a system to coach every call your team makes, or just 2-3 per week per rep?
 
-Most managers can't scale coaching. We built an AI that gives reps specific Sandler scripts after EVERY call.
+Most managers can't scale coaching. We built an AI that gives reps specific scripts after EVERY call.
 
 Worth 15 minutes to explore?
 
@@ -929,14 +939,19 @@ John Cunningham
 AI Advantage Solutions`;
             }
 
-            // Ice breaker version - much shorter
+            // Ice breaker version with ICP-specific pains
+            const painsList = pains.slice(0, 3).map(p => `- ${p}`).join('\n');
+
             return `Hi ${firstName},
 
-Quick question: Are your reps executing Sandler methodology in real conversations, or just talking about it?
+Quick question: Are your reps executing their sales methodology in real conversations, or just talking about it?
 
-Most sales leaders tell me their team knows Sandler but doesn't consistently use it${painPoint ? `, especially with ${painPoint}` : ''}.
+Most sales leaders in ${industry || 'your space'} tell me:
+${painsList}
 
-We built an AI coach that analyzes every call and gives reps specific Sandler scripts to use next time.
+Sound familiar?
+
+We built an AI coach that solves this: ${solution}
 
 Example: When prospect says "We're too busy," the AI coaches:
 "Try: That's why I called—to give you back 20 hours/week. Worth 15 min?"
@@ -956,17 +971,23 @@ AI Advantage Solutions`;
         function generateBoldEmail(firstName, company, industry, painPoint, ctaType) {
             const ctaText = getCTAText(ctaType);
             const emailType = document.getElementById('email-type').value;
+            const icpSelector = document.getElementById('icp-selector').value;
+            const icpData = ICPDatabase[icpSelector] || {};
+
+            // Get ICP-specific data
+            const topPain = icpData.executionPains ? icpData.executionPains[0] : 'Methodology execution drops to 30% by week 4';
+            const solution = icpData.executionSolution || 'AI analyzes every call and gives reps methodology-specific scripts';
 
             if (emailType === 'followup') {
                 return `${firstName} -
 
 Haven't heard back, so I'll be direct:
 
-Your Sandler investment is probably being wasted.
+Your sales methodology investment is probably being wasted.
 
 Week 1: Reps execute. Week 4: 30% compliance. Week 12: Back to old habits.
 
-We've helped teams in ${industry} fix this with AI coaching after EVERY call. Reps get specific scripts, not generic feedback.
+We've helped teams in ${industry || 'your space'} fix this with AI coaching after EVERY call. Reps get specific scripts, not generic feedback.
 
 Worth a quick call to stop the ROI leak?
 
@@ -976,24 +997,26 @@ John Cunningham
 AI Advantage Solutions`;
             }
 
-            // Ice breaker version - direct and bold
+            // Ice breaker version - direct and bold with ICP pain
             return `Hi ${firstName},
 
-Your Sandler-trained reps aren't executing the methodology.
+Your methodology-trained reps aren't executing what they learned.
 
-I know that's direct, but here's what I see constantly:
+I know that's direct, but here's what I see constantly in ${industry || 'your space'}:
 - Week 1: Fired up
 - Week 4: Using 30% of it
 - Week 12: Back to old habits
 
 The $50K+ training investment? Wasted.
 
-We built an AI that gives reps Sandler scripts after EVERY call. Not generic feedback—specific scripts.
+The real problem: ${topPain}
+
+We built an AI that solves this. ${solution}
 
 Example: Prospect says "Send info." AI coaches:
 "Try: Happy to. After you review it, what happens next?"
 
-Result: 40%+ improvement in Sandler execution scores.
+Result: 40%+ improvement in methodology execution scores.
 
 Worth 15 minutes to see if this stops the ROI leak at ${company}?
 
@@ -1008,6 +1031,16 @@ AI Advantage Solutions`;
         function generateAttractionSoftEmail(firstName, company, industry, painPoint, ctaType) {
             const ctaText = getCTAText(ctaType);
             const emailType = document.getElementById('email-type').value;
+            const icpSelector = document.getElementById('icp-selector').value;
+            const icpData = ICPDatabase[icpSelector] || {};
+
+            // Get ICP-specific pain points
+            const pains = icpData.attractionPains || [
+                'Pipeline inconsistent month-to-month',
+                'Cold calling yields 2-3% response rates',
+                'Manual prospecting takes too much time'
+            ];
+            const solution = icpData.attractionSolution || 'AI identifies ideal prospects and generates personalized outreach that gets 15-20% response rates';
 
             if (emailType === 'followup') {
                 return `Hi ${firstName},
@@ -1016,7 +1049,7 @@ Not sure if you saw my note below about helping ${company} get more qualified le
 
 Quick question: Is your pipeline full enough to hit quota comfortably?
 
-Most teams struggle with this. We've helped companies in ${industry} 3x their qualified meetings using AI-powered prospecting.
+Most teams struggle with this. We've helped companies in ${industry || 'your space'} 3x their qualified meetings using AI-powered prospecting.
 
 Worth 15 minutes to explore?
 
@@ -1027,16 +1060,21 @@ John Cunningham
 AI Advantage Solutions`;
             }
 
-            // Ice breaker version - much shorter
+            // Ice breaker version with ICP-specific pains
+            const painsList = pains.slice(0, 3).map(p => `- ${p}`).join('\n');
+
             return `Hi ${firstName},
 
 Quick question: Is ${company}'s pipeline full enough to hit quota comfortably?
 
-Most sales leaders in ${industry} tell me their biggest challenge is getting enough qualified leads${painPoint ? `, especially with ${painPoint}` : ''}.
+Most sales leaders in ${industry || 'your space'} tell me:
+${painsList}
 
-We built an AI system that identifies your ideal prospects and creates personalized outreach that gets 15-20% response rates (vs. 2-3% industry average).
+Sound familiar?
 
-Result: 3x more qualified meetings per month without burning out your reps on cold calls.
+We built an AI system that solves this: ${solution}
+
+Result: 3x more qualified meetings per month without burning out your reps.
 
 Worth 15 minutes to see if this could work for ${company}?
 
@@ -1051,6 +1089,13 @@ AI Advantage Solutions`;
         function generateAttractionBoldEmail(firstName, company, industry, painPoint, ctaType) {
             const ctaText = getCTAText(ctaType);
             const emailType = document.getElementById('email-type').value;
+            const icpSelector = document.getElementById('icp-selector').value;
+            const icpData = ICPDatabase[icpSelector] || {};
+
+            // Get ICP-specific data
+            const topPain = icpData.attractionPains ? icpData.attractionPains[0] : 'Pipeline too thin to hit quota consistently';
+            const solution = icpData.attractionSolution || 'AI-powered prospecting generates 3x more qualified meetings';
+            const pains = icpData.attractionPains || ['Cold calling = low ROI', 'Marketing leads = inconsistent', 'Manual prospecting = too time-consuming'];
 
             if (emailType === 'followup') {
                 return `${firstName} -
@@ -1059,7 +1104,7 @@ Haven't heard back, so I'll be direct:
 
 Is your pipeline full enough, or could you use more qualified meetings?
 
-If it's the latter, we've helped teams in ${industry} 3x their qualified meetings using AI-powered prospecting.
+If it's the latter, we've helped teams in ${industry || 'your space'} 3x their qualified meetings using AI-powered prospecting.
 
 15-20% response rates vs. 2-3% industry average.
 
@@ -1071,16 +1116,17 @@ John Cunningham
 AI Advantage Solutions`;
             }
 
-            // Ice breaker version - direct and short
+            // Ice breaker version - direct with ICP pains
+            const painsList = pains.slice(0, 3).map(p => `- ${p}`).join('\n');
+
             return `Hi ${firstName},
 
-I'll be direct: Most sales teams in ${industry} need more qualified leads.
+I'll be direct: ${topPain}
 
-The usual suspects aren't working:
-- Cold calling = low ROI
-- Marketing leads = inconsistent${painPoint ? `\n- ${painPoint}` : ''}
+The usual suspects aren't working for teams in ${industry || 'your space'}:
+${painsList}
 
-We built an AI system that finds your ideal prospects and generates personalized outreach that actually gets responses.
+We built an AI system that solves this. ${solution}
 
 Results: 15-20% response rates. 3x more qualified meetings. No SDR burnout.
 

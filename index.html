@@ -1626,7 +1626,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             const loading = document.getElementById('manager-notes-loading');
 
             try {
-                const { data: session } = await supabase.auth.getSession();
+                const { data: session } = await supabaseClient.auth.getSession();
                 if (!session || !session.session) {
                     container.innerHTML = '<p style="text-align: center; opacity: 0.6; padding: 30px;">Please sign in to view manager feedback</p>';
                     return;
@@ -1634,11 +1634,11 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
 
                 loading.style.display = 'block';
 
-                const { data: notes, error } = await supabase
+                const { data: notes, error } = await supabaseClient
                     .from('Manager_Notes')
                     .select('*')
                     .eq('user_id', session.session.user.id)
-                    .eq('is_visible_to_user', true)
+                    .eq('is_private', false)
                     .order('created_at', { ascending: false })
                     .limit(10);
 
@@ -1658,16 +1658,23 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                         year: 'numeric'
                     });
 
+                    const severityColor = note.severity === 'high' ? 'var(--brand-pink)'
+                        : note.severity === 'medium' ? 'var(--brand-gold)'
+                        : 'var(--brand-teal)';
+
                     return `
-                        <div class="manager-note type-${note.note_type}">
+                        <div class="manager-note type-${note.note_type}" style="border-left: 4px solid ${severityColor};">
                             <div class="note-header">
-                                <div class="note-type-badge ${note.note_type}">${note.note_type.toUpperCase()}</div>
+                                <div class="note-type-badge ${note.note_type}">${note.note_type.replace(/_/g, ' ').toUpperCase()}</div>
                                 <div class="note-date">${createdDate}</div>
                             </div>
-                            <div class="note-text">${note.note_text}</div>
-                            ${note.related_metric ? `
-                                <div class="note-related-metric">
-                                    📊 Related to: ${note.related_metric}
+                            <div class="note-subject" style="font-weight: 700; color: var(--brand-aqua); margin-bottom: 8px;">
+                                ${escapeHtml(note.subject)}
+                            </div>
+                            <div class="note-text">${escapeHtml(note.content)}</div>
+                            ${note.category ? `
+                                <div class="note-related-metric" style="margin-top: 10px; font-size: 0.85rem; color: var(--brand-gold);">
+                                    📊 Category: ${note.category}
                                 </div>
                             ` : ''}
                         </div>
@@ -1686,7 +1693,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             const loading = document.getElementById('active-goals-loading');
 
             try {
-                const { data: session } = await supabase.auth.getSession();
+                const { data: session } = await supabaseClient.auth.getSession();
                 if (!session || !session.session) {
                     container.innerHTML = '<p style="text-align: center; opacity: 0.6; padding: 30px;">Please sign in to view goals</p>';
                     return;
@@ -1694,7 +1701,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
 
                 loading.style.display = 'block';
 
-                const { data: goals, error } = await supabase
+                const { data: goals, error } = await supabaseClient
                     .from('User_Goals')
                     .select('*')
                     .eq('user_id', session.session.user.id)
@@ -1711,9 +1718,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 }
 
                 container.innerHTML = goals.map(goal => {
-                    const progressPercent = goal.target_value > 0
-                        ? Math.min((goal.current_value / goal.target_value) * 100, 100)
-                        : 0;
+                    const progressPercent = goal.progress_percentage || 0;
 
                     const progressClass = progressPercent >= 100 ? 'achieved'
                         : progressPercent >= 70 ? 'on-track'
@@ -1724,39 +1729,54 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                         day: 'numeric'
                     });
 
-                    const endDateStr = goal.end_date ? new Date(goal.end_date).toLocaleDateString('en-US', {
+                    const targetDateStr = new Date(goal.target_date).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric'
-                    }) : 'Ongoing';
+                    });
+
+                    const statusColor = goal.status === 'completed' ? 'var(--brand-teal)'
+                        : goal.status === 'overdue' ? 'var(--brand-pink)'
+                        : 'var(--brand-gold)';
 
                     return `
-                        <div class="goal-card">
+                        <div class="goal-card" style="border-left: 4px solid ${statusColor};">
                             <div class="goal-header">
-                                <div class="goal-metric-name">${goal.metric_type.replace(/_/g, ' ')}</div>
+                                <div class="goal-metric-name">
+                                    ${goal.goal_type.replace(/_/g, ' ')}
+                                    ${goal.category ? `<span style="font-size: 0.8rem; opacity: 0.7;"> • ${goal.category}</span>` : ''}
+                                </div>
                                 <div class="goal-status-badge ${goal.status}">${goal.status.toUpperCase()}</div>
+                            </div>
+                            <div style="margin: 15px 0;">
+                                <div style="font-weight: 700; color: var(--brand-aqua); margin-bottom: 8px;">
+                                    ${escapeHtml(goal.title)}
+                                </div>
+                                <div style="font-size: 0.9rem; opacity: 0.8; line-height: 1.5;">
+                                    ${escapeHtml(goal.description)}
+                                </div>
                             </div>
                             <div class="goal-progress-section">
                                 <div class="goal-values">
-                                    <div>
-                                        <span class="goal-current">${goal.current_value}</span>
-                                        <span class="goal-target">/ ${goal.target_value}</span>
+                                    <div style="font-size: 0.85rem; color: rgba(242, 244, 248, 0.7);">
+                                        Progress
                                     </div>
-                                    <div style="color: var(--brand-aqua); font-weight: 700;">
+                                    <div style="color: var(--brand-aqua); font-weight: 700; font-size: 1.2rem;">
                                         ${progressPercent.toFixed(0)}%
                                     </div>
                                 </div>
-                                <div class="goal-progress-bar">
+                                <div class="goal-progress-bar" style="margin-top: 8px;">
                                     <div class="goal-progress-fill ${progressClass}"
                                          style="width: ${progressPercent}%"></div>
                                 </div>
-                                <div class="goal-period">
-                                    ${goal.period.charAt(0).toUpperCase() + goal.period.slice(1)} Goal • ${startDate} - ${endDateStr}
+                                <div class="goal-period" style="margin-top: 10px; font-size: 0.85rem; opacity: 0.7;">
+                                    ${startDate} → ${targetDateStr}
+                                    ${goal.target_metric && goal.target_value ? ` • Target: ${goal.target_metric} = ${goal.target_value}` : ''}
                                 </div>
                             </div>
                             ${goal.notes ? `
-                                <div class="goal-notes">
-                                    💬 ${goal.notes}
+                                <div class="goal-notes" style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); font-size: 0.9rem; opacity: 0.8;">
+                                    💬 ${escapeHtml(goal.notes)}
                                 </div>
                             ` : ''}
                         </div>

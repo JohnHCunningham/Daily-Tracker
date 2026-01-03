@@ -384,6 +384,14 @@
                 </div>
 
                 <div class="input-group">
+                    <label>Email Type</label>
+                    <select id="email-type">
+                        <option value="icebreaker">Ice Breaker (First contact)</option>
+                        <option value="followup">Follow-up (After no response)</option>
+                    </select>
+                </div>
+
+                <div class="input-group">
                     <label>Channel</label>
                     <select id="channel-type" onchange="updateChannelOptions()">
                         <option value="email">Email Outreach</option>
@@ -745,155 +753,188 @@ P.S. - Happy to share more about the AI tool if anyone's curious. DM me.`;
         // Generate soft approach email
         function generateSoftEmail(firstName, company, industry, painPoint, ctaType) {
             const ctaText = getCTAText(ctaType);
+            const emailType = document.getElementById('email-type').value;
 
+            if (emailType === 'followup') {
+                return `Hi ${firstName},
+
+Not sure if you saw my note below about Sandler execution coaching.
+
+Quick question: **Do you have a system to coach every call your team makes, or just 2-3 per week per rep?**
+
+Most managers can't scale coaching. We built an AI that gives reps specific Sandler scripts after EVERY call.
+
+Worth 15 minutes to explore?
+
+${ctaText}
+
+Best,
+John Cunningham
+AI Advantage Solutions`;
+            }
+
+            // Ice breaker version - much shorter
             return `Hi ${firstName},
 
-I know I'm catching you cold, so I'll be brief.
+Quick question: **Are your reps executing Sandler methodology in real conversations, or just talking about it?**
 
-I help sales leaders at ${industry} solve a specific problem:
+Most sales leaders tell me their team knows Sandler but doesn't consistently use it${painPoint ? `, especially with ${painPoint}` : ''}.
 
-**Their reps know Sandler methodology, but they're not executing it in real conversations.**
+We built an AI coach that analyzes every call and gives reps specific Sandler scripts to use next time.
 
-The result? Sandler-trained teams that still:
-- Feature-dump instead of using the Pain Funnel
-- Skip Up-Front Contracts
-- Talk 60% of the call instead of 30%
+**Example:** When prospect says "We're too busy," the AI coaches:
+> "Try: 'That's why I called—to give you back 20 hours/week. Worth 15 min?'"
 
-I built an AI-powered coaching system that analyzes EVERY sales call and gives reps **specific Sandler scripts** to use next time—not generic feedback like "build more rapport."
+**Result:** Reps actually execute what they learned in training.
 
-**Example:** When a prospect says "We're too busy," instead of ending the call, the system coaches:
-
-> *"Try: 'I get it. And that's exactly why I called—to potentially give you back 20 hours a week. If I could show you how in 15 minutes, would that be worth it?'"*
-
-**Just curious:** Do you have a system to coach every call your team makes, or are you limited to 2-3 calls per week per rep?
-
-If you don't, would it make sense to spend 15 minutes exploring whether this could help ${company} hit quota more consistently?
-
-Worst case, we'll both know it's not a fit.
-
-Fair enough?
+Worth 15 minutes to see if this works for ${company}?
 
 ${ctaText}
 
 Best,
 **John Cunningham**
-AI Advantage Solutions
-Hamilton, ON
-[Phone] | [Calendar Link]
-
-P.S. - I've attached a one-pager showing exactly how it works. If you're curious, you can also see a live demo of your own call being analyzed with Sandler coaching: [Calendar Link]`;
+AI Advantage Solutions`;
         }
 
         // Generate bold approach email
         function generateBoldEmail(firstName, company, industry, painPoint, ctaType) {
             const ctaText = getCTAText(ctaType);
+            const emailType = document.getElementById('email-type').value;
 
+            if (emailType === 'followup') {
+                return `${firstName} -
+
+Haven't heard back, so I'll be direct:
+
+**Your Sandler investment is probably being wasted.**
+
+Week 1: Reps execute. Week 4: 30% compliance. Week 12: Back to old habits.
+
+We've helped teams in ${industry} fix this with AI coaching after EVERY call. Reps get specific scripts, not generic feedback.
+
+Worth a quick call to stop the ROI leak?
+
+${ctaText}
+
+John Cunningham
+AI Advantage Solutions`;
+            }
+
+            // Ice breaker version - direct and bold
             return `Hi ${firstName},
 
-That's probably a bold subject line, but hear me out.
+**Your Sandler-trained reps aren't executing the methodology.**
 
-Most sales leaders invest in Sandler training (or already have Sandler-trained reps), but here's what happens:
+I know that's direct, but here's what I see constantly:
+- Week 1: Fired up
+- Week 4: Using 30% of it
+- Week 12: Back to old habits
 
-- **Week 1:** Reps are fired up, taking notes
-- **Week 4:** They're using 30% of what they learned
-- **Week 12:** Back to old habits—feature dumping, skipping Pain Funnel, talking 60% of the call
+The $50K+ training investment? Wasted.
 
-The problem isn't the training. It's **reinforcement**.
+We built an AI that gives reps Sandler scripts after EVERY call. Not generic feedback—specific scripts.
 
-I built an AI system that listens to every call and gives reps **specific Sandler scripts** for next time.
+**Example:** Prospect says "Send info." AI coaches:
+> "Try: 'Happy to. After you review it, what happens next?'"
 
-Example: When a prospect says "Send me some information," instead of just sending it, the AI coaches:
+**Result:** 40%+ improvement in Sandler execution scores.
 
-> *"Try: 'Happy to. Just so I don't waste your time, after you review it, what happens next? Are we scheduling a follow-up, or will you reach out if interested?'"*
-
-**Question:** Would it be worth 15 minutes to see how this could help ${company} actually execute the Sandler methodology you've already invested in?
+Worth 15 minutes to see if this stops the ROI leak at ${company}?
 
 ${ctaText}
 
 Best,
 **John Cunningham**
-AI Advantage Solutions
-Hamilton, ON
-[Phone] | [Calendar Link]`;
+AI Advantage Solutions`;
         }
 
         // Generate attraction soft approach email
         function generateAttractionSoftEmail(firstName, company, industry, painPoint, ctaType) {
             const ctaText = getCTAText(ctaType);
+            const emailType = document.getElementById('email-type').value;
 
+            if (emailType === 'followup') {
+                return `Hi ${firstName},
+
+Not sure if you saw my note below about helping ${company} get more qualified leads.
+
+Quick question: **Is your pipeline full enough to hit quota comfortably?**
+
+Most teams struggle with this. We've helped companies in ${industry} 3x their qualified meetings using AI-powered prospecting.
+
+Worth 15 minutes to explore?
+
+${ctaText}
+
+Best,
+John Cunningham
+AI Advantage Solutions`;
+            }
+
+            // Ice breaker version - much shorter
             return `Hi ${firstName},
 
-I know I'm catching you cold, so I'll be brief.
+Quick question: **Is ${company}'s pipeline full enough to hit quota comfortably?**
 
-I help sales leaders at ${industry} solve a specific problem:
+Most sales leaders in ${industry} tell me their biggest challenge is getting enough qualified leads${painPoint ? `, especially with ${painPoint}` : ''}.
 
-**They need more qualified leads, but cold calling isn't cutting it anymore.**
+We built an AI system that identifies your ideal prospects and creates personalized outreach that gets 15-20% response rates (vs. 2-3% industry average).
 
-The result? Sales teams that:
-- Spend 60% of their day on outreach with minimal results
-- Struggle to fill the pipeline with quality prospects
-- Rely too heavily on a few referral sources
+**Result:** 3x more qualified meetings per month without burning out your reps on cold calls.
 
-I built an AI-powered system that identifies your ideal prospects and generates personalized outreach that actually gets responses—not generic templates, but messaging tailored to each prospect's pain points.
-
-**Example:** Instead of "I'd love to connect," the system creates:
-
-> *"Hi ${firstName}, I noticed ${company} is expanding in ${industry}. Most teams in your space struggle with ${painPoint || 'inconsistent lead flow'}. We help companies like yours get 3x more qualified meetings. Worth 15 minutes to explore?"*
-
-**Just curious:** Are you happy with the number of qualified leads hitting your pipeline, or would more meetings help you hit quota more consistently?
-
-If you'd benefit from more pipeline, would it make sense to spend 15 minutes exploring whether this could help ${company}?
-
-Worst case, we'll both know it's not a fit.
-
-Fair enough?
+Worth 15 minutes to see if this could work for ${company}?
 
 ${ctaText}
 
 Best,
 **John Cunningham**
-AI Advantage Solutions
-Hamilton, ON
-[Phone] | [Calendar Link]
-
-P.S. - I've attached a one-pager showing exactly how it works. If you're curious, you can also see a live demo: [Calendar Link]`;
+AI Advantage Solutions`;
         }
 
         // Generate attraction bold approach email
         function generateAttractionBoldEmail(firstName, company, industry, painPoint, ctaType) {
             const ctaText = getCTAText(ctaType);
+            const emailType = document.getElementById('email-type').value;
 
+            if (emailType === 'followup') {
+                return `${firstName} -
+
+Haven't heard back, so I'll be direct:
+
+**Is your pipeline full enough, or could you use more qualified meetings?**
+
+If it's the latter, we've helped teams in ${industry} 3x their qualified meetings using AI-powered prospecting.
+
+15-20% response rates vs. 2-3% industry average.
+
+Worth a quick call?
+
+${ctaText}
+
+John Cunningham
+AI Advantage Solutions`;
+            }
+
+            // Ice breaker version - direct and short
             return `Hi ${firstName},
 
-That's probably a bold subject line, but hear me out.
+I'll be direct: **Most sales teams in ${industry} need more qualified leads.**
 
-Most sales leaders tell me the same thing:
+The usual suspects aren't working:
+- Cold calling = low ROI
+- Marketing leads = inconsistent${painPoint ? `\n- ${painPoint}` : ''}
 
-- **Cold calling takes too much time** with too little return
-- **Marketing leads are inconsistent** or unqualified
-- **The pipeline is always too thin** to hit quota comfortably
+We built an AI system that finds your ideal prospects and generates personalized outreach that actually gets responses.
 
-Sound familiar?
+**Results:** 15-20% response rates. 3x more qualified meetings. No SDR burnout.
 
-The problem isn't effort—your team is working hard. The problem is **attraction**.
-
-I built an AI system that finds your ideal prospects and generates personalized outreach that gets responses.
-
-Example: Instead of generic cold emails, it creates messages like:
-
-> *"Hi ${firstName}, saw ${company} is growing in ${industry}. Most teams struggle with ${painPoint || 'pipeline consistency'}. We've helped similar companies 3x their qualified meetings. Worth a quick chat?"*
-
-**Results:** Our clients average 15-20% response rates (vs. 2-3% industry average) and book 3x more qualified meetings per month.
-
-**Question:** Would it be worth 15 minutes to see how this could help ${company} fill the pipeline without burning out your reps on cold calls?
+Worth 15 minutes to see if this works for ${company}?
 
 ${ctaText}
 
 Best,
 **John Cunningham**
-AI Advantage Solutions
-Hamilton, ON
-[Phone] | [Calendar Link]`;
+AI Advantage Solutions`;
         }
 
         // Get CTA text based on type

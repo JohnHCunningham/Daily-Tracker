@@ -420,18 +420,18 @@
 
                 <div id="linkedin-options" style="display: none;">
                     <div class="input-group">
-                        <label>LinkedIn Message Type</label>
+                        <label>LinkedIn Content Type</label>
                         <select id="linkedin-type">
+                            <option value="value-post">Value Post (Share insights)</option>
                             <option value="connection">Connection Request</option>
                             <option value="dm">Direct Message (After Connected)</option>
-                            <option value="group-post">Sandler Group Post</option>
                             <option value="comment">Comment on Discussion</option>
                         </select>
                     </div>
 
                     <div class="input-group">
                         <label>Context (Optional)</label>
-                        <textarea id="linkedin-context" placeholder="e.g., Saw your post about Pain Funnel challenges..."></textarea>
+                        <textarea id="linkedin-context" placeholder="e.g., Saw your post about sales challenges..."></textarea>
                     </div>
                 </div>
 
@@ -638,32 +638,36 @@
         function generateLinkedInMessages(firstName, company, industry, painPoint) {
             const linkedinType = document.getElementById('linkedin-type').value;
             const context = document.getElementById('linkedin-context').value.trim();
+            const valueProp = document.getElementById('value-prop').value;
 
             let messages = {};
 
             switch(linkedinType) {
+                case 'value-post':
+                    const postTitle = valueProp === 'attraction' ? 'LinkedIn Value Post (Attraction)' : 'LinkedIn Value Post (Execution)';
+                    messages = {
+                        subjectLines: [postTitle],
+                        emailBody: valueProp === 'attraction'
+                            ? generateLinkedInAttractionPost()
+                            : generateLinkedInExecutionPost()
+                    };
+                    break;
                 case 'connection':
                     messages = {
                         subjectLines: ['LinkedIn Connection Request'],
-                        emailBody: generateLinkedInConnection(firstName, company, context)
+                        emailBody: generateLinkedInConnection(firstName, company, context, valueProp)
                     };
                     break;
                 case 'dm':
                     messages = {
                         subjectLines: ['LinkedIn Direct Message'],
-                        emailBody: generateLinkedInDM(firstName, company, industry, painPoint, context)
-                    };
-                    break;
-                case 'group-post':
-                    messages = {
-                        subjectLines: ['Sandler Group Post'],
-                        emailBody: generateLinkedInGroupPost()
+                        emailBody: generateLinkedInDM(firstName, company, industry, painPoint, context, valueProp)
                     };
                     break;
                 case 'comment':
                     messages = {
                         subjectLines: ['Discussion Comment'],
-                        emailBody: generateLinkedInComment(context)
+                        emailBody: generateLinkedInComment(context, valueProp)
                     };
                     break;
             }
@@ -673,50 +677,18 @@
                 style: linkedinType,
                 firstName,
                 company,
+                valueProp,
                 channel: 'linkedin'
             };
 
             currentTab = 'email';
             displayCurrentTab();
-            showAlert('✅ LinkedIn message generated!', 'success');
+            showAlert('✅ LinkedIn content generated!', 'success');
         }
 
-        // Generate LinkedIn connection request
-        function generateLinkedInConnection(firstName, company, context) {
-            if (context) {
-                return `Hi ${firstName},\n\n${context}\n\nI help sales teams execute Sandler methodology in real conversations. Would love to connect and share insights!\n\nBest,\nJohn`;
-            } else {
-                return `Hi ${firstName},\n\nSaw you're with ${company}. I work with sales teams implementing Sandler methodology and would love to connect.\n\nLooking forward to sharing insights!\n\nBest,\nJohn`;
-            }
-        }
-
-        // Generate LinkedIn DM (after connection)
-        function generateLinkedInDM(firstName, company, industry, painPoint, context) {
-            const contextLine = context ? `\n\n${context}\n\n` : '\n\n';
-
-            return `Hi ${firstName},${contextLine}Thanks for connecting! I noticed you're focused on ${industry}.
-
-Quick question: After your team gets Sandler training, do you have a system to ensure they're actually EXECUTING it in real calls?
-
-Most sales leaders I talk to face the same challenge:
-- Reps learn Sandler → Get excited → Week 1-2 they use it → Week 4+ back to old habits
-
-I built an AI coaching tool that analyzes every call and gives reps specific Sandler scripts to use next time.
-
-**Example:** When prospect says "We're too busy," instead of ending the call, it coaches:
-> "Try: 'I get it. That's exactly why I called—to give you back 20 hours/week. Worth 15 min to explore?'"
-
-Worth a quick look? I can send you a 2-min demo or we could jump on a quick call.
-
-Either way, happy to be connected!
-
-Best,
-John`;
-        }
-
-        // Generate LinkedIn group post
-        function generateLinkedInGroupPost() {
-            return `After Sandler training, we had a problem:
+        // Generate LinkedIn Execution Value Post
+        function generateLinkedInExecutionPost() {
+            return `After investing $50K+ in Sandler training, we had a problem:
 
 Reps KNEW the methodology but weren't EXECUTING it in real calls.
 
@@ -728,11 +700,11 @@ We tried:
 Then we built an AI coach that analyzes EVERY call and gives specific Sandler scripts.
 
 Example: When prospect says "We're too busy," AI coaches:
-**"Try: 'I get it. That's why I called—to give you back 20 hours/week. Worth 15 min to explore?'"**
+"Try: I get it. That's why I called—to give you back 20 hours/week. Worth 15 min?"
 
-Result: Reps now USE what they learned.
+Result: 40%+ improvement in execution scores. Reps now USE what they learned.
 
-**Question for the group:** How do you ensure your team executes Sandler 60+ days after training?
+Question for the group: How do you ensure your team executes Sandler 60+ days after training?
 
 What's working for you?
 
@@ -741,8 +713,106 @@ What's working for you?
 P.S. - Happy to share more about the AI tool if anyone's curious. DM me.`;
         }
 
+        // Generate LinkedIn Attraction Value Post
+        function generateLinkedInAttractionPost() {
+            return `Most sales teams struggle with the same problem:
+
+Not enough qualified leads in the pipeline.
+
+The usual suspects aren't working:
+❌ Cold calling → 2-3% response rates, rep burnout
+❌ Marketing leads → Inconsistent, often unqualified
+❌ Manual prospecting → Takes 60% of the day
+
+We built an AI system that solves this:
+✅ Identifies ideal prospects automatically
+✅ Generates personalized outreach (not templates)
+✅ Gets 15-20% response rates vs. 2-3% industry average
+
+Result: 3x more qualified meetings per month. Pipeline stays full.
+
+Example AI-generated outreach:
+"Hi [Name], noticed your company is expanding. Most teams in your space struggle with pipeline consistency. We've helped similar companies 3x their meetings. Worth exploring?"
+
+Question for the group: How are you filling your pipeline in 2026?
+
+What's working for you?
+
+---
+
+P.S. - Happy to share more details if anyone's interested. DM me.`;
+        }
+
+        // Generate LinkedIn connection request
+        function generateLinkedInConnection(firstName, company, context, valueProp) {
+            if (context) {
+                const focusArea = valueProp === 'attraction'
+                    ? 'helping sales teams generate more qualified leads'
+                    : 'helping sales teams execute their methodology';
+                return `Hi ${firstName},\n\n${context}\n\nI work with sales teams on ${focusArea}. Would love to connect and share insights!\n\nBest,\nJohn`;
+            } else {
+                const focusArea = valueProp === 'attraction'
+                    ? 'helping sales teams fill the pipeline with qualified leads'
+                    : 'implementing sales methodology execution';
+                return `Hi ${firstName},\n\nSaw you're with ${company}. I work with sales teams on ${focusArea} and would love to connect.\n\nLooking forward to sharing insights!\n\nBest,\nJohn`;
+            }
+        }
+
+        // Generate LinkedIn DM (after connection)
+        function generateLinkedInDM(firstName, company, industry, painPoint, context, valueProp) {
+            const contextLine = context ? `\n\n${context}\n\n` : '\n\n';
+
+            if (valueProp === 'attraction') {
+                return `Hi ${firstName},${contextLine}Thanks for connecting! I noticed you're focused on ${industry}.
+
+Quick question: Is your pipeline full enough to hit quota comfortably?
+
+Most sales leaders tell me the same thing:
+- Cold calling takes too much time with minimal return
+- Marketing leads are inconsistent
+- Pipeline is always too thin
+
+We built an AI system that identifies ideal prospects and generates personalized outreach that gets 15-20% response rates (vs. 2-3% industry average).
+
+Result: 3x more qualified meetings per month without burning out your reps.
+
+Worth a quick look? I can send you a 2-min demo or we could jump on a quick call.
+
+Either way, happy to be connected!
+
+Best,
+John`;
+            }
+
+            return `Hi ${firstName},${contextLine}Thanks for connecting! I noticed you're focused on ${industry}.
+
+Quick question: After your team gets Sandler training, do you have a system to ensure they're actually EXECUTING it in real calls?
+
+Most sales leaders I talk to face the same challenge:
+- Reps learn Sandler → Get excited → Week 1-2 they use it → Week 4+ back to old habits
+
+I built an AI coaching tool that analyzes every call and gives reps specific Sandler scripts to use next time.
+
+Example: When prospect says "We're too busy," instead of ending the call, it coaches:
+"Try: I get it. That's exactly why I called—to give you back 20 hours/week. Worth 15 min to explore?"
+
+Worth a quick look? I can send you a 2-min demo or we could jump on a quick call.
+
+Either way, happy to be connected!
+
+Best,
+John`;
+        }
+
         // Generate LinkedIn comment
-        function generateLinkedInComment(context) {
+        function generateLinkedInComment(context, valueProp) {
+            if (valueProp === 'attraction') {
+                if (!context) {
+                    return `Great point! Most teams struggle to fill the pipeline. We built an AI system that generates personalized outreach and gets 15-20% response rates. 3x more qualified meetings without the manual grind.`;
+                }
+                return `Totally agree with this.\n\n${context}\n\nWe solved this with AI-powered prospecting. Identifies ideal prospects and creates personalized outreach automatically. Reps spend less time prospecting, more time selling.\n\nHappy to share more if useful!`;
+            }
+
             if (!context) {
                 return `Great point! The gap between Sandler training and execution is massive. We built an AI tool that gives reps specific scripts after every call. Game-changer for reinforcement.`;
             }

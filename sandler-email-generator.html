@@ -434,7 +434,7 @@
                 <div id="linkedin-options" style="display: none;">
                     <div class="input-group">
                         <label>LinkedIn Content Type</label>
-                        <select id="linkedin-type">
+                        <select id="linkedin-type" onchange="updateFieldRequirements()">
                             <option value="value-post">Value Post (Share insights)</option>
                             <option value="connection">Connection Request</option>
                             <option value="dm">Direct Message (After Connected)</option>
@@ -448,7 +448,7 @@
                     </div>
                 </div>
 
-                <button class="btn" onclick="generateEmails()">✨ Generate Emails</button>
+                <button class="btn" id="generate-btn" onclick="generateEmails()">✨ Generate Content</button>
                 <button class="btn btn-secondary" onclick="generateVariations()">🤖 Generate AI Variations</button>
             </div>
 
@@ -643,12 +643,45 @@
         // Update channel options
         function updateChannelOptions() {
             const channel = document.getElementById('channel-type').value;
+            const generateBtn = document.getElementById('generate-btn');
+            const linkedinType = document.getElementById('linkedin-type').value;
+
             if (channel === 'linkedin') {
                 document.getElementById('email-options').style.display = 'none';
                 document.getElementById('linkedin-options').style.display = 'block';
+
+                // Update button text
+                generateBtn.innerHTML = '💼 Generate LinkedIn Post';
+
+                // Update field requirements based on LinkedIn type
+                updateFieldRequirements();
             } else {
                 document.getElementById('email-options').style.display = 'block';
                 document.getElementById('linkedin-options').style.display = 'none';
+
+                // Update button text
+                generateBtn.innerHTML = '📧 Generate Email';
+
+                // Restore email field requirements
+                updateFieldRequirements();
+            }
+        }
+
+        // Update field requirements based on content type
+        function updateFieldRequirements() {
+            const channel = document.getElementById('channel-type').value;
+            const linkedinType = document.getElementById('linkedin-type').value;
+            const firstNameLabel = document.querySelector('label[for="first-name"]');
+            const companyLabel = document.querySelector('label[for="company"]');
+
+            if (channel === 'linkedin' && linkedinType === 'value-post') {
+                // Value posts don't need name/company
+                if (firstNameLabel) firstNameLabel.innerHTML = 'First Name <span style="opacity: 0.5;">(optional for value posts)</span>';
+                if (companyLabel) companyLabel.innerHTML = 'Company <span style="opacity: 0.5;">(optional for value posts)</span>';
+            } else {
+                // Restore required indicators
+                if (firstNameLabel) firstNameLabel.innerHTML = 'First Name *';
+                if (companyLabel) companyLabel.innerHTML = 'Company *';
             }
         }
 
@@ -668,8 +701,11 @@
             const painPoint = document.getElementById('pain-point').value.trim();
             const channel = document.getElementById('channel-type').value;
             const valueProp = document.getElementById('value-prop').value;
+            const linkedinType = document.getElementById('linkedin-type').value;
 
-            if (!firstName || !company) {
+            // Check required fields (name/company not needed for LinkedIn value posts)
+            const isValuePost = channel === 'linkedin' && linkedinType === 'value-post';
+            if (!isValuePost && (!firstName || !company)) {
                 showAlert('Please enter at least First Name and Company', 'error');
                 return;
             }

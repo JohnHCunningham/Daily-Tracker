@@ -950,6 +950,83 @@
                 <div id="scripts-rewrite-status" style="margin-top: 15px; display: none;"></div>
             </div>
 
+            <!-- Fireflies.ai Integration -->
+            <div class="card wide-card">
+                <div class="card-header">
+                    <h2 class="card-title">🎙️ Fireflies.ai Auto-Coaching</h2>
+                    <span class="card-icon">🤖</span>
+                </div>
+
+                <p style="opacity: 0.9; margin-bottom: 20px;">
+                    <strong>Zero-friction coaching:</strong> Connect Fireflies.ai and get automatic methodology-based coaching after every call. No manual uploads needed!
+                </p>
+
+                <div style="background: rgba(16, 195, 176, 0.1); padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid var(--brand-teal);">
+                    <strong style="color: var(--brand-teal);">How it works:</strong>
+                    <ol style="margin: 10px 0 0 20px; line-height: 1.7;">
+                        <li>Fireflies records your calls automatically (Zoom, Teams, Google Meet)</li>
+                        <li>When call ends, Fireflies sends transcript to your dashboard</li>
+                        <li>AI analyzes with your selected methodology (Sandler, MEDDIC, etc.)</li>
+                        <li>Coaching appears in your dashboard - <strong>ZERO manual work!</strong></li>
+                    </ol>
+                </div>
+
+                <div class="input-group">
+                    <label style="font-weight: 700;">Step 1: Get Your Fireflies API Key</label>
+                    <div style="background: rgba(244, 176, 58, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 0.9rem;">
+                        <strong>📋 Instructions:</strong>
+                        <ol style="margin: 8px 0 0 20px; line-height: 1.6;">
+                            <li>Go to <a href="https://app.fireflies.ai/integrations/custom/api" target="_blank" style="color: var(--brand-teal); text-decoration: underline;">Fireflies API Settings</a></li>
+                            <li>Click "Generate API Key"</li>
+                            <li>Copy the key and paste below</li>
+                        </ol>
+                    </div>
+                    <input
+                        type="password"
+                        id="fireflies-api-key"
+                        placeholder="Enter your Fireflies API key"
+                        style="width: 100%; background: var(--input-bg); border: 1px solid rgba(61, 224, 210, 0.3); color: var(--light-text); padding: 12px; border-radius: 8px; font-family: monospace;"
+                    >
+                </div>
+
+                <div class="input-group">
+                    <label style="font-weight: 700;">Step 2: Configure Webhook in Fireflies</label>
+                    <div style="background: rgba(244, 176, 58, 0.1); padding: 12px; border-radius: 8px; margin-bottom: 10px; font-size: 0.9rem;">
+                        <strong>📋 Instructions:</strong>
+                        <ol style="margin: 8px 0 0 20px; line-height: 1.6;">
+                            <li>Go to <a href="https://app.fireflies.ai/integrations/custom/webhooks" target="_blank" style="color: var(--brand-teal); text-decoration: underline;">Fireflies Webhooks</a></li>
+                            <li>Click "Add Webhook"</li>
+                            <li>Paste this URL in the webhook field:</li>
+                        </ol>
+                    </div>
+                    <div style="background: var(--input-bg); padding: 12px; border-radius: 8px; border: 1px solid var(--brand-teal); font-family: monospace; font-size: 0.85rem; word-break: break-all; position: relative;">
+                        <div id="webhook-url" style="color: var(--brand-teal);">
+                            https://YOUR_SUPABASE_URL/functions/v1/fireflies-webhook
+                        </div>
+                        <button
+                            onclick="copyWebhookURL()"
+                            style="position: absolute; top: 8px; right: 8px; background: var(--brand-teal); color: var(--brand-navy); border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-size: 0.8rem; font-weight: 600;"
+                        >
+                            📋 Copy
+                        </button>
+                    </div>
+                    <small style="opacity: 0.7; margin-top: 8px; display: block;">
+                        Select event type: <strong>"Transcript Ready"</strong> in Fireflies webhook settings
+                    </small>
+                </div>
+
+                <button class="btn-primary" onclick="saveFirefliesSettings()">💾 Save Fireflies Settings</button>
+
+                <div id="fireflies-status" style="margin-top: 15px;"></div>
+
+                <div style="margin-top: 20px; padding: 15px; background: rgba(61, 224, 210, 0.1); border-radius: 10px; border-left: 4px solid var(--brand-teal);">
+                    <strong style="color: var(--brand-teal);">✨ Once configured:</strong>
+                    <p style="margin: 8px 0 0 0; line-height: 1.6;">
+                        Every call will automatically appear in "Conversation History" below with full methodology-based coaching. Reps do nothing - just have their calls and get coached automatically!
+                    </p>
+                </div>
+            </div>
+
             </div><!-- End setup-section -->
 
             <!-- SECTION 2: DAILY ACTIONS -->
@@ -3697,8 +3774,66 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 loadDashboardData();
                 loadConversationHistory();
                 updateCallPlanContext();
+                loadFirefliesSettings();
             }
         });
+
+        // ============================================
+        // FIREFLIES INTEGRATION FUNCTIONS
+        // ============================================
+
+        // Save Fireflies settings
+        function saveFirefliesSettings() {
+            const apiKey = document.getElementById('fireflies-api-key').value.trim();
+
+            if (!apiKey) {
+                showAlert('Please enter your Fireflies API key', 'error');
+                return;
+            }
+
+            try {
+                localStorage.setItem('fireflies_api_key', apiKey);
+                showAlert('✅ Fireflies settings saved! Webhook is ready to receive calls.', 'success');
+
+                // Show status
+                document.getElementById('fireflies-status').innerHTML = `
+                    <div style="padding: 12px; background: rgba(16, 195, 176, 0.15); border-radius: 8px; border-left: 4px solid var(--brand-teal);">
+                        <strong style="color: var(--brand-teal);">✅ Connected!</strong>
+                        <p style="margin: 8px 0 0 0;">Fireflies will now automatically send calls for coaching.</p>
+                    </div>
+                `;
+            } catch (error) {
+                console.error('Error saving Fireflies settings:', error);
+                showAlert('Failed to save settings', 'error');
+            }
+        }
+
+        // Load Fireflies settings
+        function loadFirefliesSettings() {
+            const apiKey = localStorage.getItem('fireflies_api_key');
+
+            if (apiKey) {
+                document.getElementById('fireflies-api-key').value = apiKey;
+                document.getElementById('fireflies-status').innerHTML = `
+                    <div style="padding: 12px; background: rgba(16, 195, 176, 0.15); border-radius: 8px; border-left: 4px solid var(--brand-teal);">
+                        <strong style="color: var(--brand-teal);">✅ Connected!</strong>
+                        <p style="margin: 8px 0 0 0;">Fireflies is configured and ready.</p>
+                    </div>
+                `;
+            }
+
+            // Display webhook URL with actual Supabase URL
+            const webhookURL = `${SUPABASE_URL}/functions/v1/fireflies-webhook`;
+            document.getElementById('webhook-url').textContent = webhookURL;
+        }
+
+        // Copy webhook URL to clipboard
+        function copyWebhookURL() {
+            const webhookURL = document.getElementById('webhook-url').textContent;
+            navigator.clipboard.writeText(webhookURL).then(() => {
+                showAlert('✅ Webhook URL copied!', 'success');
+            });
+        }
 
         // ============================================
         // CALL PLANNING FUNCTIONS

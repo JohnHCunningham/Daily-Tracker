@@ -552,6 +552,136 @@
         </div>
     </section>
 
+    <!-- Pricing Section -->
+    <section style="padding: 80px 20px; background: var(--white);">
+        <div class="container" style="max-width: 1000px;">
+            <h2 class="section-title">Simple, Transparent Pricing</h2>
+            <p style="font-size: 1.2rem; color: #64748b; text-align: center; margin-bottom: 40px;">Choose the plan that fits your team. Start with Execution, scale to the Full Factory.</p>
+
+            <!-- Monthly/Annual Toggle -->
+            <div style="text-align: center; margin-bottom: 50px;">
+                <div style="display: inline-flex; background: var(--light-gray); border-radius: 50px; padding: 6px; gap: 6px;">
+                    <button id="monthly-btn" class="pricing-toggle active" onclick="togglePricing('monthly')" style="padding: 12px 32px; border: none; border-radius: 50px; font-size: 1rem; font-weight: 600; cursor: pointer; background: var(--teal); color: white; transition: all 0.3s;">
+                        Monthly
+                    </button>
+                    <button id="annual-btn" class="pricing-toggle" onclick="togglePricing('annual')" style="padding: 12px 32px; border: none; border-radius: 50px; font-size: 1rem; font-weight: 600; cursor: pointer; background: transparent; color: var(--navy); transition: all 0.3s;">
+                        Annual <span style="background: var(--gold); color: white; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; margin-left: 6px;">Save 2 Months</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Pricing Cards -->
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 40px; max-width: 900px; margin: 0 auto;">
+
+                <!-- Execution Bundle -->
+                <div style="background: white; border: 2px solid var(--border-gray); border-radius: 16px; padding: 40px; position: relative; transition: all 0.3s; box-shadow: 0 4px 20px rgba(12, 16, 48, 0.08);">
+                    <h3 style="color: var(--navy); font-size: 1.8rem; margin-bottom: 12px;">Execution Bundle</h3>
+                    <p style="color: #64748b; margin-bottom: 24px; line-height: 1.6;">Perfect for teams ready to execute their methodology with discipline.</p>
+
+                    <div class="pricing-amount" style="margin-bottom: 30px;">
+                        <div class="monthly-price">
+                            <span style="font-size: 3rem; font-weight: 700; color: var(--teal);">$997</span>
+                            <span style="font-size: 1.2rem; color: #64748b;">/month</span>
+                        </div>
+                        <div class="annual-price" style="display: none;">
+                            <span style="font-size: 3rem; font-weight: 700; color: var(--teal);">$9,970</span>
+                            <span style="font-size: 1.2rem; color: #64748b;">/year</span>
+                            <div style="font-size: 0.95rem; color: var(--gold); font-weight: 600; margin-top: 8px;">Save $1,994 (2 months free)</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 30px;">
+                        <div style="font-weight: 600; color: var(--navy); margin-bottom: 16px; font-size: 1.1rem;">What's Included:</div>
+                        <ul style="list-style: none; padding: 0; margin: 0;">
+                            <li style="padding: 10px 0; border-bottom: 1px solid var(--border-gray); color: #64748b; line-height: 1.6;">✅ One-click AI coaching</li>
+                            <li style="padding: 10px 0; border-bottom: 1px solid var(--border-gray); color: #64748b; line-height: 1.6;">✅ Radial performance charts</li>
+                            <li style="padding: 10px 0; border-bottom: 1px solid var(--border-gray); color: #64748b; line-height: 1.6;">✅ Real-time AI conversation analysis</li>
+                            <li style="padding: 10px 0; border-bottom: 1px solid var(--border-gray); color: #64748b; line-height: 1.6;">✅ Methodology-specific coaching (6 frameworks)</li>
+                            <li style="padding: 10px 0; border-bottom: 1px solid var(--border-gray); color: #64748b; line-height: 1.6;">✅ Unlimited users & calls</li>
+                            <li style="padding: 10px 0; color: #64748b; line-height: 1.6;">✅ 30-day money-back guarantee</li>
+                        </ul>
+                    </div>
+
+                    <a href="#contact" style="display: block; background: var(--teal); color: white; text-align: center; padding: 16px; border-radius: 8px; font-weight: 600; text-decoration: none; transition: all 0.3s;">Get Started Free</a>
+                </div>
+
+                <!-- Full Revenue Factory -->
+                <div style="background: linear-gradient(135deg, var(--navy) 0%, #1a1f4d 100%); border: 3px solid var(--gold); border-radius: 16px; padding: 40px; position: relative; transition: all 0.3s; box-shadow: 0 10px 40px rgba(244, 176, 58, 0.3);">
+                    <div style="position: absolute; top: -16px; right: 20px; background: var(--gold); color: var(--navy); padding: 6px 20px; border-radius: 20px; font-weight: 700; font-size: 0.9rem;">BEST VALUE</div>
+
+                    <h3 style="color: var(--aqua); font-size: 1.8rem; margin-bottom: 12px;">Full Revenue Factory</h3>
+                    <p style="color: rgba(255,255,255,0.8); margin-bottom: 24px; line-height: 1.6;">Complete system: Attraction, Execution, and Completion. Locks in for life.</p>
+
+                    <div class="pricing-amount" style="margin-bottom: 30px;">
+                        <div class="monthly-price">
+                            <span style="font-size: 3rem; font-weight: 700; color: var(--gold);">$1,495</span>
+                            <span style="font-size: 1.2rem; color: rgba(255,255,255,0.7);">/month</span>
+                        </div>
+                        <div class="annual-price" style="display: none;">
+                            <span style="font-size: 3rem; font-weight: 700; color: var(--gold);">$14,950</span>
+                            <span style="font-size: 1.2rem; color: rgba(255,255,255,0.7);">/year</span>
+                            <div style="font-size: 0.95rem; color: var(--aqua); font-weight: 600; margin-top: 8px;">Save $2,990 (2 months free)</div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 30px;">
+                        <div style="font-weight: 600; color: var(--aqua); margin-bottom: 16px; font-size: 1.1rem;">Everything in Execution, plus:</div>
+                        <ul style="list-style: none; padding: 0; margin: 0;">
+                            <li style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); line-height: 1.6;">✅ AI lead generation & enrichment (Feb 2026)</li>
+                            <li style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); line-height: 1.6;">✅ Google & Instagram ads automation (Feb 2026)</li>
+                            <li style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); line-height: 1.6;">✅ AI proposal & contract generator (March 2026)</li>
+                            <li style="padding: 10px 0; border-bottom: 1px solid rgba(255,255,255,0.1); color: rgba(255,255,255,0.9); line-height: 1.6;">✅ Deal closing automation (March 2026)</li>
+                            <li style="padding: 10px 0; color: var(--gold); line-height: 1.6; font-weight: 600;">🔒 Founding customer rate - locks in forever</li>
+                        </ul>
+                    </div>
+
+                    <a href="#contact" style="display: block; background: var(--gold); color: var(--navy); text-align: center; padding: 16px; border-radius: 8px; font-weight: 600; text-decoration: none; transition: all 0.3s;">Get Started Free</a>
+                </div>
+            </div>
+
+            <!-- Pricing Notes -->
+            <div style="text-align: center; margin-top: 50px; color: #64748b;">
+                <p style="font-size: 1rem; line-height: 1.8;">
+                    🎯 All plans include unlimited users and calls<br>
+                    🔒 Your data is never shared or sold<br>
+                    ✅ 30-day money-back guarantee on all plans<br>
+                    💼 White label available for consultants - <a href="#contact" style="color: var(--teal); text-decoration: none; font-weight: 600;">Contact us</a>
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <script>
+        function togglePricing(plan) {
+            const monthlyBtn = document.getElementById('monthly-btn');
+            const annualBtn = document.getElementById('annual-btn');
+            const monthlyPrices = document.querySelectorAll('.monthly-price');
+            const annualPrices = document.querySelectorAll('.annual-price');
+
+            if (plan === 'monthly') {
+                monthlyBtn.classList.add('active');
+                monthlyBtn.style.background = 'var(--teal)';
+                monthlyBtn.style.color = 'white';
+                annualBtn.classList.remove('active');
+                annualBtn.style.background = 'transparent';
+                annualBtn.style.color = 'var(--navy)';
+
+                monthlyPrices.forEach(el => el.style.display = 'block');
+                annualPrices.forEach(el => el.style.display = 'none');
+            } else {
+                annualBtn.classList.add('active');
+                annualBtn.style.background = 'var(--teal)';
+                annualBtn.style.color = 'white';
+                monthlyBtn.classList.remove('active');
+                monthlyBtn.style.background = 'transparent';
+                monthlyBtn.style.color = 'var(--navy)';
+
+                monthlyPrices.forEach(el => el.style.display = 'none');
+                annualPrices.forEach(el => el.style.display = 'block');
+            }
+        }
+    </script>
+
     <!-- Security Deep Dive -->
     <section style="padding: 80px 20px; background: linear-gradient(135deg, var(--navy) 0%, #1a1f4d 100%); color: var(--white);">
         <div class="container" style="max-width: 900px;">

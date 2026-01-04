@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You - SalesAI.Coach</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0C1030;
+            --teal: #10C3B0;
+            --aqua: #3DE0D2;
+            --pink: #E64563;
+            --gold: #F4B03A;
+            --white: #FFFFFF;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: linear-gradient(135deg, var(--navy) 0%, #1a1f4d 100%);
+            color: var(--white);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 700px;
+            text-align: center;
+        }
+
+        .checkmark {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            background: var(--teal);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 40px;
+            animation: scaleIn 0.5s ease-out;
+        }
+
+        .checkmark svg {
+            width: 60px;
+            height: 60px;
+            fill: none;
+            stroke: var(--white);
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            animation: drawCheck 0.5s ease-out 0.3s forwards;
+            stroke-dasharray: 100;
+            stroke-dashoffset: 100;
+        }
+
+        @keyframes scaleIn {
+            0% {
+                transform: scale(0);
+            }
+            50% {
+                transform: scale(1.1);
+            }
+            100% {
+                transform: scale(1);
+            }
+        }
+
+        @keyframes drawCheck {
+            to {
+                stroke-dashoffset: 0;
+            }
+        }
+
+        h1 {
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 20px;
+            animation: fadeInUp 0.6s ease-out 0.3s backwards;
+        }
+
+        .subtitle {
+            font-size: 1.3rem;
+            color: var(--aqua);
+            margin-bottom: 40px;
+            line-height: 1.6;
+            animation: fadeInUp 0.6s ease-out 0.5s backwards;
+        }
+
+        .info-box {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 40px;
+            margin: 40px 0;
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 0.6s ease-out 0.7s backwards;
+        }
+
+        .info-box h2 {
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            color: var(--aqua);
+        }
+
+        .info-box ul {
+            list-style: none;
+            text-align: left;
+            max-width: 400px;
+            margin: 0 auto;
+        }
+
+        .info-box li {
+            padding: 12px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+        }
+
+        .info-box li:last-child {
+            border-bottom: none;
+        }
+
+        .info-box li::before {
+            content: "✓";
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: var(--teal);
+            border-radius: 50%;
+            margin-right: 15px;
+            text-align: center;
+            line-height: 24px;
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 40px;
+            animation: fadeInUp 0.6s ease-out 0.9s backwards;
+        }
+
+        .button {
+            display: inline-block;
+            padding: 16px 32px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .button-primary {
+            background: var(--teal);
+            color: var(--white);
+        }
+
+        .button-primary:hover {
+            background: var(--aqua);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 195, 176, 0.3);
+        }
+
+        .button-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--white);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .button-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .social-links {
+            margin-top: 60px;
+            padding-top: 40px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .social-links p {
+            margin-bottom: 20px;
+            color: var(--aqua);
+        }
+
+        .social-icons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+        }
+
+        .social-icons a {
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            font-size: 1.5rem;
+        }
+
+        .social-icons a:hover {
+            background: var(--teal);
+            transform: translateY(-3px);
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2rem;
+            }
+
+            .subtitle {
+                font-size: 1.1rem;
+            }
+
+            .info-box {
+                padding: 30px 20px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+            }
+
+            .button {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="checkmark">
+            <svg viewBox="0 0 52 52">
+                <polyline points="14 27 22 35 38 17"/>
+            </svg>
+        </div>
+
+        <h1>Thank You!</h1>
+        <p class="subtitle">
+            Your free trial request has been received. Our team will reach out within 24 hours to get you started.
+        </p>
+
+        <div class="info-box">
+            <h2>What Happens Next?</h2>
+            <ul>
+                <li>We'll review your information and team needs</li>
+                <li>A sales coach will contact you to schedule a demo</li>
+                <li>We'll set up your account with your chosen methodology</li>
+                <li>Your team can start analyzing calls within 48 hours</li>
+            </ul>
+        </div>
+
+        <div class="cta-buttons">
+            <a href="/resources.html" class="button button-primary">Explore Resources</a>
+            <a href="/" class="button button-secondary">Back to Home</a>
+        </div>
+
+        <div class="social-links">
+            <p>While you wait, connect with us:</p>
+            <div class="social-icons">
+                <a href="https://linkedin.com/company/ai-advantage-solutions" target="_blank" title="LinkedIn">
+                    📎
+                </a>
+                <a href="https://twitter.com/salesaicoach" target="_blank" title="Twitter">
+                    🐦
+                </a>
+                <a href="mailto:admin@aiadvantagesolutions.com" title="Email">
+                    📧
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // CONVERSION TRACKING
+        // ============================================
+
+        // Track conversion in Google Analytics
+        if (window.gtag) {
+            gtag('event', 'conversion', {
+                'send_to': 'AW-CONVERSION_ID/CONVERSION_LABEL', // Replace with your Google Ads conversion ID
+                'transaction_id': new Date().getTime()
+            });
+
+            gtag('event', 'generate_lead', {
+                'event_category': 'engagement',
+                'event_label': 'free_trial_request'
+            });
+        }
+
+        // Track conversion in Facebook Pixel
+        if (window.fbq) {
+            fbq('track', 'Lead');
+        }
+
+        // Track conversion in LinkedIn Insight
+        if (window.lintrk) {
+            lintrk('track', { conversion_id: YOUR_CONVERSION_ID });
+        }
+
+        // Log conversion to Supabase for attribution tracking
+        (async function() {
+            try {
+                const leadId = sessionStorage.getItem('lead_id');
+                if (!leadId) return;
+
+                const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+                const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+
+                // Update lead status to "contacted"
+                await fetch(`${SUPABASE_URL}/rest/v1/Leads?id=eq.${leadId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    },
+                    body: JSON.stringify({
+                        lead_status: 'contacted',
+                        first_contact_date: new Date().toISOString()
+                    })
+                });
+
+                console.log('Lead status updated to contacted');
+
+            } catch (error) {
+                console.error('Error updating lead status:', error);
+            }
+        })();
+
+        // ============================================
+        // SESSION CLEANUP
+        // ============================================
+
+        // Clear UTM parameters from session after successful conversion
+        setTimeout(() => {
+            sessionStorage.removeItem('utm_params');
+            sessionStorage.removeItem('referrer');
+            sessionStorage.removeItem('landing_page');
+        }, 5000);
+    </script>
+</body>
+</html>

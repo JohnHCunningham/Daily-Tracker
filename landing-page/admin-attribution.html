@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lead Attribution Dashboard - SalesAI.Coach Admin</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0C1030;
+            --teal: #10C3B0;
+            --aqua: #3DE0D2;
+            --pink: #E64563;
+            --gold: #F4B03A;
+            --white: #FFFFFF;
+            --light-gray: #F5F7FA;
+            --border-gray: #E2E8F0;
+            --success: #10B981;
+            --warning: #F59E0B;
+            --danger: #EF4444;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--light-gray);
+            color: var(--navy);
+            line-height: 1.6;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--navy) 0%, #1a1f4d 100%);
+            color: var(--white);
+            padding: 24px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 20px;
+        }
+
+        .header-nav a {
+            color: var(--aqua);
+            text-decoration: none;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .header-nav a:hover {
+            color: var(--white);
+        }
+
+        /* Main Container */
+        .container {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 24px;
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--white);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            border-left: 4px solid var(--teal);
+        }
+
+        .stat-card.warning {
+            border-left-color: var(--warning);
+        }
+
+        .stat-card.danger {
+            border-left-color: var(--danger);
+        }
+
+        .stat-card.success {
+            border-left-color: var(--success);
+        }
+
+        .stat-label {
+            font-size: 0.875rem;
+            color: #64748b;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--navy);
+            margin-bottom: 8px;
+        }
+
+        .stat-change {
+            font-size: 0.875rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .stat-change.positive {
+            color: var(--success);
+        }
+
+        .stat-change.negative {
+            color: var(--danger);
+        }
+
+        /* Filters */
+        .filters {
+            background: var(--white);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 40px;
+            display: flex;
+            gap: 20px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+
+        .filter-group {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: var(--navy);
+            margin-bottom: 8px;
+        }
+
+        .filter-group select,
+        .filter-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 1px solid var(--border-gray);
+            border-radius: 8px;
+            font-size: 0.875rem;
+            background: var(--white);
+            transition: border-color 0.3s ease;
+        }
+
+        .filter-group select:focus,
+        .filter-group input:focus {
+            outline: none;
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(16, 195, 176, 0.1);
+        }
+
+        .filter-btn {
+            padding: 10px 24px;
+            background: var(--teal);
+            color: var(--white);
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .filter-btn:hover {
+            background: var(--aqua);
+            transform: translateY(-2px);
+        }
+
+        /* Section */
+        .section {
+            background: var(--white);
+            padding: 32px;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            margin-bottom: 40px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 2px solid var(--border-gray);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--navy);
+        }
+
+        /* Charts */
+        .chart-container {
+            position: relative;
+            height: 400px;
+            margin-bottom: 40px;
+        }
+
+        /* Table */
+        .table-container {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--light-gray);
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            font-size: 0.875rem;
+            color: var(--navy);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-bottom: 2px solid var(--border-gray);
+        }
+
+        td {
+            padding: 16px 12px;
+            border-bottom: 1px solid var(--border-gray);
+            font-size: 0.9375rem;
+        }
+
+        tr:hover {
+            background: var(--light-gray);
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .badge-success {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .badge-danger {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--danger);
+        }
+
+        .badge-info {
+            background: rgba(16, 195, 176, 0.1);
+            color: var(--teal);
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 60px 20px;
+            color: #64748b;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--border-gray);
+            border-top: 4px solid var(--teal);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            background: transparent;
+            border: none;
+            border-bottom: 3px solid transparent;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            color: #64748b;
+        }
+
+        .tab:hover {
+            color: var(--navy);
+        }
+
+        .tab.active {
+            color: var(--navy);
+            border-bottom-color: var(--teal);
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .header-content {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .stats-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+
+            .chart-container {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="header">
+        <div class="header-content">
+            <h1>📊 Lead Attribution Dashboard</h1>
+            <nav class="header-nav">
+                <a href="/admin-team.html">Team Performance</a>
+                <a href="/admin-attribution.html">Attribution</a>
+                <a href="/index.html">Back to Site</a>
+            </nav>
+        </div>
+    </div>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Stats Overview -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Leads</div>
+                <div class="stat-value" id="stat-total-leads">-</div>
+                <div class="stat-change positive" id="stat-leads-change">
+                    ↑ +0% vs last period
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-label">Conversion Rate</div>
+                <div class="stat-value" id="stat-conversion-rate">-</div>
+                <div class="stat-change positive" id="stat-conversion-change">
+                    ↑ +0% vs last period
+                </div>
+            </div>
+
+            <div class="stat-card warning">
+                <div class="stat-label">Cost Per Lead</div>
+                <div class="stat-value" id="stat-cpl">-</div>
+                <div class="stat-change negative" id="stat-cpl-change">
+                    ↓ $0 vs last period
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-label">Campaign ROI</div>
+                <div class="stat-value" id="stat-roi">-</div>
+                <div class="stat-change positive" id="stat-roi-change">
+                    ↑ +0% vs last period
+                </div>
+            </div>
+
+            <div class="stat-card">
+                <div class="stat-label">Avg Quality Score</div>
+                <div class="stat-value" id="stat-quality-score">-</div>
+                <div class="stat-change" id="stat-quality-change">
+                    - vs last period
+                </div>
+            </div>
+
+            <div class="stat-card success">
+                <div class="stat-label">High-Value Leads (A/A+)</div>
+                <div class="stat-value" id="stat-high-value">-</div>
+                <div class="stat-change positive" id="stat-high-value-change">
+                    ↑ +0 vs last period
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters -->
+        <div class="filters">
+            <div class="filter-group">
+                <label for="filter-date-range">Date Range</label>
+                <select id="filter-date-range">
+                    <option value="7">Last 7 days</option>
+                    <option value="30" selected>Last 30 days</option>
+                    <option value="90">Last 90 days</option>
+                    <option value="365">Last year</option>
+                    <option value="custom">Custom range</option>
+                </select>
+            </div>
+
+            <div class="filter-group" id="custom-date-start-group" style="display: none;">
+                <label for="filter-date-start">Start Date</label>
+                <input type="date" id="filter-date-start">
+            </div>
+
+            <div class="filter-group" id="custom-date-end-group" style="display: none;">
+                <label for="filter-date-end">End Date</label>
+                <input type="date" id="filter-date-end">
+            </div>
+
+            <div class="filter-group">
+                <label for="filter-source">Lead Source</label>
+                <select id="filter-source">
+                    <option value="">All Sources</option>
+                    <!-- Populated dynamically -->
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label for="filter-campaign">Campaign</label>
+                <select id="filter-campaign">
+                    <option value="">All Campaigns</option>
+                    <!-- Populated dynamically -->
+                </select>
+            </div>
+
+            <div class="filter-group">
+                <label>&nbsp;</label>
+                <button class="filter-btn" onclick="applyFilters()">Apply Filters</button>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="section">
+            <div class="tabs">
+                <button class="tab active" onclick="showTab('overview')">Overview</button>
+                <button class="tab" onclick="showTab('sources')">Lead Sources</button>
+                <button class="tab" onclick="showTab('campaigns')">Campaigns</button>
+                <button class="tab" onclick="showTab('leads')">All Leads</button>
+            </div>
+
+            <!-- Overview Tab -->
+            <div id="tab-overview" class="tab-content active">
+                <h3 class="section-title">Attribution Performance Overview</h3>
+
+                <div class="chart-container">
+                    <canvas id="leads-over-time-chart"></canvas>
+                </div>
+
+                <div class="chart-container">
+                    <canvas id="source-distribution-chart"></canvas>
+                </div>
+            </div>
+
+            <!-- Lead Sources Tab -->
+            <div id="tab-sources" class="tab-content">
+                <div class="section-header">
+                    <h3 class="section-title">Lead Source Performance</h3>
+                </div>
+
+                <div class="table-container" id="sources-table-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading lead sources...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Campaigns Tab -->
+            <div id="tab-campaigns" class="tab-content">
+                <div class="section-header">
+                    <h3 class="section-title">Campaign Performance & ROI</h3>
+                </div>
+
+                <div class="table-container" id="campaigns-table-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading campaigns...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- All Leads Tab -->
+            <div id="tab-leads" class="tab-content">
+                <div class="section-header">
+                    <h3 class="section-title">All Leads</h3>
+                </div>
+
+                <div class="table-container" id="leads-table-container">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Loading leads...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+
+        const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+        const SUPABASE_SERVICE_ROLE_KEY = 'YOUR_SERVICE_ROLE_KEY';
+
+        // Admin email whitelist
+        const ADMIN_EMAILS = ['admin@aiadvantagesolutions.com', 'john@aiadvantagesolutions.com'];
+
+        // ============================================
+        // AUTHENTICATION
+        // ============================================
+
+        async function checkAuth() {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+
+                if (!session) {
+                    window.location.href = '/login.html?redirect=/admin-attribution.html';
+                    return false;
+                }
+
+                const userEmail = session.user.email;
+                if (!ADMIN_EMAILS.includes(userEmail)) {
+                    alert('Access denied. Admin privileges required.');
+                    window.location.href = '/index.html';
+                    return false;
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Auth error:', error);
+                window.location.href = '/login.html';
+                return false;
+            }
+        }
+
+        // ============================================
+        // DATA FETCHING
+        // ============================================
+
+        async function fetchLeadSourcePerformance(filters = {}) {
+            const { data, error } = await supabase
+                .from('Lead_Source_Performance')
+                .select('*')
+                .order('total_leads', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching lead sources:', error);
+                return [];
+            }
+
+            return data;
+        }
+
+        async function fetchCampaignPerformance(filters = {}) {
+            const { data, error } = await supabase
+                .from('Campaign_Performance')
+                .select('*')
+                .order('roi_percentage', { ascending: false });
+
+            if (error) {
+                console.error('Error fetching campaigns:', error);
+                return [];
+            }
+
+            return data;
+        }
+
+        async function fetchLeads(filters = {}) {
+            let query = supabase
+                .from('Leads')
+                .select(`
+                    *,
+                    first_touch_source:Lead_Sources!first_touch_source_id(source_name),
+                    last_touch_source:Lead_Sources!last_touch_source_id(source_name),
+                    first_touch_campaign:Campaigns!first_touch_campaign_id(campaign_name)
+                `)
+                .order('created_at', { ascending: false })
+                .limit(100);
+
+            // Apply filters
+            if (filters.dateRange && filters.dateRange !== 'custom') {
+                const daysAgo = parseInt(filters.dateRange);
+                const startDate = new Date();
+                startDate.setDate(startDate.getDate() - daysAgo);
+                query = query.gte('created_at', startDate.toISOString());
+            }
+
+            if (filters.source) {
+                query = query.eq('first_touch_source_id', filters.source);
+            }
+
+            if (filters.campaign) {
+                query = query.eq('first_touch_campaign_id', filters.campaign);
+            }
+
+            const { data, error } = await query;
+
+            if (error) {
+                console.error('Error fetching leads:', error);
+                return [];
+            }
+
+            return data;
+        }
+
+        async function fetchStats(filters = {}) {
+            // This would use custom Supabase functions or aggregate queries
+            // For now, we'll calculate from fetched leads
+
+            const leads = await fetchLeads(filters);
+
+            const totalLeads = leads.length;
+            const convertedLeads = leads.filter(l => l.closed_won_date).length;
+            const conversionRate = totalLeads > 0 ? (convertedLeads / totalLeads * 100).toFixed(1) : 0;
+
+            const totalRevenue = leads.reduce((sum, l) => sum + (l.closed_revenue || 0), 0);
+            const avgQualityScore = totalLeads > 0
+                ? (leads.reduce((sum, l) => sum + (l.quality_score || 0), 0) / totalLeads).toFixed(1)
+                : 0;
+
+            const highValueLeads = leads.filter(l => l.lead_grade in ['A+', 'A']).length;
+
+            return {
+                totalLeads,
+                conversionRate,
+                cpl: 0, // Would be calculated from campaign spend
+                roi: 0, // Would be calculated from campaign performance
+                avgQualityScore,
+                highValueLeads
+            };
+        }
+
+        // ============================================
+        // RENDER FUNCTIONS
+        // ============================================
+
+        function renderStats(stats) {
+            document.getElementById('stat-total-leads').textContent = stats.totalLeads.toLocaleString();
+            document.getElementById('stat-conversion-rate').textContent = stats.conversionRate + '%';
+            document.getElementById('stat-cpl').textContent = '$' + stats.cpl.toFixed(2);
+            document.getElementById('stat-roi').textContent = stats.roi + '%';
+            document.getElementById('stat-quality-score').textContent = stats.avgQualityScore;
+            document.getElementById('stat-high-value').textContent = stats.highValueLeads;
+        }
+
+        function renderSourcesTable(sources) {
+            const container = document.getElementById('sources-table-container');
+
+            if (sources.length === 0) {
+                container.innerHTML = '<div class="loading"><p>No lead sources found</p></div>';
+                return;
+            }
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Source Name</th>
+                            <th>Category</th>
+                            <th>Total Leads</th>
+                            <th>Customers Won</th>
+                            <th>Conversion Rate</th>
+                            <th>Avg Quality Score</th>
+                            <th>Total Revenue</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            sources.forEach(source => {
+                const convRate = source.conversion_rate || 0;
+                const badge = convRate > 15 ? 'badge-success' : convRate > 10 ? 'badge-warning' : 'badge-danger';
+
+                html += `
+                    <tr>
+                        <td><strong>${source.source_name || 'Unknown'}</strong></td>
+                        <td><span class="badge badge-info">${source.source_category || 'N/A'}</span></td>
+                        <td>${source.total_leads || 0}</td>
+                        <td>${source.customers_won || 0}</td>
+                        <td><span class="badge ${badge}">${convRate.toFixed(1)}%</span></td>
+                        <td>${(source.avg_quality_score || 0).toFixed(1)}</td>
+                        <td>$${(source.total_revenue || 0).toLocaleString()}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function renderCampaignsTable(campaigns) {
+            const container = document.getElementById('campaigns-table-container');
+
+            if (campaigns.length === 0) {
+                container.innerHTML = '<div class="loading"><p>No campaigns found</p></div>';
+                return;
+            }
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Campaign Name</th>
+                            <th>Source</th>
+                            <th>Total Spend</th>
+                            <th>Total Clicks</th>
+                            <th>Leads</th>
+                            <th>Cost Per Lead</th>
+                            <th>Revenue</th>
+                            <th>ROI</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            campaigns.forEach(campaign => {
+                const roi = campaign.roi_percentage || 0;
+                const badge = roi > 200 ? 'badge-success' : roi > 100 ? 'badge-warning' : 'badge-danger';
+
+                html += `
+                    <tr>
+                        <td><strong>${campaign.campaign_name || 'Unknown'}</strong></td>
+                        <td>${campaign.source_name || 'N/A'}</td>
+                        <td>$${(campaign.total_spend || 0).toLocaleString()}</td>
+                        <td>${(campaign.total_clicks || 0).toLocaleString()}</td>
+                        <td>${campaign.total_leads || 0}</td>
+                        <td>$${(campaign.cost_per_lead || 0).toFixed(2)}</td>
+                        <td>$${(campaign.total_revenue || 0).toLocaleString()}</td>
+                        <td><span class="badge ${badge}">${roi.toFixed(0)}%</span></td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function renderLeadsTable(leads) {
+            const container = document.getElementById('leads-table-container');
+
+            if (leads.length === 0) {
+                container.innerHTML = '<div class="loading"><p>No leads found</p></div>';
+                return;
+            }
+
+            let html = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Company</th>
+                            <th>Source</th>
+                            <th>Campaign</th>
+                            <th>Quality Score</th>
+                            <th>Status</th>
+                            <th>Created</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            leads.forEach(lead => {
+                const fullName = `${lead.first_name || ''} ${lead.last_name || ''}`.trim() || 'Unknown';
+                const source = lead.first_touch_source?.source_name || 'Unknown';
+                const campaign = lead.first_touch_campaign?.campaign_name || 'N/A';
+                const qualityScore = lead.quality_score || 0;
+                const grade = lead.lead_grade || 'N/A';
+
+                const gradeBadge = grade === 'A+' || grade === 'A' ? 'badge-success'
+                    : grade === 'B' ? 'badge-warning'
+                    : 'badge-danger';
+
+                html += `
+                    <tr>
+                        <td><strong>${fullName}</strong></td>
+                        <td>${lead.email}</td>
+                        <td>${lead.company || 'N/A'}</td>
+                        <td>${source}</td>
+                        <td>${campaign}</td>
+                        <td>
+                            <span class="badge ${gradeBadge}">${grade} (${qualityScore})</span>
+                        </td>
+                        <td><span class="badge badge-info">${lead.lead_status || 'new'}</span></td>
+                        <td>${new Date(lead.created_at).toLocaleDateString()}</td>
+                    </tr>
+                `;
+            });
+
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        // ============================================
+        // CHARTS
+        // ============================================
+
+        let leadsOverTimeChart = null;
+        let sourceDistributionChart = null;
+
+        function renderLeadsOverTimeChart(leads) {
+            const ctx = document.getElementById('leads-over-time-chart');
+            if (!ctx) return;
+
+            // Group leads by date
+            const leadsByDate = {};
+            leads.forEach(lead => {
+                const date = new Date(lead.created_at).toLocaleDateString();
+                leadsByDate[date] = (leadsByDate[date] || 0) + 1;
+            });
+
+            const dates = Object.keys(leadsByDate).sort();
+            const counts = dates.map(date => leadsByDate[date]);
+
+            if (leadsOverTimeChart) {
+                leadsOverTimeChart.destroy();
+            }
+
+            leadsOverTimeChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dates,
+                    datasets: [{
+                        label: 'Leads Over Time',
+                        data: counts,
+                        borderColor: '#10C3B0',
+                        backgroundColor: 'rgba(16, 195, 176, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function renderSourceDistributionChart(sources) {
+            const ctx = document.getElementById('source-distribution-chart');
+            if (!ctx) return;
+
+            const labels = sources.map(s => s.source_name);
+            const data = sources.map(s => s.total_leads);
+
+            const colors = [
+                '#10C3B0', '#3DE0D2', '#E64563', '#F4B03A', '#0C1030',
+                '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#06B6D4'
+            ];
+
+            if (sourceDistributionChart) {
+                sourceDistributionChart.destroy();
+            }
+
+            sourceDistributionChart = new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: labels,
+                    datasets: [{
+                        data: data,
+                        backgroundColor: colors.slice(0, labels.length),
+                        borderWidth: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'right'
+                        }
+                    }
+                }
+            });
+        }
+
+        // ============================================
+        // TAB SWITCHING
+        // ============================================
+
+        function showTab(tabName) {
+            // Hide all tabs
+            document.querySelectorAll('.tab-content').forEach(tab => {
+                tab.classList.remove('active');
+            });
+
+            // Remove active class from all tab buttons
+            document.querySelectorAll('.tab').forEach(btn => {
+                btn.classList.remove('active');
+            });
+
+            // Show selected tab
+            document.getElementById(`tab-${tabName}`).classList.add('active');
+
+            // Add active class to clicked tab button
+            event.target.classList.add('active');
+        }
+
+        // ============================================
+        // FILTER HANDLING
+        // ============================================
+
+        document.getElementById('filter-date-range').addEventListener('change', (e) => {
+            const isCustom = e.target.value === 'custom';
+            document.getElementById('custom-date-start-group').style.display = isCustom ? 'block' : 'none';
+            document.getElementById('custom-date-end-group').style.display = isCustom ? 'block' : 'none';
+        });
+
+        async function applyFilters() {
+            const filters = {
+                dateRange: document.getElementById('filter-date-range').value,
+                source: document.getElementById('filter-source').value,
+                campaign: document.getElementById('filter-campaign').value
+            };
+
+            await loadData(filters);
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        async function loadData(filters = {}) {
+            // Load stats
+            const stats = await fetchStats(filters);
+            renderStats(stats);
+
+            // Load leads for charts
+            const leads = await fetchLeads(filters);
+            renderLeadsOverTimeChart(leads);
+
+            // Load sources
+            const sources = await fetchLeadSourcePerformance(filters);
+            renderSourcesTable(sources);
+            renderSourceDistributionChart(sources);
+
+            // Load campaigns
+            const campaigns = await fetchCampaignPerformance(filters);
+            renderCampaignsTable(campaigns);
+
+            // Load all leads
+            renderLeadsTable(leads);
+
+            // Populate filter dropdowns
+            populateFilters(sources, campaigns);
+        }
+
+        function populateFilters(sources, campaigns) {
+            const sourceSelect = document.getElementById('filter-source');
+            const campaignSelect = document.getElementById('filter-campaign');
+
+            // Populate sources
+            sources.forEach(source => {
+                const option = document.createElement('option');
+                option.value = source.source_id;
+                option.textContent = source.source_name;
+                sourceSelect.appendChild(option);
+            });
+
+            // Populate campaigns (would need to fetch campaigns list)
+            // This is a placeholder
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', async () => {
+            const isAuthenticated = await checkAuth();
+            if (!isAuthenticated) return;
+
+            await loadData();
+        });
+    </script>
+
+    <!-- Initialize Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    </script>
+</body>
+</html>

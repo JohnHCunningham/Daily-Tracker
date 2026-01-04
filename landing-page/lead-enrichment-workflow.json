@@ -1,0 +1,869 @@
+{
+  "name": "Lead Enrichment Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "triggerOn": "specificOperation",
+        "tableName": "Leads",
+        "operation": "INSERT"
+      },
+      "name": "Supabase Trigger - New Lead",
+      "type": "n8n-nodes-base.supabaseTrigger",
+      "position": [250, 300],
+      "webhookId": "lead-enrichment-trigger"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/Leads",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "id",
+              "value": "eq.={{ $json.record.id }}"
+            },
+            {
+              "name": "select",
+              "value": "*"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "enrichment_status",
+              "value": "in_progress"
+            },
+            {
+              "name": "enrichment_last_attempted",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        },
+        "options": {
+          "headers": {
+            "parameters": [
+              {
+                "name": "Prefer",
+                "value": "return=representation"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Update Lead Status - In Progress",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [450, 300]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "leadId",
+              "value": "={{ $json.record.id }}",
+              "type": "string"
+            },
+            {
+              "name": "email",
+              "value": "={{ $json.record.email }}",
+              "type": "string"
+            },
+            {
+              "name": "firstName",
+              "value": "={{ $json.record.first_name }}",
+              "type": "string"
+            },
+            {
+              "name": "lastName",
+              "value": "={{ $json.record.last_name }}",
+              "type": "string"
+            },
+            {
+              "name": "company",
+              "value": "={{ $json.record.company }}",
+              "type": "string"
+            },
+            {
+              "name": "linkedinUrl",
+              "value": "={{ $json.record.linkedin_url || '' }}",
+              "type": "string"
+            },
+            {
+              "name": "websiteUrl",
+              "value": "={{ $json.record.website_url || '' }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "name": "Extract Lead Data",
+      "type": "n8n-nodes-base.set",
+      "position": [650, 300]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.linkedinUrl }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "name": "Has LinkedIn URL?",
+      "type": "n8n-nodes-base.if",
+      "position": [850, 200]
+    },
+    {
+      "parameters": {
+        "taskId": "linkedin-profile-scraper",
+        "actorInput": {
+          "startUrls": [
+            {
+              "url": "={{ $json.linkedinUrl }}"
+            }
+          ],
+          "proxy": {
+            "useApifyProxy": true
+          }
+        }
+      },
+      "name": "Apify - Scrape LinkedIn Profile",
+      "type": "n8n-nodes-base.apify",
+      "position": [1050, 100],
+      "credentials": {
+        "apifyApi": {
+          "id": "1",
+          "name": "Apify API"
+        }
+      },
+      "notes": "Uses Apify's LinkedIn Profile Scraper actor"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "linkedinData",
+              "value": "={{ $json }}",
+              "type": "object"
+            },
+            {
+              "name": "linkedinName",
+              "value": "={{ $json.name }}",
+              "type": "string"
+            },
+            {
+              "name": "linkedinHeadline",
+              "value": "={{ $json.headline }}",
+              "type": "string"
+            },
+            {
+              "name": "linkedinCurrentCompany",
+              "value": "={{ $json.company }}",
+              "type": "string"
+            },
+            {
+              "name": "linkedinCurrentTitle",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "name": "linkedinConnections",
+              "value": "={{ $json.connections }}",
+              "type": "number"
+            },
+            {
+              "name": "linkedinLocation",
+              "value": "={{ $json.location }}",
+              "type": "string"
+            },
+            {
+              "name": "linkedinProfileFound",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "name": "Parse LinkedIn Data",
+      "type": "n8n-nodes-base.set",
+      "position": [1250, 100]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/Lead_Enrichment_Log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "lead_id",
+              "value": "={{ $('Extract Lead Data').item.json.leadId }}"
+            },
+            {
+              "name": "enrichment_type",
+              "value": "linkedin_profile"
+            },
+            {
+              "name": "status",
+              "value": "completed"
+            },
+            {
+              "name": "data_source",
+              "value": "apify_linkedin"
+            },
+            {
+              "name": "data_found",
+              "value": "={{ $json.linkedinProfileFound }}"
+            },
+            {
+              "name": "response_payload",
+              "value": "={{ JSON.stringify($json.linkedinData) }}"
+            }
+          ]
+        }
+      },
+      "name": "Log LinkedIn Enrichment Success",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1450, 100]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.websiteUrl }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "name": "Has Website URL?",
+      "type": "n8n-nodes-base.if",
+      "position": [850, 400]
+    },
+    {
+      "parameters": {
+        "taskId": "website-content-crawler",
+        "actorInput": {
+          "startUrls": [
+            {
+              "url": "={{ $json.websiteUrl }}"
+            }
+          ],
+          "maxCrawlDepth": 2,
+          "maxCrawlPages": 10,
+          "proxyConfiguration": {
+            "useApifyProxy": true
+          }
+        }
+      },
+      "name": "Apify - Scrape Website",
+      "type": "n8n-nodes-base.apify",
+      "position": [1050, 400],
+      "credentials": {
+        "apifyApi": {
+          "id": "1",
+          "name": "Apify API"
+        }
+      },
+      "notes": "Uses Apify's Website Content Crawler"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "websiteData",
+              "value": "={{ $json }}",
+              "type": "object"
+            },
+            {
+              "name": "websiteTitle",
+              "value": "={{ $json.title }}",
+              "type": "string"
+            },
+            {
+              "name": "websiteDescription",
+              "value": "={{ $json.description }}",
+              "type": "string"
+            },
+            {
+              "name": "websiteContent",
+              "value": "={{ $json.text }}",
+              "type": "string"
+            },
+            {
+              "name": "websiteFound",
+              "value": true,
+              "type": "boolean"
+            }
+          ]
+        }
+      },
+      "name": "Parse Website Data",
+      "type": "n8n-nodes-base.set",
+      "position": [1250, 400]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "create",
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a technology stack analyzer. Analyze the website content and identify all technologies, frameworks, and tools being used. Return a JSON array of technology names."
+            },
+            {
+              "role": "user",
+              "content": "Website Title: {{ $json.websiteTitle }}\n\nWebsite Description: {{ $json.websiteDescription }}\n\nWebsite Content (first 2000 chars): {{ $json.websiteContent.substring(0, 2000) }}\n\nIdentify the technology stack as a JSON array."
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.3
+        }
+      },
+      "name": "ChatGPT - Analyze Tech Stack",
+      "type": "n8n-nodes-base.openAi",
+      "position": [1450, 400],
+      "credentials": {
+        "openAiApi": {
+          "id": "1",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "techStack",
+              "value": "={{ JSON.parse($json.message.content) }}",
+              "type": "array"
+            }
+          ]
+        }
+      },
+      "name": "Parse Tech Stack",
+      "type": "n8n-nodes-base.set",
+      "position": [1650, 400]
+    },
+    {
+      "parameters": {
+        "resource": "chat",
+        "operation": "create",
+        "model": "gpt-4o",
+        "messages": {
+          "values": [
+            {
+              "role": "system",
+              "content": "You are a competitive intelligence analyst. Analyze the company information and identify:\n1. Top 3-5 competitors\n2. Market position (leader, challenger, niche_player, startup)\n3. Key differentiation points\n\nReturn valid JSON with this structure:\n{\n  \"competitors\": [\"Competitor 1\", \"Competitor 2\"],\n  \"market_position\": \"challenger\",\n  \"differentiation\": \"Brief summary of unique value prop\"\n}"
+            },
+            {
+              "role": "user",
+              "content": "Company: {{ $('Extract Lead Data').item.json.company }}\n\nLinkedIn Company: {{ $('Parse LinkedIn Data').item.json.linkedinCurrentCompany }}\n\nWebsite: {{ $json.websiteUrl }}\n\nWebsite Description: {{ $json.websiteDescription }}\n\nTech Stack: {{ JSON.stringify($json.techStack) }}\n\nProvide competitive analysis as JSON."
+            }
+          ]
+        },
+        "options": {
+          "temperature": 0.4
+        }
+      },
+      "name": "ChatGPT - Competitor Analysis",
+      "type": "n8n-nodes-base.openAi",
+      "position": [1050, 600],
+      "credentials": {
+        "openAiApi": {
+          "id": "1",
+          "name": "OpenAI API"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "name": "competitorData",
+              "value": "={{ JSON.parse($json.message.content) }}",
+              "type": "object"
+            },
+            {
+              "name": "competitors",
+              "value": "={{ JSON.parse($json.message.content).competitors }}",
+              "type": "array"
+            },
+            {
+              "name": "marketPosition",
+              "value": "={{ JSON.parse($json.message.content).market_position }}",
+              "type": "string"
+            },
+            {
+              "name": "differentiation",
+              "value": "={{ JSON.parse($json.message.content).differentiation }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "name": "Parse Competitor Data",
+      "type": "n8n-nodes-base.set",
+      "position": [1250, 600]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/Lead_Enrichment",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "lead_id",
+              "value": "={{ $('Extract Lead Data').item.json.leadId }}"
+            },
+            {
+              "name": "linkedin_url",
+              "value": "={{ $('Extract Lead Data').item.json.linkedinUrl }}"
+            },
+            {
+              "name": "linkedin_profile_found",
+              "value": "={{ $('Parse LinkedIn Data').item.json.linkedinProfileFound || false }}"
+            },
+            {
+              "name": "linkedin_name",
+              "value": "={{ $('Parse LinkedIn Data').item.json.linkedinName || '' }}"
+            },
+            {
+              "name": "linkedin_headline",
+              "value": "={{ $('Parse LinkedIn Data').item.json.linkedinHeadline || '' }}"
+            },
+            {
+              "name": "linkedin_current_company",
+              "value": "={{ $('Parse LinkedIn Data').item.json.linkedinCurrentCompany || '' }}"
+            },
+            {
+              "name": "linkedin_current_title",
+              "value": "={{ $('Parse LinkedIn Data').item.json.linkedinCurrentTitle || '' }}"
+            },
+            {
+              "name": "linkedin_connections",
+              "value": "={{ $('Parse LinkedIn Data').item.json.linkedinConnections || 0 }}"
+            },
+            {
+              "name": "linkedin_location",
+              "value": "={{ $('Parse LinkedIn Data').item.json.linkedinLocation || '' }}"
+            },
+            {
+              "name": "website_url",
+              "value": "={{ $('Extract Lead Data').item.json.websiteUrl }}"
+            },
+            {
+              "name": "website_found",
+              "value": "={{ $('Parse Website Data').item.json.websiteFound || false }}"
+            },
+            {
+              "name": "website_title",
+              "value": "={{ $('Parse Website Data').item.json.websiteTitle || '' }}"
+            },
+            {
+              "name": "website_description",
+              "value": "={{ $('Parse Website Data').item.json.websiteDescription || '' }}"
+            },
+            {
+              "name": "website_tech_stack",
+              "value": "={{ JSON.stringify($('Parse Tech Stack').item.json.techStack || []) }}"
+            },
+            {
+              "name": "competitors_identified",
+              "value": "={{ JSON.stringify($('Parse Competitor Data').item.json.competitors || []) }}"
+            },
+            {
+              "name": "market_position",
+              "value": "={{ $('Parse Competitor Data').item.json.marketPosition || '' }}"
+            },
+            {
+              "name": "differentiation_notes",
+              "value": "={{ $('Parse Competitor Data').item.json.differentiation || '' }}"
+            },
+            {
+              "name": "enrichment_source",
+              "value": "apify"
+            },
+            {
+              "name": "enrichment_confidence",
+              "value": "0.85"
+            }
+          ]
+        },
+        "options": {
+          "headers": {
+            "parameters": [
+              {
+                "name": "Prefer",
+                "value": "return=representation"
+              }
+            ]
+          }
+        }
+      },
+      "name": "Save Enrichment Data",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1450, 600]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/rpc/calculate_lead_quality_score",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "target_lead_id",
+              "value": "={{ $('Extract Lead Data').item.json.leadId }}"
+            }
+          ]
+        }
+      },
+      "name": "Calculate Quality Score",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1650, 600]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/Leads?id=eq.{{ $('Extract Lead Data').item.json.leadId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "enrichment_status",
+              "value": "completed"
+            },
+            {
+              "name": "enrichment_completed_date",
+              "value": "={{ $now.toISO() }}"
+            }
+          ]
+        }
+      },
+      "name": "Update Lead - Enrichment Complete",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1850, 600]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "number": [
+            {
+              "value1": "={{ $('Calculate Quality Score').item.json.total_score }}",
+              "operation": "largerEqual",
+              "value2": 80
+            }
+          ]
+        }
+      },
+      "name": "Is High-Value Lead?",
+      "type": "n8n-nodes-base.if",
+      "position": [2050, 600]
+    },
+    {
+      "parameters": {
+        "fromEmail": "sales@aiadvantagesolutions.com",
+        "toEmail": "admin@aiadvantagesolutions.com, john@aiadvantagesolutions.com",
+        "subject": "🚨 High-Value Lead Alert: {{ $('Extract Lead Data').item.json.firstName }} {{ $('Extract Lead Data').item.json.lastName }}",
+        "emailType": "html",
+        "message": "<h2>New High-Value Lead (Grade: {{ $('Calculate Quality Score').item.json.grade }})</h2>\n\n<p><strong>Name:</strong> {{ $('Extract Lead Data').item.json.firstName }} {{ $('Extract Lead Data').item.json.lastName }}</p>\n<p><strong>Email:</strong> {{ $('Extract Lead Data').item.json.email }}</p>\n<p><strong>Company:</strong> {{ $('Extract Lead Data').item.json.company }}</p>\n<p><strong>Title:</strong> {{ $('Parse LinkedIn Data').item.json.linkedinCurrentTitle }}</p>\n\n<h3>Quality Score: {{ $('Calculate Quality Score').item.json.total_score }}/100</h3>\n<ul>\n  <li>Firmographic: {{ $('Calculate Quality Score').item.json.firmographic_score }}</li>\n  <li>Engagement: {{ $('Calculate Quality Score').item.json.engagement_score }}</li>\n  <li>Intent: {{ $('Calculate Quality Score').item.json.intent_score }}</li>\n  <li>Fit: {{ $('Calculate Quality Score').item.json.fit_score }}</li>\n</ul>\n\n<h3>Competitor Context</h3>\n<p><strong>Market Position:</strong> {{ $('Parse Competitor Data').item.json.marketPosition }}</p>\n<p><strong>Known Competitors:</strong> {{ $('Parse Competitor Data').item.json.competitors.join(', ') }}</p>\n<p><strong>Differentiation:</strong> {{ $('Parse Competitor Data').item.json.differentiation }}</p>\n\n<p><a href=\"https://salesai.coach/admin-team.html\">View in Dashboard</a></p>"
+      },
+      "name": "Send High-Value Lead Alert",
+      "type": "n8n-nodes-base.emailSend",
+      "position": [2250, 500],
+      "credentials": {
+        "smtp": {
+          "id": "1",
+          "name": "SMTP"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/Leads?id=eq.{{ $('Extract Lead Data').item.json.leadId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "enrichment_status",
+              "value": "failed"
+            }
+          ]
+        }
+      },
+      "name": "Update Lead - Enrichment Failed",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [1850, 800]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $env.SUPABASE_URL }}/rest/v1/Lead_Enrichment_Log",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "lead_id",
+              "value": "={{ $('Extract Lead Data').item.json.leadId }}"
+            },
+            {
+              "name": "enrichment_type",
+              "value": "{{ $node.name }}"
+            },
+            {
+              "name": "status",
+              "value": "failed"
+            },
+            {
+              "name": "data_source",
+              "value": "error"
+            },
+            {
+              "name": "error_message",
+              "value": "={{ $json.error.message }}"
+            },
+            {
+              "name": "data_found",
+              "value": false
+            }
+          ]
+        }
+      },
+      "name": "Log Enrichment Error",
+      "type": "n8n-nodes-base.httpRequest",
+      "position": [2050, 800]
+    }
+  ],
+  "connections": {
+    "Supabase Trigger - New Lead": {
+      "main": [
+        [
+          {
+            "node": "Update Lead Status - In Progress",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead Status - In Progress": {
+      "main": [
+        [
+          {
+            "node": "Extract Lead Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Lead Data": {
+      "main": [
+        [
+          {
+            "node": "Has LinkedIn URL?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Has Website URL?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has LinkedIn URL?": {
+      "main": [
+        [
+          {
+            "node": "Apify - Scrape LinkedIn Profile",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify - Scrape LinkedIn Profile": {
+      "main": [
+        [
+          {
+            "node": "Parse LinkedIn Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse LinkedIn Data": {
+      "main": [
+        [
+          {
+            "node": "Log LinkedIn Enrichment Success",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Website URL?": {
+      "main": [
+        [
+          {
+            "node": "Apify - Scrape Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify - Scrape Website": {
+      "main": [
+        [
+          {
+            "node": "Parse Website Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Website Data": {
+      "main": [
+        [
+          {
+            "node": "ChatGPT - Analyze Tech Stack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatGPT - Analyze Tech Stack": {
+      "main": [
+        [
+          {
+            "node": "Parse Tech Stack",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Tech Stack": {
+      "main": [
+        [
+          {
+            "node": "ChatGPT - Competitor Analysis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatGPT - Competitor Analysis": {
+      "main": [
+        [
+          {
+            "node": "Parse Competitor Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse Competitor Data": {
+      "main": [
+        [
+          {
+            "node": "Save Enrichment Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Save Enrichment Data": {
+      "main": [
+        [
+          {
+            "node": "Calculate Quality Score",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Calculate Quality Score": {
+      "main": [
+        [
+          {
+            "node": "Update Lead - Enrichment Complete",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update Lead - Enrichment Complete": {
+      "main": [
+        [
+          {
+            "node": "Is High-Value Lead?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is High-Value Lead?": {
+      "main": [
+        [
+          {
+            "node": "Send High-Value Lead Alert",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "errorWorkflow": "error-handler-workflow"
+  }
+}

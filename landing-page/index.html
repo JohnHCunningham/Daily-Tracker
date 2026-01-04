@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SalesAI.Coach - AI-Powered Sales Coaching & Performance Tracking</title>
+    <meta name="description" content="Transform your sales team with AI-powered conversation analysis, methodology-specific coaching, and real-time performance insights.">
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --navy: #0C1030;
+            --teal: #10C3B0;
+            --aqua: #3DE0D2;
+            --pink: #E64563;
+            --gold: #F4B03A;
+            --white: #FFFFFF;
+            --light-gray: #F5F7FA;
+            --border-gray: #E2E8F0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--navy);
+            background: var(--white);
+        }
+
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, var(--navy) 0%, #1a1f4d 100%);
+            color: var(--white);
+            padding: 120px 20px 80px;
+            text-align: center;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+            line-height: 1.2;
+        }
+
+        .hero .subtitle {
+            font-size: 1.5rem;
+            color: var(--aqua);
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        .hero .cta-button {
+            display: inline-block;
+            background: var(--teal);
+            color: var(--white);
+            padding: 16px 40px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .hero .cta-button:hover {
+            background: var(--aqua);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 195, 176, 0.3);
+        }
+
+        /* Features Section */
+        .features {
+            padding: 80px 20px;
+            background: var(--light-gray);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 60px;
+            color: var(--navy);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 40px;
+        }
+
+        .feature-card {
+            background: var(--white);
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(12, 16, 48, 0.08);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 30px rgba(12, 16, 48, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: var(--navy);
+        }
+
+        .feature-card p {
+            color: #64748b;
+            line-height: 1.7;
+        }
+
+        /* Methodologies Section */
+        .methodologies {
+            padding: 80px 20px;
+            background: var(--white);
+        }
+
+        .methodology-badges {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 40px;
+        }
+
+        .badge {
+            background: linear-gradient(135deg, var(--teal), var(--aqua));
+            color: var(--white);
+            padding: 12px 28px;
+            border-radius: 50px;
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        /* Contact Form Section */
+        .contact-section {
+            padding: 80px 20px;
+            background: linear-gradient(135deg, var(--navy) 0%, #1a1f4d 100%);
+            color: var(--white);
+        }
+
+        .contact-section .section-title {
+            color: var(--white);
+        }
+
+        .form-container {
+            max-width: 600px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 40px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .form-group {
+            margin-bottom: 24px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: var(--aqua);
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 1rem;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--navy);
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--teal);
+            box-shadow: 0 0 0 3px rgba(16, 195, 176, 0.2);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 120px;
+        }
+
+        .submit-button {
+            width: 100%;
+            background: var(--teal);
+            color: var(--white);
+            padding: 16px;
+            font-size: 1.2rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .submit-button:hover {
+            background: var(--aqua);
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 195, 176, 0.3);
+        }
+
+        .submit-button:disabled {
+            background: #64748b;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .form-message {
+            margin-top: 20px;
+            padding: 16px;
+            border-radius: 8px;
+            text-align: center;
+            font-weight: 600;
+            display: none;
+        }
+
+        .form-message.success {
+            background: rgba(16, 195, 176, 0.2);
+            border: 1px solid var(--teal);
+            color: var(--aqua);
+        }
+
+        .form-message.error {
+            background: rgba(230, 69, 99, 0.2);
+            border: 1px solid var(--pink);
+            color: var(--pink);
+        }
+
+        /* Social Proof */
+        .social-proof {
+            padding: 60px 20px;
+            background: var(--white);
+            text-align: center;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            max-width: 1000px;
+            margin: 40px auto 0;
+        }
+
+        .stat {
+            padding: 30px;
+        }
+
+        .stat-number {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--teal);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-size: 1.1rem;
+            color: #64748b;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--navy);
+            color: var(--white);
+            padding: 40px 20px;
+            text-align: center;
+        }
+
+        footer a {
+            color: var(--aqua);
+            text-decoration: none;
+        }
+
+        footer a:hover {
+            text-decoration: underline;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .hero .subtitle {
+                font-size: 1.2rem;
+            }
+
+            .section-title {
+                font-size: 2rem;
+            }
+
+            .form-container {
+                padding: 30px 20px;
+            }
+        }
+
+        /* Loading Spinner */
+        .spinner {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top: 3px solid var(--white);
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1>Transform Your Sales Team with AI-Powered Coaching</h1>
+            <p class="subtitle">Real-time conversation analysis, methodology-specific insights, and performance tracking</p>
+            <a href="#contact" class="cta-button">Get Started Free</a>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features">
+        <div class="container">
+            <h2 class="section-title">Why Sales Leaders Choose SalesAI.Coach</h2>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">🎯</div>
+                    <h3>Methodology-Specific Coaching</h3>
+                    <p>Get targeted insights for Sandler, MEDDIC, Challenger, SPIN, Gap Selling, and Value Selling. No generic advice – just actionable coaching for your framework.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📊</div>
+                    <h3>Real-Time Performance Tracking</h3>
+                    <p>Track talk ratios, question patterns, objection handling, and methodology execution across every conversation. See exactly what's working and what needs improvement.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">🤖</div>
+                    <h3>AI Conversation Analysis</h3>
+                    <p>Automatically transcribe and analyze sales calls. Our AI identifies pain points, tracks methodology execution, and provides coaching prompts in real-time.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">👥</div>
+                    <h3>Manager Dashboard</h3>
+                    <p>Identify team strengths and weaknesses at a glance. Get categorical insights like "Upfront contracts missing in 35% of calls" with actionable coaching prompts.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">📈</div>
+                    <h3>Lead Attribution & ROI</h3>
+                    <p>Track every lead source, measure campaign performance, and calculate ROI. Know which marketing channels drive the highest-quality leads.</p>
+                </div>
+
+                <div class="feature-card">
+                    <div class="feature-icon">⚡</div>
+                    <h3>Lead Enrichment</h3>
+                    <p>Automatically enrich leads with LinkedIn profiles, company data, competitor analysis, and quality scores. Prioritize high-value prospects instantly.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Methodologies Section -->
+    <section class="methodologies">
+        <div class="container">
+            <h2 class="section-title">Supporting All Major Sales Methodologies</h2>
+            <div class="methodology-badges">
+                <div class="badge">Sandler</div>
+                <div class="badge">MEDDIC</div>
+                <div class="badge">Challenger</div>
+                <div class="badge">SPIN Selling</div>
+                <div class="badge">Gap Selling</div>
+                <div class="badge">Value Selling</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Social Proof -->
+    <section class="social-proof">
+        <div class="container">
+            <h2 class="section-title">Trusted by High-Performing Sales Teams</h2>
+            <div class="stats-grid">
+                <div class="stat">
+                    <div class="stat-number">10,000+</div>
+                    <div class="stat-label">Conversations Analyzed</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">35%</div>
+                    <div class="stat-label">Avg. Win Rate Increase</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">2.5x</div>
+                    <div class="stat-label">Faster Ramp Time</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-number">98%</div>
+                    <div class="stat-label">Customer Satisfaction</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Form Section -->
+    <section class="contact-section" id="contact">
+        <div class="container">
+            <h2 class="section-title">Start Your Free Trial Today</h2>
+            <div class="form-container">
+                <form id="contact-form">
+                    <div class="form-group">
+                        <label for="first_name">First Name *</label>
+                        <input type="text" id="first_name" name="first_name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="last_name">Last Name *</label>
+                        <input type="text" id="last_name" name="last_name" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="email">Work Email *</label>
+                        <input type="email" id="email" name="email" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="company">Company *</label>
+                        <input type="text" id="company" name="company" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="phone">Phone Number</label>
+                        <input type="tel" id="phone" name="phone">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="methodology">Sales Methodology</label>
+                        <select id="methodology" name="methodology">
+                            <option value="">Select your methodology...</option>
+                            <option value="Sandler">Sandler</option>
+                            <option value="MEDDIC">MEDDIC</option>
+                            <option value="Challenger">Challenger</option>
+                            <option value="SPIN">SPIN Selling</option>
+                            <option value="Gap Selling">Gap Selling</option>
+                            <option value="Value Selling">Value Selling</option>
+                            <option value="Other">Other</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="team_size">Team Size</label>
+                        <select id="team_size" name="team_size">
+                            <option value="">Select team size...</option>
+                            <option value="1-5">1-5 reps</option>
+                            <option value="6-10">6-10 reps</option>
+                            <option value="11-25">11-25 reps</option>
+                            <option value="26-50">26-50 reps</option>
+                            <option value="50+">50+ reps</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="message">How can we help?</label>
+                        <textarea id="message" name="message" placeholder="Tell us about your team's coaching challenges..."></textarea>
+                    </div>
+
+                    <!-- Hidden UTM Fields -->
+                    <input type="hidden" id="utm_source" name="utm_source">
+                    <input type="hidden" id="utm_medium" name="utm_medium">
+                    <input type="hidden" id="utm_campaign" name="utm_campaign">
+                    <input type="hidden" id="utm_term" name="utm_term">
+                    <input type="hidden" id="utm_content" name="utm_content">
+                    <input type="hidden" id="referrer" name="referrer">
+                    <input type="hidden" id="landing_page" name="landing_page">
+
+                    <button type="submit" class="submit-button" id="submit-button">
+                        Start Free Trial
+                    </button>
+
+                    <div class="form-message" id="form-message"></div>
+                </form>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 SalesAI.Coach by AI Advantage Solutions. All rights reserved.</p>
+            <p style="margin-top: 10px;">
+                <a href="mailto:admin@aiadvantagesolutions.com">Contact Us</a> |
+                <a href="/privacy.html">Privacy Policy</a> |
+                <a href="/terms.html">Terms of Service</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // ============================================
+        // UTM PARAMETER CAPTURE
+        // ============================================
+
+        // Parse UTM parameters from URL
+        const urlParams = new URLSearchParams(window.location.search);
+
+        // Store UTM parameters
+        const utmParams = {
+            utm_source: urlParams.get('utm_source') || '',
+            utm_medium: urlParams.get('utm_medium') || '',
+            utm_campaign: urlParams.get('utm_campaign') || '',
+            utm_term: urlParams.get('utm_term') || '',
+            utm_content: urlParams.get('utm_content') || ''
+        };
+
+        // Populate hidden form fields
+        document.getElementById('utm_source').value = utmParams.utm_source;
+        document.getElementById('utm_medium').value = utmParams.utm_medium;
+        document.getElementById('utm_campaign').value = utmParams.utm_campaign;
+        document.getElementById('utm_term').value = utmParams.utm_term;
+        document.getElementById('utm_content').value = utmParams.utm_content;
+        document.getElementById('referrer').value = document.referrer;
+        document.getElementById('landing_page').value = window.location.href;
+
+        // Store in sessionStorage for multi-page tracking
+        sessionStorage.setItem('utm_params', JSON.stringify(utmParams));
+        sessionStorage.setItem('referrer', document.referrer);
+        sessionStorage.setItem('landing_page', window.location.href);
+
+        // ============================================
+        // LEAD SOURCE MAPPING
+        // ============================================
+
+        // Map UTM source to Lead_Sources table UUIDs
+        // TODO: Replace these UUIDs with actual UUIDs from your Lead_Sources table
+        const leadSourceMap = {
+            'google': null,  // Will be fetched from Supabase
+            'facebook': null,
+            'linkedin': null,
+            'twitter': null,
+            'organic': null,
+            'direct': null,
+            'referral': null,
+            'email': null
+        };
+
+        function getLeadSourceId(utmSource, utmMedium) {
+            // If no UTM source, determine from referrer
+            if (!utmSource) {
+                if (!document.referrer) {
+                    return 'direct'; // Direct traffic
+                } else if (document.referrer.includes('google.com')) {
+                    return 'organic-google';
+                } else {
+                    return 'referral';
+                }
+            }
+
+            // Map UTM source to Lead Source
+            const sourceKey = utmSource.toLowerCase();
+
+            // If medium is CPC/PPC, it's paid advertising
+            if (utmMedium && ['cpc', 'ppc', 'paid'].includes(utmMedium.toLowerCase())) {
+                if (sourceKey.includes('google')) return 'google-ads';
+                if (sourceKey.includes('facebook')) return 'facebook-ads';
+                if (sourceKey.includes('linkedin')) return 'linkedin-ads';
+            }
+
+            // Return source key for lookup
+            return sourceKey;
+        }
+
+        // ============================================
+        // FORM SUBMISSION
+        // ============================================
+
+        document.getElementById('contact-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const submitButton = document.getElementById('submit-button');
+            const formMessage = document.getElementById('form-message');
+
+            // Disable submit button
+            submitButton.disabled = true;
+            submitButton.innerHTML = 'Submitting... <div class="spinner"></div>';
+
+            // Collect form data
+            const formData = new FormData(e.target);
+
+            // Determine lead source
+            const sourceKey = getLeadSourceId(utmParams.utm_source, utmParams.utm_medium);
+
+            // Prepare lead data for Supabase
+            const leadData = {
+                // Contact Information
+                email: formData.get('email'),
+                first_name: formData.get('first_name'),
+                last_name: formData.get('last_name'),
+                company: formData.get('company'),
+                phone: formData.get('phone') || null,
+
+                // First-Touch Attribution
+                first_touch_utm_source: utmParams.utm_source || null,
+                first_touch_utm_medium: utmParams.utm_medium || null,
+                first_touch_utm_campaign: utmParams.utm_campaign || null,
+                first_touch_utm_term: utmParams.utm_term || null,
+                first_touch_utm_content: utmParams.utm_content || null,
+                first_touch_referrer: document.referrer || null,
+                first_touch_landing_page: window.location.href,
+                first_touch_date: new Date().toISOString(),
+
+                // Additional Fields
+                lead_status: 'new',
+
+                // Custom Fields (will be added to Leads table)
+                metadata: {
+                    methodology: formData.get('methodology') || null,
+                    team_size: formData.get('team_size') || null,
+                    message: formData.get('message') || null,
+                    form_submitted_at: new Date().toISOString()
+                }
+            };
+
+            // TODO: Replace with your Supabase credentials
+            const SUPABASE_URL = 'https://YOUR_PROJECT.supabase.co';
+            const SUPABASE_ANON_KEY = 'YOUR_ANON_KEY';
+
+            try {
+                // Step 1: Get Lead Source ID
+                const sourcesResponse = await fetch(
+                    `${SUPABASE_URL}/rest/v1/Lead_Sources?source_name=ilike.%${sourceKey}%&limit=1`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    }
+                );
+
+                if (sourcesResponse.ok) {
+                    const sources = await sourcesResponse.json();
+                    if (sources.length > 0) {
+                        leadData.first_touch_source_id = sources[0].id;
+                    }
+                }
+
+                // Step 2: Submit lead to Supabase
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/Leads`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify(leadData)
+                });
+
+                if (response.ok) {
+                    const lead = await response.json();
+                    console.log('Lead created:', lead);
+
+                    // Show success message
+                    formMessage.className = 'form-message success';
+                    formMessage.style.display = 'block';
+                    formMessage.textContent = '✓ Thank you! We\'ll be in touch within 24 hours.';
+
+                    // Reset form
+                    e.target.reset();
+
+                    // Redirect to thank you page after 2 seconds
+                    setTimeout(() => {
+                        window.location.href = '/thank-you.html';
+                    }, 2000);
+
+                } else {
+                    throw new Error('Failed to submit lead');
+                }
+
+            } catch (error) {
+                console.error('Error submitting form:', error);
+
+                // Show error message
+                formMessage.className = 'form-message error';
+                formMessage.style.display = 'block';
+                formMessage.textContent = '✗ Something went wrong. Please try again or email us at admin@aiadvantagesolutions.com';
+
+            } finally {
+                // Re-enable submit button
+                submitButton.disabled = false;
+                submitButton.textContent = 'Start Free Trial';
+            }
+        });
+
+        // ============================================
+        // ANALYTICS TRACKING (Optional)
+        // ============================================
+
+        // Track page view with UTM parameters
+        if (window.gtag) {
+            gtag('event', 'page_view', {
+                page_title: document.title,
+                page_location: window.location.href,
+                utm_source: utmParams.utm_source,
+                utm_medium: utmParams.utm_medium,
+                utm_campaign: utmParams.utm_campaign
+            });
+        }
+
+        // Track form field interactions
+        document.querySelectorAll('#contact-form input, #contact-form select, #contact-form textarea').forEach(field => {
+            field.addEventListener('blur', () => {
+                if (window.gtag && field.value) {
+                    gtag('event', 'form_field_completed', {
+                        field_name: field.name
+                    });
+                }
+            });
+        });
+
+        // Smooth scroll for CTA button
+        document.querySelector('.cta-button').addEventListener('click', (e) => {
+            e.preventDefault();
+            document.querySelector('#contact').scrollIntoView({
+                behavior: 'smooth'
+            });
+
+            // Track CTA click
+            if (window.gtag) {
+                gtag('event', 'cta_click', {
+                    cta_location: 'hero'
+                });
+            }
+        });
+    </script>
+</body>
+</html>

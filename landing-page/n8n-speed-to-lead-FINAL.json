@@ -1,0 +1,332 @@
+{
+  "name": "Speed-to-Lead: Contact Form Enrichment [CORRECTED]",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "701fa496-37f8-43c0-9e00-1eb8973b148f",
+        "responseMode": "lastNode"
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook - Contact Form",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 400]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "={{ $json.body.email }}",
+        "subject": "=Thanks for reaching out, {{ $json.body.name.split(' ')[0] }}",
+        "emailType": "text",
+        "message": "=Hi {{ $json.body.name.split(' ')[0] }},\n\nThanks for reaching out about SalesAI.Coach. I received your message and I'm looking forward to learning more about your team's sales execution challenges.\n\nI'll send you a personalized response within the next few minutes with some thoughts specific to your situation.\n\nIn the meantime, feel free to browse our Execution Exploration booking calendar if you'd like to schedule a focused conversation: https://tidycal.com/aiautomations/execution-exploration\n\nTalk soon,\nJohn Cunningham\nAI Advantage Solutions\njohn@aiadvantagesolutions.ca\n(905) 519-8983"
+      },
+      "id": "send-auto-reply",
+      "name": "Send Instant Auto-Reply",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [470, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.linkedin }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-linkedin-provided",
+      "name": "Check if LinkedIn Provided",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [470, 400]
+    },
+    {
+      "parameters": {
+        "resource": "task",
+        "operation": "run",
+        "taskId": "apify/linkedin-profile-scraper",
+        "waitForFinish": true,
+        "input": "={{ { \"startUrls\": [{ \"url\": $json.body.linkedin }], \"maxResults\": 1 } }}"
+      },
+      "id": "scrape-linkedin",
+      "name": "Scrape LinkedIn Profile",
+      "type": "n8n-nodes-base.apify",
+      "typeVersion": 1,
+      "position": [690, 300],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { linkedin_data: 'No LinkedIn profile provided' } }];"
+      },
+      "id": "no-linkedin-fallback",
+      "name": "No LinkedIn Fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [690, 500]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.body.website }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-website-provided",
+      "name": "Check if Website Provided",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [470, 650]
+    },
+    {
+      "parameters": {
+        "resource": "task",
+        "operation": "run",
+        "taskId": "apify/website-content-crawler",
+        "waitForFinish": true,
+        "input": "={{ { \"startUrls\": [{ \"url\": $json.body.website }], \"maxCrawlDepth\": 2, \"maxPages\": 5 } }}"
+      },
+      "id": "scrape-website",
+      "name": "Scrape Company Website",
+      "type": "n8n-nodes-base.apify",
+      "typeVersion": 1,
+      "position": [690, 650],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { website_data: 'No website provided' } }];"
+      },
+      "id": "no-website-fallback",
+      "name": "No Website Fallback",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [690, 800]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition"
+      },
+      "id": "merge-all-data",
+      "name": "Merge All Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [910, 550]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "options": {},
+        "text": "=Analyze this lead data and identify:\n1. Industry/sector\n2. Potential pain points based on their message\n3. Company size indicators\n4. Decision-making level (based on LinkedIn if available)\n\nLEAD DATA:\nName: {{ $json.body.name }}\nEmail: {{ $json.body.email }}\nCompany: {{ $json.body.company }}\nWebsite: {{ $json.body.website || 'Not provided' }}\nLinkedIn: {{ $json.body.linkedin || 'Not provided' }}\nPhone: {{ $json.body.phone || 'Not provided' }}\nMessage: {{ $json.body.message }}\n\nLinkedIn Data: {{ $('Scrape LinkedIn Profile').item.json.linkedin_data || $('No LinkedIn Fallback').item.json.linkedin_data }}\nWebsite Data: {{ $('Scrape Company Website').item.json.website_data || $('No Website Fallback').item.json.website_data }}\n\nProvide a concise analysis in 3-4 bullet points.",
+        "modelId": "gpt-4o-mini",
+        "options": {}
+      },
+      "id": "analyze-lead",
+      "name": "ChatGPT: Analyze Lead",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [1130, 550]
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "minutes"
+      },
+      "id": "wait-3-minutes",
+      "name": "Wait 3 Minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1350, 550]
+    },
+    {
+      "parameters": {
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "options": {},
+        "text": "=Write a personalized email response to this sales lead. Use the analysis provided to reference specific pain points and show you understand their business context.\n\nLEAD INFO:\nName: {{ $json.body.name }}\nCompany: {{ $json.body.company }}\nMessage: {{ $json.body.message }}\n\nANALYSIS:\n{{ $('ChatGPT: Analyze Lead').item.json.response }}\n\nEMAIL REQUIREMENTS:\n- Start with their first name\n- Reference something specific from their message\n- Mention 1-2 relevant pain points from the analysis\n- Explain how SalesAI.Coach addresses those specific challenges\n- Include a clear call-to-action to book an Execution Exploration: https://tidycal.com/aiautomations/execution-exploration\n- Sign as John Cunningham, AI Advantage Solutions\n- Keep it under 200 words\n- Conversational, not salesy tone\n\nGenerate the email body only (no subject line).",
+        "modelId": "gpt-4o",
+        "options": {}
+      },
+      "id": "generate-email",
+      "name": "ChatGPT: Generate Personalized Email",
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1,
+      "position": [1570, 550]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "={{ $json.body.email }}",
+        "subject": "=Re: Your SalesAI.Coach inquiry, {{ $json.body.name.split(' ')[0] }}",
+        "emailType": "text",
+        "message": "={{ $('ChatGPT: Generate Personalized Email').item.json.response }}"
+      },
+      "id": "send-personalized-email",
+      "name": "Send Personalized Email",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [1790, 550]
+    }
+  ],
+  "connections": {
+    "Webhook - Contact Form": {
+      "main": [
+        [
+          {
+            "node": "Send Instant Auto-Reply",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check if LinkedIn Provided",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Check if Website Provided",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if LinkedIn Provided": {
+      "main": [
+        [
+          {
+            "node": "Scrape LinkedIn Profile",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No LinkedIn Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape LinkedIn Profile": {
+      "main": [
+        [
+          {
+            "node": "Merge All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No LinkedIn Fallback": {
+      "main": [
+        [
+          {
+            "node": "Merge All Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check if Website Provided": {
+      "main": [
+        [
+          {
+            "node": "Scrape Company Website",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Website Fallback",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Scrape Company Website": {
+      "main": [
+        [
+          {
+            "node": "Merge All Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "No Website Fallback": {
+      "main": [
+        [
+          {
+            "node": "Merge All Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge All Data": {
+      "main": [
+        [
+          {
+            "node": "ChatGPT: Analyze Lead",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatGPT: Analyze Lead": {
+      "main": [
+        [
+          {
+            "node": "Wait 3 Minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait 3 Minutes": {
+      "main": [
+        [
+          {
+            "node": "ChatGPT: Generate Personalized Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "ChatGPT: Generate Personalized Email": {
+      "main": [
+        [
+          {
+            "node": "Send Personalized Email",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

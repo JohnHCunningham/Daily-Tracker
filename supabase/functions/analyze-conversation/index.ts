@@ -246,6 +246,19 @@ Example format:
 You respond: '[Sandler script]'
 Why it works: [Sandler principle]"
 
+CRITICAL: Provide complete coaching in 4 categories:
+
+1. STRENGTHS (what_went_well): What they executed well, with specific quotes
+2. WEAKNESSES (areas_to_improve): What they did but could do better
+3. OMISSIONS: What they COMPLETELY FORGOT or NEVER DID
+   - Did NOT set up-front contract
+   - Did NOT discuss budget at all
+   - Did NOT ask pain funnel questions
+   - Did NOT use negative reverse selling
+   - MISSED asking about decision process
+   - MISSED building rapport at opening
+4. SUGGESTIONS (tactical_scripts + next_call_playbook): Exact scripts for next time
+
 Return JSON in this exact format:
 {
   "overall_score": 7.5,
@@ -264,6 +277,7 @@ Return JSON in this exact format:
   "negative_reverse_used": true,
   "what_went_well": ["Specific thing with quote", "Another specific win"],
   "areas_to_improve": ["Specific tactical fix", "Another specific fix"],
+  "omissions": ["Did NOT set up-front contract", "Did NOT discuss budget at all", "MISSED asking decision process questions"],
   "tactical_scripts": {
     "opening_alternatives": ["Script 1", "Script 2", "Script 3"],
     "upfront_contract": "Exact script to use",

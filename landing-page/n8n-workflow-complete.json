@@ -1,0 +1,215 @@
+{
+  "name": "Speed-to-Lead Contact Form",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "contact-form-speed-to-lead",
+        "responseMode": "responseNode"
+      },
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [240, 300]
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={ \"success\": true, \"message\": \"Thank you! We'll be in touch shortly.\" }"
+      },
+      "id": "respond-webhook",
+      "name": "Respond to Webhook",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [460, 300]
+    },
+    {
+      "parameters": {
+        "authentication": "oAuth2",
+        "sendTo": "={{ $json.email }}",
+        "subject": "=Thanks for reaching out, {{ $json.name.split(' ')[0] }}",
+        "emailType": "text",
+        "message": "=Hi {{ $json.name.split(' ')[0] }},\n\nThanks for reaching out about SalesAI.Coach. I received your message and I'm looking forward to learning more about your team's sales execution challenges.\n\nI'll send you a personalized response within the next few minutes with some thoughts specific to your situation.\n\nIn the meantime, feel free to browse our Execution Exploration booking calendar if you'd like to schedule a focused conversation: https://tidycal.com/aiautomations/execution-exploration\n\nTalk soon,\nJohn Cunningham\nAI Advantage Solutions\njohn@aiadvantagesolutions.ca\n(905) 519-8983"
+      },
+      "id": "auto-reply",
+      "name": "Send Auto-Reply",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [680, 200],
+      "continueOnFail": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.linkedin }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-linkedin",
+      "name": "LinkedIn Provided?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 300]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...items[0].json, linkedin_data: 'No LinkedIn provided' } }];"
+      },
+      "id": "no-linkedin",
+      "name": "No LinkedIn",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 400]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{ $json.website }}",
+              "operation": "isNotEmpty"
+            }
+          ]
+        }
+      },
+      "id": "check-website",
+      "name": "Website Provided?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [900, 550]
+    },
+    {
+      "parameters": {
+        "jsCode": "return [{ json: { ...items[0].json, website_data: 'No website provided' } }];"
+      },
+      "id": "no-website",
+      "name": "No Website",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1120, 650]
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combinationMode": "mergeByPosition"
+      },
+      "id": "merge-data",
+      "name": "Merge Data",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 2.1,
+      "position": [1340, 400]
+    },
+    {
+      "parameters": {
+        "amount": 3,
+        "unit": "minutes"
+      },
+      "id": "wait-node",
+      "name": "Wait 3 Minutes",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [1560, 400]
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Respond to Webhook": {
+      "main": [
+        [
+          {
+            "node": "Send Auto-Reply",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "LinkedIn Provided?",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Website Provided?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Provided?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "No LinkedIn",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No LinkedIn": {
+      "main": [
+        [
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Website Provided?": {
+      "main": [
+        [],
+        [
+          {
+            "node": "No Website",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Website": {
+      "main": [
+        [
+          {
+            "node": "Merge Data",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge Data": {
+      "main": [
+        [
+          {
+            "node": "Wait 3 Minutes",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "pinData": {},
+  "tags": []
+}

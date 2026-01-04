@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>Team Coaching Dashboard - SalesAI.Coach</title>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        /* --- BRAND COLOR PALETTE --- */
+        :root {
+            --brand-navy: #0C1030;
+            --brand-teal: #10C3B0;
+            --brand-aqua: #3DE0D2;
+            --brand-pink: #E64563;
+            --brand-gold: #F4B03A;
+            --brand-yellow: #F9C863;
+            --light-text: #F2F4F8;
+            --card-bg: #131a40;
+            --input-bg: #090c26;
+            --success-green: #10C3B0;
+            --warning-yellow: #F4B03A;
+            --danger-red: #E64563;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--brand-navy) 0%, #050816 100%);
+            color: var(--light-text);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .dashboard-container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .admin-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .admin-header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--brand-aqua), var(--brand-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .admin-header p {
+            color: var(--brand-gold);
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .btn-logout {
+            background: linear-gradient(135deg, var(--brand-pink), #c13752);
+            border: none;
+            padding: 10px 20px;
+            color: white;
+            font-weight: 700;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .btn-logout:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: linear-gradient(135deg, rgba(61, 224, 210, 0.2), rgba(16, 195, 176, 0.2));
+            border: 1px solid var(--brand-teal);
+            color: var(--brand-aqua);
+            padding: 10px 20px;
+            font-weight: 700;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Login Modal */
+        .login-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(5, 8, 22, 0.95);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .login-box {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+            border: 1px solid rgba(61, 224, 210, 0.2);
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .login-box h2 {
+            color: var(--brand-aqua);
+            margin-bottom: 10px;
+        }
+
+        .login-box p {
+            color: var(--light-text);
+            opacity: 0.7;
+            margin-bottom: 30px;
+        }
+
+        .login-box input {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--brand-teal);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+        }
+
+        .login-box input:focus {
+            outline: none;
+            border-color: var(--brand-aqua);
+            box-shadow: 0 0 0 3px rgba(61, 224, 210, 0.1);
+        }
+
+        .login-box button {
+            width: 100%;
+            background: linear-gradient(135deg, var(--brand-gold), var(--brand-yellow));
+            border: none;
+            padding: 12px;
+            color: var(--brand-navy);
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .login-box button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(244, 176, 58, 0.4);
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .alert-error {
+            background: rgba(230, 69, 99, 0.2);
+            border: 1px solid var(--brand-pink);
+            color: var(--brand-pink);
+        }
+
+        .alert-success {
+            background: rgba(16, 195, 176, 0.2);
+            border: 1px solid var(--brand-teal);
+            color: var(--brand-aqua);
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Team Grid */
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
+            gap: 25px;
+            margin-top: 30px;
+        }
+
+        .team-member-card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(61, 224, 210, 0.1);
+            position: relative;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .team-member-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.5);
+            border-color: var(--brand-aqua);
+        }
+
+        .team-member-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background: linear-gradient(90deg, var(--brand-teal), var(--brand-aqua));
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .user-info {
+            flex: 1;
+        }
+
+        .user-name {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--brand-aqua);
+            margin-bottom: 5px;
+        }
+
+        .user-methodology {
+            font-size: 0.85rem;
+            color: var(--brand-gold);
+            opacity: 0.9;
+        }
+
+        .performance-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--brand-gold), var(--brand-yellow));
+            color: var(--brand-navy);
+            font-size: 1.2rem;
+            font-weight: 900;
+        }
+
+        .performance-badge.high {
+            background: linear-gradient(135deg, var(--success-green), var(--brand-aqua));
+        }
+
+        .performance-badge.medium {
+            background: linear-gradient(135deg, var(--warning-yellow), var(--brand-gold));
+        }
+
+        .performance-badge.low {
+            background: linear-gradient(135deg, var(--danger-red), #c13752);
+            color: white;
+        }
+
+        .insight-section {
+            background: rgba(255,255,255,0.03);
+            border-radius: 15px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+
+        .insight-section.priority {
+            border-left: 4px solid var(--danger-red);
+        }
+
+        .insight-section.strength {
+            border-left: 4px solid var(--success-green);
+        }
+
+        .insight-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .insight-icon {
+            font-size: 1.2rem;
+        }
+
+        .insight-label {
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .insight-label.priority {
+            color: var(--danger-red);
+        }
+
+        .insight-label.strength {
+            color: var(--success-green);
+        }
+
+        .insight-metric {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--light-text);
+            margin-bottom: 8px;
+        }
+
+        .coaching-prompt {
+            font-size: 0.8rem;
+            color: rgba(242, 244, 248, 0.7);
+            font-style: italic;
+            padding-left: 28px;
+        }
+
+        .quick-metrics {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            padding-top: 15px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .metric {
+            text-align: center;
+            flex: 1;
+        }
+
+        .metric-value {
+            font-size: 1.2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .metric-label {
+            font-size: 0.7rem;
+            color: rgba(242, 244, 248, 0.6);
+            margin-top: 3px;
+        }
+
+        .traffic-light {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .traffic-light.green {
+            background-color: var(--success-green);
+            box-shadow: 0 0 8px var(--success-green);
+        }
+
+        .traffic-light.yellow {
+            background-color: var(--warning-yellow);
+            box-shadow: 0 0 8px var(--warning-yellow);
+        }
+
+        .traffic-light.red {
+            background-color: var(--danger-red);
+            box-shadow: 0 0 8px var(--danger-red);
+        }
+
+        .view-details-btn {
+            display: block;
+            width: 100%;
+            margin-top: 15px;
+            padding: 12px;
+            background: linear-gradient(135deg, rgba(61, 224, 210, 0.1), rgba(16, 195, 176, 0.1));
+            border: 1px solid var(--brand-teal);
+            color: var(--brand-aqua);
+            font-weight: 700;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+            text-decoration: none;
+        }
+
+        .view-details-btn:hover {
+            background: linear-gradient(135deg, rgba(61, 224, 210, 0.2), rgba(16, 195, 176, 0.2));
+        }
+
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--brand-teal);
+            font-size: 1.2rem;
+        }
+
+        .loading::after {
+            content: '...';
+            animation: dots 1.5s steps(4, end) infinite;
+        }
+
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: rgba(242, 244, 248, 0.6);
+        }
+
+        .empty-state-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .team-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .admin-header {
+                flex-direction: column;
+                gap: 15px;
+                align-items: flex-start;
+            }
+
+            .header-actions {
+                width: 100%;
+                flex-direction: column;
+            }
+
+            .btn-secondary, .btn-logout {
+                width: 100%;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Login Modal -->
+    <div id="login-modal" class="login-modal hidden">
+        <div class="login-box">
+            <h2>Manager Login</h2>
+            <p>Sign in with your admin account</p>
+            <div id="login-alert-container"></div>
+            <input type="email" id="admin-email" placeholder="Email address" autofocus>
+            <input type="password" id="admin-password" placeholder="Password">
+            <button onclick="adminLogin()">Sign In</button>
+            <p style="margin-top: 15px; font-size: 0.85rem; opacity: 0.6;">
+                Powered by Supabase Auth
+            </p>
+        </div>
+    </div>
+
+    <!-- Main Dashboard -->
+    <div id="main-dashboard" class="dashboard-container hidden">
+
+        <!-- Admin Header -->
+        <div class="admin-header">
+            <div>
+                <h1>Team Coaching Dashboard</h1>
+                <p>Quick Insights → Detailed Drill-Down</p>
+            </div>
+            <div class="header-actions">
+                <a href="../admin.html" class="btn-secondary">← Analytics Dashboard</a>
+                <button class="btn-logout" onclick="adminLogout()">Logout</button>
+            </div>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Team Member Cards Grid -->
+        <div id="team-grid-container" class="loading">
+            Loading team data
+        </div>
+
+    </div>
+
+    <script>
+        // ============================================
+        // CONFIGURATION
+        // ============================================
+
+        const SUPABASE_URL = 'https://qwqlsbccwnwrdpcaccjz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTA1MDQsImV4cCI6MjA4MDg4NjUwNH0.yWzSV2Nid_T1XiDE0RrskFob9mRUc-m6MbeIiT7huC4';
+
+        // Admin email whitelist
+        const ADMIN_EMAILS = [
+            'admin@aiadvantagesolutions.com',
+            'john@aiadvantagesolutions.ca'
+        ];
+
+        let supabaseClient;
+
+        // Initialize Supabase
+        try {
+            supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (error) {
+            console.error('Supabase initialization error:', error);
+        }
+
+        // ============================================
+        // AUTHENTICATION FUNCTIONS
+        // ============================================
+
+        async function checkAdminAccess() {
+            try {
+                const { data: { session }, error } = await supabaseClient.auth.getSession();
+
+                if (error || !session) {
+                    return false;
+                }
+
+                // Check if user email is in admin whitelist
+                const userEmail = session.user.email;
+                const isAdmin = ADMIN_EMAILS.includes(userEmail);
+
+                if (!isAdmin) {
+                    console.warn(`Unauthorized access attempt by: ${userEmail}`);
+                    await supabaseClient.auth.signOut();
+                    return false;
+                }
+
+                return true;
+            } catch (error) {
+                console.error('Admin access check failed:', error);
+                return false;
+            }
+        }
+
+        async function adminLogin() {
+            const email = document.getElementById('admin-email').value;
+            const password = document.getElementById('admin-password').value;
+            const loginAlertContainer = document.getElementById('login-alert-container');
+
+            if (!email || !password) {
+                loginAlertContainer.innerHTML = '<div class="alert alert-error">Please enter email and password</div>';
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({
+                    email: email,
+                    password: password
+                });
+
+                if (error) throw error;
+
+                // Check if user is in admin whitelist
+                if (!ADMIN_EMAILS.includes(email)) {
+                    await supabaseClient.auth.signOut();
+                    loginAlertContainer.innerHTML = '<div class="alert alert-error">Unauthorized: Not an admin account</div>';
+                    return;
+                }
+
+                // Success - show dashboard
+                document.getElementById('login-modal').classList.add('hidden');
+                document.getElementById('main-dashboard').classList.remove('hidden');
+                loadTeamDashboard();
+
+            } catch (error) {
+                console.error('Login error:', error);
+                loginAlertContainer.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+                document.getElementById('admin-password').value = '';
+            }
+        }
+
+        async function adminLogout() {
+            try {
+                await supabaseClient.auth.signOut();
+                location.reload();
+            } catch (error) {
+                console.error('Logout error:', error);
+                location.reload();
+            }
+        }
+
+        // ============================================
+        // UTILITY FUNCTIONS
+        // ============================================
+
+        function escapeHtml(unsafe) {
+            if (unsafe === null || unsafe === undefined) {
+                return '';
+            }
+            return String(unsafe)
+                .replace(/&/g, "&amp;")
+                .replace(/</g, "&lt;")
+                .replace(/>/g, "&gt;")
+                .replace(/"/g, "&quot;")
+                .replace(/'/g, "&#039;");
+        }
+
+        function showAlert(message, type = 'success') {
+            const container = document.getElementById('alert-container');
+            const alert = document.createElement('div');
+            alert.className = `alert alert-${type}`;
+            alert.textContent = message;
+            container.appendChild(alert);
+
+            setTimeout(() => alert.remove(), 5000);
+        }
+
+        function formatCurrency(amount) {
+            return new Intl.NumberFormat('en-CA', {
+                style: 'currency',
+                currency: 'CAD'
+            }).format(amount || 0);
+        }
+
+        function getPerformanceClass(score) {
+            if (score >= 7.5) return 'high';
+            if (score >= 5) return 'medium';
+            return 'low';
+        }
+
+        function getTrafficLight(value, type) {
+            // Different thresholds for different metric types
+            if (type === 'conversion') {
+                if (value >= 2) return 'green';
+                if (value >= 1) return 'yellow';
+                return 'red';
+            }
+            if (type === 'activity') {
+                if (value >= 100) return 'green';
+                if (value >= 50) return 'yellow';
+                return 'red';
+            }
+            if (type === 'revenue') {
+                if (value >= 10000) return 'green';
+                if (value >= 5000) return 'yellow';
+                return 'red';
+            }
+            return 'yellow';
+        }
+
+        // ============================================
+        // DATA FETCHING FUNCTIONS
+        // ============================================
+
+        async function fetchTeamData() {
+            try {
+                // Get all users from auth.users (admin can access via RPC function)
+                // For now, we'll query existing data tables to find unique users
+
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+                const dateFilter = thirtyDaysAgo.toISOString().split('T')[0];
+
+                // Fetch activity data
+                const { data: activityData, error: activityError } = await supabaseClient
+                    .from('Daily_Tracker')
+                    .select('user_id, dials, conversations, discovery_meetings')
+                    .gte('date', dateFilter);
+
+                if (activityError) throw activityError;
+
+                // Fetch sales data
+                const { data: salesData, error: salesError } = await supabaseClient
+                    .from('Sales')
+                    .select('user_id, amount_cad')
+                    .gte('date', dateFilter);
+
+                if (salesError) throw salesError;
+
+                // Fetch conversation analyses for methodology insights
+                const { data: analysisData, error: analysisError } = await supabaseClient
+                    .from('Conversation_Analyses')
+                    .select('*')
+                    .gte('date', dateFilter);
+
+                if (analysisError) console.warn('No conversation analysis data:', analysisError);
+
+                // Get unique user IDs
+                const userIds = new Set();
+                activityData?.forEach(row => row.user_id && userIds.add(row.user_id));
+                salesData?.forEach(row => row.user_id && userIds.add(row.user_id));
+                analysisData?.forEach(row => row.user_id && userIds.add(row.user_id));
+
+                // Fetch user details for each user
+                const teamMembers = [];
+
+                for (const userId of userIds) {
+                    const { data: userData, error: userError } = await supabaseClient
+                        .from('auth.users')
+                        .select('id, email, raw_user_meta_data')
+                        .eq('id', userId)
+                        .single();
+
+                    // If can't access auth.users directly, create placeholder data
+                    const userInfo = userData || {
+                        id: userId,
+                        email: `user_${userId.substring(0, 8)}@example.com`,
+                        raw_user_meta_data: { methodology: 'Sandler' }
+                    };
+
+                    // Calculate metrics for this user
+                    const userActivity = activityData?.filter(a => a.user_id === userId) || [];
+                    const userSales = salesData?.filter(s => s.user_id === userId) || [];
+                    const userAnalyses = analysisData?.filter(a => a.user_id === userId) || [];
+
+                    const totalDials = userActivity.reduce((sum, a) => sum + (a.dials || 0), 0);
+                    const totalConversations = userActivity.reduce((sum, a) => sum + (a.conversations || 0), 0);
+                    const totalMeetings = userActivity.reduce((sum, a) => sum + (a.discovery_meetings || 0), 0);
+                    const totalRevenue = userSales.reduce((sum, s) => sum + (parseFloat(s.amount_cad) || 0), 0);
+                    const conversionRate = totalDials > 0 ? ((userSales.length / totalDials) * 100) : 0;
+
+                    // Analyze methodology execution (dynamic based on user's methodology)
+                    const userMethodology = userInfo.raw_user_meta_data?.methodology || 'Sandler';
+                    const insights = analyzeMethodologyExecution(userAnalyses, userMethodology);
+
+                    teamMembers.push({
+                        id: userId,
+                        name: userInfo.raw_user_meta_data?.full_name || userInfo.email.split('@')[0],
+                        email: userInfo.email,
+                        methodology: userInfo.raw_user_meta_data?.methodology || 'Sandler',
+                        performanceScore: calculatePerformanceScore({
+                            revenue: totalRevenue,
+                            activity: totalDials,
+                            conversion: conversionRate,
+                            insights
+                        }),
+                        metrics: {
+                            revenue: totalRevenue,
+                            activity: totalDials,
+                            conversations: totalConversations,
+                            meetings: totalMeetings,
+                            sales: userSales.length,
+                            conversionRate: conversionRate.toFixed(1)
+                        },
+                        insights
+                    });
+                }
+
+                return teamMembers;
+
+            } catch (error) {
+                console.error('Error fetching team data:', error);
+                throw error;
+            }
+        }
+
+        function analyzeMethodologyExecution(analyses, methodology) {
+            if (!analyses || analyses.length === 0) {
+                return {
+                    topPriority: {
+                        metric: 'No data available',
+                        executionRate: 0,
+                        callsAnalyzed: 0,
+                        severity: 'medium',
+                        coachingPrompt: 'Start tracking conversation analyses to identify improvement areas.'
+                    },
+                    topStrength: {
+                        metric: 'Building baseline',
+                        executionRate: 0,
+                        callsAnalyzed: 0
+                    }
+                };
+            }
+
+            const total = analyses.length;
+            let metrics = {};
+
+            // Analyze based on methodology
+            switch(methodology) {
+                case 'Sandler':
+                    metrics = analyzeSandler(analyses, total);
+                    break;
+                case 'MEDDIC':
+                    metrics = analyzeMEDDIC(analyses, total);
+                    break;
+                case 'Challenger':
+                    metrics = analyzeChallenger(analyses, total);
+                    break;
+                case 'SPIN':
+                    metrics = analyzeSPIN(analyses, total);
+                    break;
+                case 'Gap Selling':
+                    metrics = analyzeGapSelling(analyses, total);
+                    break;
+                case 'Value Selling':
+                    metrics = analyzeValueSelling(analyses, total);
+                    break;
+                default:
+                    metrics = analyzeSandler(analyses, total); // Default to Sandler
+            }
+
+            // Find lowest execution rate (top priority to fix)
+            const sortedByRate = Object.values(metrics).sort((a, b) => a.rate - b.rate);
+            const lowestMetric = sortedByRate[0];
+            const highestMetric = sortedByRate[sortedByRate.length - 1];
+
+            // Determine severity
+            const severity = lowestMetric.rate < 50 ? 'high' : lowestMetric.rate < 70 ? 'medium' : 'low';
+
+            return {
+                topPriority: {
+                    metric: `${lowestMetric.name}: Missing in ${total - lowestMetric.count} of ${total} calls`,
+                    executionRate: lowestMetric.rate.toFixed(0),
+                    callsAnalyzed: total,
+                    severity: severity,
+                    coachingPrompt: lowestMetric.coachingPrompt
+                },
+                topStrength: {
+                    metric: `${highestMetric.name}: Strong in ${highestMetric.count} of ${total} calls`,
+                    executionRate: highestMetric.rate.toFixed(0),
+                    callsAnalyzed: total
+                },
+                allMetrics: metrics
+            };
+        }
+
+        function analyzeSandler(analyses, total) {
+            return {
+                upfrontContract: {
+                    name: 'Upfront Contract',
+                    count: analyses.filter(a => a.upfront_contract_set).length,
+                    rate: (analyses.filter(a => a.upfront_contract_set).length / total) * 100,
+                    coachingPrompt: 'Upfront contracts set expectations. What\'s the plan to make this standard?'
+                },
+                painFunnel: {
+                    name: 'Pain Funnel',
+                    count: analyses.filter(a => a.pain_identified).length,
+                    rate: (analyses.filter(a => a.pain_identified).length / total) * 100,
+                    coachingPrompt: 'Deep pain identification drives urgency. How can we dig deeper?'
+                },
+                budgetDiscussion: {
+                    name: 'Budget Discussion',
+                    count: analyses.filter(a => a.budget_discussed).length,
+                    rate: (analyses.filter(a => a.budget_discussed).length / total) * 100,
+                    coachingPrompt: 'Early budget discussion qualifies deals. When should we ask?'
+                },
+                decisionProcess: {
+                    name: 'Decision Process',
+                    count: analyses.filter(a => a.decision_makers_identified).length,
+                    rate: (analyses.filter(a => a.decision_makers_identified).length / total) * 100,
+                    coachingPrompt: 'Knowing decision makers prevents stalls. How do we find them earlier?'
+                }
+            };
+        }
+
+        function analyzeMEDDIC(analyses, total) {
+            return {
+                metrics: {
+                    name: 'Metrics',
+                    count: analyses.filter(a => a.meddic_metrics_identified).length,
+                    rate: (analyses.filter(a => a.meddic_metrics_identified).length / total) * 100,
+                    coachingPrompt: 'Quantified metrics build business cases. What numbers matter most?'
+                },
+                economicBuyer: {
+                    name: 'Economic Buyer',
+                    count: analyses.filter(a => a.meddic_economic_buyer_identified).length,
+                    rate: (analyses.filter(a => a.meddic_economic_buyer_identified).length / total) * 100,
+                    coachingPrompt: 'Access to budget authority is critical. How do we reach them?'
+                },
+                decisionCriteria: {
+                    name: 'Decision Criteria',
+                    count: analyses.filter(a => a.meddic_decision_criteria_mapped).length,
+                    rate: (analyses.filter(a => a.meddic_decision_criteria_mapped).length / total) * 100,
+                    coachingPrompt: 'Understanding evaluation criteria positions us to win. What are they?'
+                },
+                decisionProcess: {
+                    name: 'Decision Process',
+                    count: analyses.filter(a => a.meddic_decision_process_defined).length,
+                    rate: (analyses.filter(a => a.meddic_decision_process_defined).length / total) * 100,
+                    coachingPrompt: 'Knowing the buying timeline prevents surprises. When will they decide?'
+                },
+                pain: {
+                    name: 'Identify Pain',
+                    count: analyses.filter(a => a.meddic_pain_identified).length,
+                    rate: (analyses.filter(a => a.meddic_pain_identified).length / total) * 100,
+                    coachingPrompt: 'Business pain creates urgency. What problem are we solving?'
+                },
+                champion: {
+                    name: 'Champion',
+                    count: analyses.filter(a => a.meddic_champion_secured).length,
+                    rate: (analyses.filter(a => a.meddic_champion_secured).length / total) * 100,
+                    coachingPrompt: 'Champions sell for us internally. Who is our advocate?'
+                }
+            };
+        }
+
+        function analyzeChallenger(analyses, total) {
+            return {
+                teach: {
+                    name: 'Teach (Commercial Insight)',
+                    count: analyses.filter(a => a.challenger_teach_executed).length,
+                    rate: (analyses.filter(a => a.challenger_teach_executed).length / total) * 100,
+                    coachingPrompt: 'Commercial teaching reframes thinking. What insight are we sharing?'
+                },
+                tailor: {
+                    name: 'Tailor (Personalization)',
+                    count: analyses.filter(a => a.challenger_tailor_executed).length,
+                    rate: (analyses.filter(a => a.challenger_tailor_executed).length / total) * 100,
+                    coachingPrompt: 'Tailoring creates resonance. How do we customize for each stakeholder?'
+                },
+                control: {
+                    name: 'Take Control',
+                    count: analyses.filter(a => a.challenger_control_executed).length,
+                    rate: (analyses.filter(a => a.challenger_control_executed).length / total) * 100,
+                    coachingPrompt: 'Assertiveness drives deals forward. When should we push back?'
+                },
+                tension: {
+                    name: 'Constructive Tension',
+                    count: analyses.filter(a => a.challenger_tension_created).length,
+                    rate: (analyses.filter(a => a.challenger_tension_created).length / total) * 100,
+                    coachingPrompt: 'Tension creates urgency. How do we challenge without being aggressive?'
+                }
+            };
+        }
+
+        function analyzeSPIN(analyses, total) {
+            return {
+                situation: {
+                    name: 'Situation Questions',
+                    count: analyses.filter(a => a.spin_situation_asked).length,
+                    rate: (analyses.filter(a => a.spin_situation_asked).length / total) * 100,
+                    coachingPrompt: 'Keep situation questions brief (2-3). Move to problems quickly.'
+                },
+                problem: {
+                    name: 'Problem Questions',
+                    count: analyses.filter(a => a.spin_problem_asked).length,
+                    rate: (analyses.filter(a => a.spin_problem_asked).length / total) * 100,
+                    coachingPrompt: 'Problem questions uncover pain. What issues are we finding?'
+                },
+                implication: {
+                    name: 'Implication Questions',
+                    count: analyses.filter(a => a.spin_implication_asked).length,
+                    rate: (analyses.filter(a => a.spin_implication_asked).length / total) * 100,
+                    coachingPrompt: 'Implications build urgency. What are the consequences of inaction?'
+                },
+                needPayoff: {
+                    name: 'Need-Payoff Questions',
+                    count: analyses.filter(a => a.spin_needpayoff_asked).length,
+                    rate: (analyses.filter(a => a.spin_needpayoff_asked).length / total) * 100,
+                    coachingPrompt: 'Let prospects articulate value. What benefits do they see?'
+                }
+            };
+        }
+
+        function analyzeGapSelling(analyses, total) {
+            return {
+                currentState: {
+                    name: 'Current State Discovery',
+                    count: analyses.filter(a => a.gap_current_state_discovered).length,
+                    rate: (analyses.filter(a => a.gap_current_state_discovered).length / total) * 100,
+                    coachingPrompt: 'Deep current state understanding is foundation. What are we missing?'
+                },
+                futureState: {
+                    name: 'Future State Vision',
+                    count: analyses.filter(a => a.gap_future_state_defined).length,
+                    rate: (analyses.filter(a => a.gap_future_state_defined).length / total) * 100,
+                    coachingPrompt: 'Paint the picture of success. Where do they want to be?'
+                },
+                gap: {
+                    name: 'Gap Identification',
+                    count: analyses.filter(a => a.gap_identified).length,
+                    rate: (analyses.filter(a => a.gap_identified).length / total) * 100,
+                    coachingPrompt: 'Quantify the gap to create urgency. How big is the distance?'
+                },
+                impact: {
+                    name: 'Impact Quantification',
+                    count: analyses.filter(a => a.gap_impact_quantified).length,
+                    rate: (analyses.filter(a => a.gap_impact_quantified).length / total) * 100,
+                    coachingPrompt: 'Put numbers to the problem. What\'s the cost of the gap?'
+                }
+            };
+        }
+
+        function analyzeValueSelling(analyses, total) {
+            return {
+                businessValue: {
+                    name: 'Business Value',
+                    count: analyses.filter(a => a.value_business_discussed).length,
+                    rate: (analyses.filter(a => a.value_business_discussed).length / total) * 100,
+                    coachingPrompt: 'Connect to organizational goals. What\'s the strategic impact?'
+                },
+                valueQuantified: {
+                    name: 'Value Quantification',
+                    count: analyses.filter(a => a.value_business_quantified).length,
+                    rate: (analyses.filter(a => a.value_business_quantified).length / total) * 100,
+                    coachingPrompt: 'Numbers build business cases. What\'s the ROI?'
+                },
+                personalValue: {
+                    name: 'Personal Value',
+                    count: analyses.filter(a => a.value_personal_discussed).length,
+                    rate: (analyses.filter(a => a.value_personal_discussed).length / total) * 100,
+                    coachingPrompt: 'Individual wins matter. What\'s in it for them personally?'
+                },
+                roi: {
+                    name: 'ROI Presentation',
+                    count: analyses.filter(a => a.value_roi_presented).length,
+                    rate: (analyses.filter(a => a.value_roi_presented).length / total) * 100,
+                    coachingPrompt: 'Clear ROI drives decisions. What\'s the payback period?'
+                }
+            };
+        }
+
+        function calculatePerformanceScore(data) {
+            // Weighted performance score (0-10)
+            const revenueScore = Math.min(10, (data.revenue / 10000) * 10);
+            const activityScore = Math.min(10, (data.activity / 100) * 10);
+            const conversionScore = Math.min(10, (data.conversion / 2) * 10);
+
+            // If we have insights, factor in methodology execution
+            let methodologyScore = 5; // default middle score
+            if (data.insights && data.insights.topPriority) {
+                methodologyScore = (data.insights.topPriority.executionRate / 10) || 5;
+            }
+
+            const score = (
+                revenueScore * 0.30 +
+                activityScore * 0.25 +
+                conversionScore * 0.25 +
+                methodologyScore * 0.20
+            );
+
+            return Math.round(score * 10) / 10;
+        }
+
+        // ============================================
+        // RENDERING FUNCTIONS
+        // ============================================
+
+        function renderTeamGrid(teamMembers) {
+            const container = document.getElementById('team-grid-container');
+
+            if (!teamMembers || teamMembers.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">👥</div>
+                        <h2>No Team Data Available</h2>
+                        <p>Start tracking activity and conversations to see team insights.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const gridHTML = `
+                <div class="team-grid">
+                    ${teamMembers.map(member => `
+                        <div class="team-member-card" onclick="viewUserDetail('${member.id}')">
+                            <div class="card-header">
+                                <div class="user-info">
+                                    <div class="user-name">${escapeHtml(member.name)}</div>
+                                    <div class="user-methodology">@ ${escapeHtml(member.methodology)}</div>
+                                </div>
+                                <div class="performance-badge ${getPerformanceClass(member.performanceScore)}">
+                                    ${member.performanceScore}/10
+                                </div>
+                            </div>
+
+                            <div class="insight-section priority">
+                                <div class="insight-header">
+                                    <span class="insight-icon">🚨</span>
+                                    <span class="insight-label priority">Top Priority</span>
+                                </div>
+                                <div class="insight-metric">
+                                    ${member.insights.topPriority.severity === 'high' ? '🔴' : member.insights.topPriority.severity === 'medium' ? '🟡' : '🟢'}
+                                    ${escapeHtml(member.insights.topPriority.metric)}
+                                    (${member.insights.topPriority.executionRate}%)
+                                </div>
+                                <div class="coaching-prompt">
+                                    💬 ${escapeHtml(member.insights.topPriority.coachingPrompt)}
+                                </div>
+                            </div>
+
+                            <div class="insight-section strength">
+                                <div class="insight-header">
+                                    <span class="insight-icon">🟢</span>
+                                    <span class="insight-label strength">Top Strength</span>
+                                </div>
+                                <div class="insight-metric">
+                                    ${escapeHtml(member.insights.topStrength.metric)}
+                                    (${member.insights.topStrength.executionRate}%)
+                                </div>
+                            </div>
+
+                            <div class="quick-metrics">
+                                <div class="metric">
+                                    <div class="metric-value">
+                                        <span class="traffic-light ${getTrafficLight(member.metrics.revenue, 'revenue')}"></span>
+                                        ${formatCurrency(member.metrics.revenue).replace('.00', '')}
+                                    </div>
+                                    <div class="metric-label">Revenue</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">
+                                        <span class="traffic-light ${getTrafficLight(member.metrics.activity, 'activity')}"></span>
+                                        ${member.metrics.activity}
+                                    </div>
+                                    <div class="metric-label">Dials</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value">
+                                        <span class="traffic-light ${getTrafficLight(parseFloat(member.metrics.conversionRate), 'conversion')}"></span>
+                                        ${member.metrics.conversionRate}%
+                                    </div>
+                                    <div class="metric-label">Conv Rate</div>
+                                </div>
+                            </div>
+
+                            <a href="admin-team-detail.html?user=${member.id}" class="view-details-btn" onclick="event.stopPropagation()">
+                                View Details →
+                            </a>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+
+            container.innerHTML = gridHTML;
+        }
+
+        function viewUserDetail(userId) {
+            window.location.href = `admin-team-detail.html?user=${userId}`;
+        }
+
+        // ============================================
+        // MAIN LOAD FUNCTION
+        // ============================================
+
+        async function loadTeamDashboard() {
+            try {
+                const teamMembers = await fetchTeamData();
+                renderTeamGrid(teamMembers);
+            } catch (error) {
+                console.error('Error loading team dashboard:', error);
+                document.getElementById('team-grid-container').innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚠️</div>
+                        <h2>Error Loading Team Data</h2>
+                        <p>${escapeHtml(error.message)}</p>
+                        <button class="btn-secondary" onclick="loadTeamDashboard()">Retry</button>
+                    </div>
+                `;
+            }
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        window.addEventListener('DOMContentLoaded', async () => {
+            // Check if user is already authenticated
+            const isAuthenticated = await checkAdminAccess();
+
+            if (isAuthenticated) {
+                document.getElementById('main-dashboard').classList.remove('hidden');
+                loadTeamDashboard();
+            } else {
+                document.getElementById('login-modal').classList.remove('hidden');
+            }
+
+            // Allow Enter key to submit login
+            const handleEnterKey = (e) => {
+                if (e.key === 'Enter') {
+                    adminLogin();
+                }
+            };
+
+            document.getElementById('admin-email').addEventListener('keypress', handleEnterKey);
+            document.getElementById('admin-password').addEventListener('keypress', handleEnterKey);
+        });
+
+    </script>
+
+</body>
+</html>

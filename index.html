@@ -2815,6 +2815,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                         talk_listen_ratio_score: analysis.talk_ratio_score,
                         what_went_well: analysis.what_went_well,
                         areas_to_improve: analysis.areas_to_improve,
+                        omissions: analysis.omissions,
                         specific_recommendations: analysis.recommendations,
                         talk_percentage: analysis.talk_percentage,
                         question_count: analysis.question_count,
@@ -3038,6 +3039,18 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                             </ul>
                         </div>
                     </div>
+
+                    ${analysis.omissions && analysis.omissions.length > 0 ? `
+                    <div class="coaching-card priority-high" style="margin-bottom: 15px; border-left: 4px solid var(--brand-pink);">
+                        <div class="coaching-title">🚨 Omissions - What You Forgot</div>
+                        <div class="coaching-content">
+                            <p style="margin-bottom: 10px; opacity: 0.9; color: var(--brand-pink);">Critical elements you completely missed or never addressed:</p>
+                            <ul style="margin-left: 20px;">
+                                ${analysis.omissions.map(item => `<li style="color: var(--brand-pink);">${item}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    ` : ''}
 
                     ${tacticalScriptsHTML}
 

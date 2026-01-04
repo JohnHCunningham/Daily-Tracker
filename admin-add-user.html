@@ -196,6 +196,43 @@
 
         <div id="alert-container"></div>
 
+        <!-- CSV Import Section -->
+        <div class="card" style="margin-bottom: 25px;">
+            <h2>📊 Bulk Import Team Members</h2>
+            <p style="opacity: 0.9; margin-bottom: 20px;">Upload a CSV file to create multiple team members at once. Each user will receive an email with their login credentials.</p>
+
+            <div style="display: flex; gap: 15px; margin-bottom: 20px;">
+                <button onclick="downloadCSVTemplate()" class="btn btn-secondary">
+                    📥 Download CSV Template
+                </button>
+                <button onclick="document.getElementById('csv-file-input').click()" class="btn btn-primary">
+                    📤 Upload CSV File
+                </button>
+                <input type="file" id="csv-file-input" accept=".csv" style="display: none;" onchange="handleCSVUpload(event)">
+            </div>
+
+            <div style="background: rgba(16, 195, 176, 0.1); padding: 15px; border-radius: 10px; border-left: 4px solid var(--brand-teal);">
+                <strong style="color: var(--brand-teal);">CSV Format:</strong>
+                <p style="margin: 10px 0; font-family: monospace; font-size: 0.9rem;">
+                    email,password,first_name,last_name,methodology
+                </p>
+                <p style="opacity: 0.8; font-size: 0.9rem;">
+                    Example: john@company.com,TempPass123,John,Smith,Sandler
+                </p>
+            </div>
+
+            <div id="csv-preview" style="margin-top: 20px; display: none;">
+                <h3 style="color: var(--brand-gold); margin-bottom: 10px;">Preview (First 5 rows)</h3>
+                <div id="csv-preview-content"></div>
+                <div style="margin-top: 15px; display: flex; gap: 15px;">
+                    <button onclick="importCSVUsers()" class="btn btn-primary">✅ Import Users & Send Emails</button>
+                    <button onclick="cancelCSVImport()" class="btn btn-secondary">❌ Cancel</button>
+                </div>
+            </div>
+
+            <div id="csv-status" style="margin-top: 15px;"></div>
+        </div>
+
         <!-- Create User Form -->
         <div class="card">
             <h2>Create New Team Member</h2>
@@ -352,7 +389,7 @@
 
                 // Send email notification via n8n webhook
                 try {
-                    await fetch('https://aiadvantagesolutions.app.n8n.cloud/webhook/87643e7c-c7bd-4bf9-ac3a-1bda8ef9f1b1', {
+                    await fetch('https://aiadvantagesolutions.app.n8n.cloud/webhook/2b2e8b7e-8c86-42d5-b7f4-dc6fa6ecad3e', {
                         method: 'POST',
                         headers: {
                             'Content-Type': 'application/json'
@@ -429,6 +466,223 @@
                 console.error('Error loading users:', error);
                 loading.textContent = 'Unable to load users list';
             }
+        }
+
+        // CSV Import Functions
+        let csvData = [];
+
+        function downloadCSVTemplate() {
+            const csvContent = 'email,password,first_name,last_name,methodology\njohn@example.com,TempPass123,John,Smith,Sandler\nsarah@example.com,TempPass456,Sarah,Johnson,MEDDIC';
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'team-members-template.csv';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        async function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                const text = e.target.result;
+                csvData = parseCSV(text);
+
+                if (csvData.length === 0) {
+                    showAlert('No valid data found in CSV file', 'error');
+                    return;
+                }
+
+                displayCSVPreview();
+            };
+            reader.readAsText(file);
+        }
+
+        function parseCSV(text) {
+            const lines = text.trim().split('\n');
+            const headers = lines[0].toLowerCase().split(',').map(h => h.trim());
+
+            const data = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = lines[i].split(',').map(v => v.trim());
+
+                if (values.length !== headers.length) continue;
+
+                const row = {};
+                headers.forEach((header, index) => {
+                    row[header] = values[index];
+                });
+
+                // Validate required fields
+                if (row.email && row.password) {
+                    data.push(row);
+                }
+            }
+
+            return data;
+        }
+
+        function displayCSVPreview() {
+            const previewDiv = document.getElementById('csv-preview');
+            const contentDiv = document.getElementById('csv-preview-content');
+
+            const previewData = csvData.slice(0, 5);
+
+            let html = `
+                <table style="width: 100%; margin-top: 10px;">
+                    <thead>
+                        <tr>
+                            <th>Email</th>
+                            <th>Password</th>
+                            <th>First Name</th>
+                            <th>Last Name</th>
+                            <th>Methodology</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            previewData.forEach(row => {
+                html += `
+                    <tr>
+                        <td>${row.email}</td>
+                        <td>${row.password}</td>
+                        <td>${row.first_name || ''}</td>
+                        <td>${row.last_name || ''}</td>
+                        <td>${row.methodology || ''}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                </table>
+                <p style="margin-top: 10px; color: var(--brand-gold);">
+                    <strong>Total users to import: ${csvData.length}</strong>
+                </p>
+            `;
+
+            contentDiv.innerHTML = html;
+            previewDiv.style.display = 'block';
+        }
+
+        async function importCSVUsers() {
+            const statusDiv = document.getElementById('csv-status');
+            statusDiv.innerHTML = '<div class="alert alert-success">Importing users...</div>';
+
+            let successCount = 0;
+            let errorCount = 0;
+            const errors = [];
+
+            for (const user of csvData) {
+                try {
+                    // Create user via Supabase Admin API
+                    const response = await fetch(`${SUPABASE_URL}/auth/v1/admin/users`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${(await supabaseClient.auth.getSession()).data.session.access_token}`
+                        },
+                        body: JSON.stringify({
+                            email: user.email,
+                            password: user.password,
+                            email_confirm: true,
+                            user_metadata: {
+                                first_name: user.first_name || '',
+                                last_name: user.last_name || '',
+                                methodology: user.methodology || '',
+                                manager_id: currentAdminId,
+                                full_name: `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                            }
+                        })
+                    });
+
+                    if (!response.ok) {
+                        // Fallback to regular signup
+                        const { error } = await supabaseClient.auth.signUp({
+                            email: user.email,
+                            password: user.password,
+                            options: {
+                                data: {
+                                    first_name: user.first_name || '',
+                                    last_name: user.last_name || '',
+                                    methodology: user.methodology || '',
+                                    manager_id: currentAdminId,
+                                    full_name: `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                                }
+                            }
+                        });
+
+                        if (error) throw error;
+                    }
+
+                    // Send email notification via n8n webhook
+                    try {
+                        await fetch('https://aiadvantagesolutions.app.n8n.cloud/webhook/2b2e8b7e-8c86-42d5-b7f4-dc6fa6ecad3e', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({
+                                email: user.email,
+                                password: user.password,
+                                firstName: user.first_name || '',
+                                lastName: user.last_name || '',
+                                methodology: user.methodology || '',
+                                fullName: `${user.first_name || ''} ${user.last_name || ''}`.trim()
+                            })
+                        });
+                    } catch (emailError) {
+                        console.error('Failed to send email for:', user.email, emailError);
+                        // Don't fail import if email fails
+                    }
+
+                    successCount++;
+                    statusDiv.innerHTML = `<div class="alert alert-success">Imported ${successCount} of ${csvData.length}...</div>`;
+
+                } catch (error) {
+                    errorCount++;
+                    errors.push(`${user.email}: ${error.message}`);
+                    console.error('Error importing user:', user.email, error);
+                }
+            }
+
+            // Show final results
+            let resultHTML = `<div class="alert alert-success">
+                <strong>✅ Import Complete!</strong><br>
+                Successfully imported: ${successCount} users<br>
+            `;
+
+            if (errorCount > 0) {
+                resultHTML += `<br><strong style="color: var(--brand-pink);">Failed: ${errorCount} users</strong><br>`;
+                resultHTML += `<details style="margin-top: 10px;"><summary>View Errors</summary><ul>`;
+                errors.forEach(err => {
+                    resultHTML += `<li>${err}</li>`;
+                });
+                resultHTML += `</ul></details>`;
+            }
+
+            resultHTML += `</div>`;
+            statusDiv.innerHTML = resultHTML;
+
+            // Clear preview and reset
+            cancelCSVImport();
+
+            // Reload users list
+            setTimeout(() => {
+                loadUsers();
+            }, 1000);
+        }
+
+        function cancelCSVImport() {
+            csvData = [];
+            document.getElementById('csv-preview').style.display = 'none';
+            document.getElementById('csv-preview-content').innerHTML = '';
+            document.getElementById('csv-file-input').value = '';
         }
 
         // Initialize

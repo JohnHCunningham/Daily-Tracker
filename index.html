@@ -744,12 +744,24 @@
 
         <div id="alert-container"></div>
 
+        <!-- Tab Navigation -->
+        <div style="background: var(--card-bg); border-radius: 20px; padding: 10px; margin-bottom: 30px; box-shadow: 0 10px 30px rgba(0,0,0,0.3);">
+            <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                <button class="tab-btn active" onclick="switchTab('today')">📊 Today</button>
+                <button class="tab-btn" onclick="switchTab('charts')">📈 Charts</button>
+                <button class="tab-btn" onclick="switchTab('coaching')">🤖 Coaching</button>
+                <button class="tab-btn" onclick="switchTab('goals')">🎯 Goals</button>
+                <button class="tab-btn" onclick="switchTab('plan')">📝 Plan</button>
+                <button class="tab-btn" onclick="switchTab('setup')" style="margin-left: auto; background: rgba(244, 176, 58, 0.2); border: 1px solid var(--brand-gold);">⚙️ Setup</button>
+            </div>
+        </div>
+
         <!-- Main Dashboard Grid -->
         <div class="dashboard-grid">
 
-            <!-- SECTION 1: SETUP & CONFIGURATION -->
-            <div style="grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: center; margin: 20px 0 10px 0;">
-                <h2 style="color: var(--brand-aqua); font-size: 1.5rem; margin: 0;">⚙️ Setup & Configuration</h2>
+            <!-- TAB: SETUP -->
+            <div id="tab-setup" class="tab-content" style="grid-column: 1 / -1;">
+                <h2 style="color: var(--brand-aqua); font-size: 1.5rem; margin: 0 0 20px 0;">⚙️ Setup & Configuration</h2>
                 <button onclick="toggleSetup()" id="setup-toggle-btn" style="background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua)); border: none; padding: 8px 16px; color: var(--brand-navy); font-weight: 700; border-radius: 20px; cursor: pointer; font-size: 0.9rem; transition: transform 0.2s ease;">
                     Hide Setup
                 </button>
@@ -785,7 +797,7 @@
             </div>
 
             <!-- ICP (Ideal Customer Profile) Builder Card -->
-            <div class="card">
+            <div class="card wide-card">
                 <div class="card-header">
                     <h2 class="card-title">Ideal Customer Profile (ICP)</h2>
                     <span class="card-icon">🎯</span>
@@ -894,7 +906,7 @@
             </div>
 
             <!-- Sales Scripts Editor Card -->
-            <div class="card">
+            <div class="card wide-card">
                 <div class="card-header">
                     <h2 class="card-title">Your Sales Scripts</h2>
                     <span class="card-icon">📝</span>
@@ -1028,9 +1040,11 @@
             </div>
 
             </div><!-- End setup-section -->
+            </div><!-- End tab-setup -->
 
-            <!-- SECTION 2: DAILY ACTIONS -->
-            <h2 style="grid-column: 1 / -1; color: var(--brand-aqua); margin: 30px 0 10px 0; font-size: 1.5rem;">📝 Daily Actions</h2>
+            <!-- TAB: TODAY -->
+            <div id="tab-today" class="tab-content active" style="grid-column: 1 / -1;">
+                <h2 style="color: var(--brand-aqua); font-size: 1.5rem; margin: 0 0 20px 0;">📊 Today's Activity</h2>
 
             <!-- Daily Activity Input Card -->
             <div class="card">
@@ -1191,9 +1205,11 @@
                     </p>
                 </div>
             </div>
+            </div><!-- End tab-today -->
 
-            <!-- SECTION 3: PERFORMANCE TRACKING -->
-            <h2 style="grid-column: 1 / -1; color: var(--brand-aqua); margin: 30px 0 10px 0; font-size: 1.5rem;">📊 Performance Tracking</h2>
+            <!-- TAB: CHARTS -->
+            <div id="tab-charts" class="tab-content" style="grid-column: 1 / -1;">
+                <h2 style="color: var(--brand-aqua); font-size: 1.5rem; margin: 0 0 20px 0;">📈 Performance & Analytics</h2>
 
             <!-- Daily Goal Progress Card -->
             <div class="card wide-card">
@@ -1309,9 +1325,11 @@
                     <!-- Goal breakdown will be inserted here -->
                 </div>
             </div>
+            </div><!-- End tab-charts -->
 
-            <!-- SECTION 4.5: CALL PLANNING -->
-            <h2 style="grid-column: 1 / -1; color: var(--brand-aqua); margin: 30px 0 10px 0; font-size: 1.5rem;">📋 Call Planning</h2>
+            <!-- TAB: PLAN -->
+            <div id="tab-plan" class="tab-content" style="grid-column: 1 / -1;">
+                <h2 style="color: var(--brand-aqua); font-size: 1.5rem; margin: 0 0 20px 0;">📝 Plan Your Next Call</h2>
 
             <!-- Plan Your Next Call -->
             <div class="card wide-card">
@@ -1351,9 +1369,11 @@
 
                 <div id="call-plan-result" style="margin-top: 20px;"></div>
             </div>
+            </div><!-- End tab-plan -->
 
-            <!-- SECTION 5: MANAGER FEEDBACK & GOALS -->
-            <h2 style="grid-column: 1 / -1; color: var(--brand-aqua); margin: 30px 0 10px 0; font-size: 1.5rem;">👨‍💼 Manager Feedback & Goals</h2>
+            <!-- TAB: GOALS -->
+            <div id="tab-goals" class="tab-content" style="grid-column: 1 / -1;">
+                <h2 style="color: var(--brand-aqua); font-size: 1.5rem; margin: 0 0 20px 0;">🎯 Goals & Manager Feedback</h2>
 
             <!-- Manager Notes -->
             <div class="card wide-card">
@@ -1380,9 +1400,11 @@
                     <p style="text-align: center; opacity: 0.6; padding: 30px;">No active goals set</p>
                 </div>
             </div>
+            </div><!-- End tab-goals -->
 
-            <!-- SECTION 6: AI COACHING & INSIGHTS -->
-            <h2 style="grid-column: 1 / -1; color: var(--brand-aqua); margin: 30px 0 10px 0; font-size: 1.5rem;">🤖 AI Coaching & Insights</h2>
+            <!-- TAB: COACHING -->
+            <div id="tab-coaching" class="tab-content" style="grid-column: 1 / -1;">
+                <h2 style="color: var(--brand-aqua); font-size: 1.5rem; margin: 0 0 20px 0;">🤖 AI Coaching & Insights</h2>
 
             <!-- AI Coaching Insights -->
             <div class="card wide-card">
@@ -1464,9 +1486,10 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                     <div class="loading">Loading conversation analyses...</div>
                 </div>
             </div>
+            </div><!-- End tab-coaching -->
 
-        </div>
-    </div>
+        </div><!-- End dashboard-grid -->
+    </div><!-- End dashboard-container -->
 
     <script>
         // ============================================
@@ -1483,6 +1506,40 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         // API keys are stored securely on the server, never exposed to the client
 
         let supabaseClient;
+
+        // ============================================
+        // TAB NAVIGATION
+        // ============================================
+        function switchTab(tabName) {
+            // Hide all tab contents
+            const tabs = document.querySelectorAll('.tab-content');
+            tabs.forEach(tab => tab.classList.remove('active'));
+
+            // Remove active class from all buttons
+            const buttons = document.querySelectorAll('.tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            // Show selected tab
+            const selectedTab = document.getElementById(`tab-${tabName}`);
+            if (selectedTab) {
+                selectedTab.classList.add('active');
+            }
+
+            // Highlight active button
+            event.target.classList.add('active');
+
+            // Save current tab to localStorage
+            localStorage.setItem('currentTab', tabName);
+        }
+
+        // Load last active tab on page load
+        function loadActiveTab() {
+            const lastTab = localStorage.getItem('currentTab') || 'today';
+            const tabButton = document.querySelector(`[onclick*="'${lastTab}'"]`);
+            if (tabButton) {
+                tabButton.click();
+            }
+        }
 
         // Initialize Supabase client (with proper error handling)
         function initializeSupabase() {

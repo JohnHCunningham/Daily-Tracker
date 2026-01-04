@@ -1233,6 +1233,48 @@
                 </div>
             </div>
 
+            <!-- SECTION 4.5: CALL PLANNING -->
+            <h2 style="grid-column: 1 / -1; color: var(--brand-aqua); margin: 30px 0 10px 0; font-size: 1.5rem;">📋 Call Planning</h2>
+
+            <!-- Plan Your Next Call -->
+            <div class="card wide-card">
+                <div class="card-header">
+                    <h2 class="card-title">Plan Your Next Call</h2>
+                    <span class="card-icon">🎯</span>
+                </div>
+
+                <p style="opacity: 0.9; margin-bottom: 20px;">Prepare for your next call with a methodology-based game plan. Describe the situation and get a custom agenda.</p>
+
+                <!-- Show context being used -->
+                <div style="display: flex; gap: 10px; margin-bottom: 20px; padding: 12px; background: rgba(61, 224, 210, 0.1); border-radius: 8px; font-size: 0.85rem;">
+                    <div style="flex: 1;">
+                        <strong style="color: var(--brand-gold);">📚 Using Methodology:</strong>
+                        <span id="call-plan-methodology">MEDDIC/MEDDPICC</span>
+                    </div>
+                    <div style="flex: 1;">
+                        <strong style="color: var(--brand-gold);">🎯 Using ICP:</strong>
+                        <span id="call-plan-icp">Your target customer profile</span>
+                    </div>
+                </div>
+
+                <div class="input-group">
+                    <label style="font-weight: 700; font-size: 1rem;">Describe your upcoming call:</label>
+                    <textarea
+                        id="call-plan-description"
+                        placeholder="Example: I have a discovery call with Sarah at ABC Housing tomorrow. She mentioned they're struggling with tenant communications and maintenance tracking. I don't know their budget, decision makers, or timeline yet. They have 200 units across 3 properties."
+                        rows="6"
+                        style="width: 100%; background: var(--input-bg); border: 1px solid rgba(61, 224, 210, 0.3); color: var(--light-text); padding: 15px; border-radius: 10px; font-size: 0.95rem; line-height: 1.6; resize: vertical;"
+                    ></textarea>
+                    <small style="opacity: 0.7; margin-top: 5px; display: block;">
+                        Include: Who you're calling, what you know, what you don't know, and your objective
+                    </small>
+                </div>
+
+                <button class="btn-primary" onclick="generateCallPlan()">🎯 Generate Call Plan</button>
+
+                <div id="call-plan-result" style="margin-top: 20px;"></div>
+            </div>
+
             <!-- SECTION 5: MANAGER FEEDBACK & GOALS -->
             <h2 style="grid-column: 1 / -1; color: var(--brand-aqua); margin: 30px 0 10px 0; font-size: 1.5rem;">👨‍💼 Manager Feedback & Goals</h2>
 
@@ -3654,8 +3696,193 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 // Load dashboard data
                 loadDashboardData();
                 loadConversationHistory();
+                updateCallPlanContext();
             }
         });
+
+        // ============================================
+        // CALL PLANNING FUNCTIONS
+        // ============================================
+
+        // Update call plan context display
+        function updateCallPlanContext() {
+            const methodologyInfo = getMethodologyInfo();
+            const icp = getICP();
+
+            document.getElementById('call-plan-methodology').textContent = methodologyInfo.name;
+
+            if (icp && icp.industry) {
+                document.getElementById('call-plan-icp').textContent = icp.industry;
+            } else {
+                document.getElementById('call-plan-icp').textContent = 'Set up your ICP above';
+            }
+        }
+
+        // Generate call plan
+        async function generateCallPlan() {
+            const description = document.getElementById('call-plan-description').value.trim();
+
+            if (!description) {
+                showAlert('Please describe your upcoming call', 'error');
+                return;
+            }
+
+            const methodology = getMethodology();
+            const methodologyInfo = getMethodologyInfo();
+            const icp = getICP();
+            const scripts = getScripts();
+
+            showAlert(`🎯 Creating ${methodologyInfo.name} call plan...`, 'success');
+
+            try {
+                const { data, error } = await supabaseClient.functions.invoke('generate-call-plan', {
+                    body: { description, methodology, icp, scripts }
+                });
+
+                if (error) throw error;
+
+                displayCallPlan(data);
+                showAlert('✅ Call plan generated!', 'success');
+
+            } catch (error) {
+                console.error('Error generating call plan:', error);
+                showAlert(`Failed to generate call plan: ${error.message}`, 'error');
+            }
+        }
+
+        // Display call plan results
+        function displayCallPlan(plan) {
+            const container = document.getElementById('call-plan-result');
+            const methodologyInfo = getMethodologyInfo();
+
+            container.innerHTML = `
+                <div style="background: linear-gradient(135deg, rgba(16, 195, 176, 0.2), rgba(61, 224, 210, 0.1)); padding: 25px; border-radius: 15px;">
+                    <h3 style="color: var(--brand-aqua); font-size: 1.4rem; margin-bottom: 20px;">
+                        📞 ${plan.call_title || 'Your Call Plan'}
+                    </h3>
+
+                    ${plan.call_objective ? `
+                    <div style="margin-bottom: 20px; padding: 15px; background: rgba(244, 176, 58, 0.15); border-radius: 10px; border-left: 4px solid var(--brand-gold);">
+                        <strong style="color: var(--brand-gold);">🎯 Objective:</strong>
+                        <p style="margin: 8px 0 0 0;">${plan.call_objective}</p>
+                    </div>
+                    ` : ''}
+
+                    <div class="coaching-card priority-low" style="margin-bottom: 15px;">
+                        <div class="coaching-title">📋 Call Agenda</div>
+                        <div class="coaching-content">
+                            <ol style="margin-left: 20px; line-height: 1.8;">
+                                ${plan.agenda.map(item => `<li>${item}</li>`).join('')}
+                            </ol>
+                        </div>
+                    </div>
+
+                    ${plan.opening_script ? `
+                    <div class="coaching-card priority-high" style="margin-bottom: 15px;">
+                        <div class="coaching-title">🎯 Opening Script</div>
+                        <div class="coaching-content">
+                            <p style="font-size: 1.05rem; line-height: 1.7; padding: 10px; background: rgba(16, 195, 176, 0.1); border-radius: 8px;">
+                                "${plan.opening_script}"
+                            </p>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div class="coaching-card priority-high" style="margin-bottom: 15px;">
+                        <div class="coaching-title">❓ Questions to Ask (${methodologyInfo.name})</div>
+                        <div class="coaching-content">
+                            <ol style="margin-left: 20px; line-height: 1.8;">
+                                ${plan.questions_to_ask.map(q => `<li>${q}</li>`).join('')}
+                            </ol>
+                        </div>
+                    </div>
+
+                    ${plan.unknowns_to_uncover && plan.unknowns_to_uncover.length > 0 ? `
+                    <div class="coaching-card priority-medium" style="margin-bottom: 15px;">
+                        <div class="coaching-title">🔍 Information to Uncover</div>
+                        <div class="coaching-content">
+                            <ul style="margin-left: 20px; line-height: 1.7;">
+                                ${plan.unknowns_to_uncover.map(item => `<li>${item}</li>`).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${plan.objection_prep && plan.objection_prep.length > 0 ? `
+                    <div class="coaching-card priority-medium" style="margin-bottom: 15px;">
+                        <div class="coaching-title">🛡️ Prepare for These Objections</div>
+                        <div class="coaching-content">
+                            ${plan.objection_prep.map(obj => `
+                                <div style="margin-bottom: 15px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+                                    <p style="color: var(--brand-pink); margin-bottom: 8px;"><strong>They might say:</strong> "${obj.objection}"</p>
+                                    <p style="color: var(--brand-teal);"><strong>You respond:</strong> "${obj.response}"</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    ${plan.closing_strategy ? `
+                    <div class="coaching-card priority-high" style="border: 2px solid var(--brand-gold);">
+                        <div class="coaching-title">🚀 How to Close & Next Steps</div>
+                        <div class="coaching-content">
+                            <p style="line-height: 1.7;">${plan.closing_strategy}</p>
+                        </div>
+                    </div>
+                    ` : ''}
+
+                    <div style="margin-top: 20px; text-align: center;">
+                        <button class="btn-primary" onclick="copyCallPlanToClipboard()" style="display: inline-block;">
+                            📋 Copy Plan to Clipboard
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            // Store plan for copying
+            window.currentCallPlan = plan;
+        }
+
+        // Copy call plan to clipboard
+        function copyCallPlanToClipboard() {
+            const plan = window.currentCallPlan;
+            if (!plan) {
+                showAlert('No call plan to copy', 'error');
+                return;
+            }
+
+            const methodologyInfo = getMethodologyInfo();
+
+            let text = `📞 ${plan.call_title || 'CALL PLAN'}\n\n`;
+
+            if (plan.call_objective) {
+                text += `🎯 OBJECTIVE:\n${plan.call_objective}\n\n`;
+            }
+
+            text += `📋 AGENDA:\n${plan.agenda.map((item, i) => `${i + 1}. ${item}`).join('\n')}\n\n`;
+
+            if (plan.opening_script) {
+                text += `🎯 OPENING:\n"${plan.opening_script}"\n\n`;
+            }
+
+            text += `❓ QUESTIONS TO ASK (${methodologyInfo.name}):\n${plan.questions_to_ask.map((q, i) => `${i + 1}. ${q}`).join('\n')}\n\n`;
+
+            if (plan.unknowns_to_uncover && plan.unknowns_to_uncover.length > 0) {
+                text += `🔍 INFORMATION TO UNCOVER:\n${plan.unknowns_to_uncover.map(item => `• ${item}`).join('\n')}\n\n`;
+            }
+
+            if (plan.objection_prep && plan.objection_prep.length > 0) {
+                text += `🛡️ OBJECTION PREP:\n${plan.objection_prep.map(obj => `"${obj.objection}" → "${obj.response}"`).join('\n')}\n\n`;
+            }
+
+            if (plan.closing_strategy) {
+                text += `🚀 CLOSING:\n${plan.closing_strategy}`;
+            }
+
+            navigator.clipboard.writeText(text).then(() => {
+                showAlert('✅ Call plan copied to clipboard!', 'success');
+            });
+        }
     </script>
 </body>
 </html>

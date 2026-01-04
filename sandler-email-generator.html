@@ -856,11 +856,13 @@
             switch(linkedinType) {
                 case 'value-post':
                     const postTitle = valueProp === 'attraction' ? 'LinkedIn Value Post (Attraction)' : 'LinkedIn Value Post (Execution)';
+                    const postType = valueProp === 'attraction' ? 'attraction' : 'execution';
                     messages = {
                         subjectLines: [postTitle],
                         emailBody: valueProp === 'attraction'
                             ? generateLinkedInAttractionPost()
-                            : generateLinkedInExecutionPost()
+                            : generateLinkedInExecutionPost(),
+                        imagePrompt: generateLinkedInImagePrompt(postType)
                     };
                     break;
                 case 'connection':
@@ -895,6 +897,27 @@
             currentTab = 'email';
             displayCurrentTab();
             showAlert('✅ LinkedIn content generated!', 'success');
+        }
+
+        // Generate image prompt for LinkedIn posts
+        function generateLinkedInImagePrompt(postType) {
+            const prompts = {
+                execution: [
+                    "Professional business chart showing declining trend line from 85% to 31%, clean corporate style, teal and navy blue colors, minimalist design, data visualization",
+                    "Split-screen comparison: cluttered training materials on left vs. clean mobile app interface on right, modern business aesthetic, professional photography style",
+                    "Close-up of sales professional reviewing analytics dashboard on laptop, clean modern office background, bright lighting, professional color palette",
+                    "Infographic showing training decay curve over 12 weeks, clean corporate design, navy and teal gradient, minimalist style with clear data points"
+                ],
+                attraction: [
+                    "Modern business professional analyzing email metrics on dual monitors, clean office setting, bright natural light, navy and teal color scheme",
+                    "Infographic comparing 2.7% vs 18% response rates with upward arrow, clean corporate design, professional color palette, minimalist style",
+                    "Split comparison: generic mass email template vs personalized outreach message, modern design, professional business aesthetic",
+                    "Professional sales team celebrating success in modern office, genuine expressions, bright lighting, corporate environment, diverse team"
+                ]
+            };
+
+            const promptArray = prompts[postType] || prompts.execution;
+            return promptArray[Math.floor(Math.random() * promptArray.length)];
         }
 
         // Generate LinkedIn Execution Value Post
@@ -1348,12 +1371,27 @@ AI Advantage Solutions`;
                     </div>
                 `;
             } else if (currentTab === 'email') {
+                const imagePromptSection = generatedEmails.imagePrompt ? `
+                    <div style="margin-top: 25px; padding: 20px; background: rgba(244, 176, 58, 0.1); border-radius: 15px; border-left: 4px solid var(--brand-gold);">
+                        <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 12px;">
+                            <span style="font-size: 1.5rem;">🎨</span>
+                            <h3 style="color: var(--brand-gold); margin: 0;">AI Image Prompt</h3>
+                        </div>
+                        <p style="opacity: 0.9; margin-bottom: 15px; font-size: 0.9rem;">Use this prompt with Leonardo.ai, Midjourney, or DALL-E to create a professional image for your LinkedIn post:</p>
+                        <div style="background: rgba(0,0,0,0.3); padding: 15px; border-radius: 10px; margin-bottom: 15px; font-family: monospace; font-size: 0.9rem; line-height: 1.6;">
+                            ${generatedEmails.imagePrompt}
+                        </div>
+                        <button class="btn copy-btn" onclick="copyText('${generatedEmails.imagePrompt.replace(/'/g, "\\'")}', 'Image prompt copied!')">📋 Copy Image Prompt</button>
+                    </div>
+                ` : '';
+
                 output.innerHTML = `
                     <div class="email-output">
                         <div class="email-subject">Subject: ${generatedEmails.subjectLines[0]}</div>
                         <div class="email-body">${generatedEmails.emailBody}</div>
                         <button class="btn copy-btn" onclick="copyEmailToClipboard()">📋 Copy Full Email</button>
                         <button class="btn copy-btn btn-secondary" onclick="trackEmailSent()">✅ Mark as Sent</button>
+                        ${imagePromptSection}
                     </div>
                 `;
             } else if (currentTab === 'variations') {

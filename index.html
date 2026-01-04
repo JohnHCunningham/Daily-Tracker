@@ -1753,49 +1753,80 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
 
                 loading.style.display = 'block';
 
-                const { data: notes, error } = await supabaseClient
-                    .from('Manager_Notes')
+                const { data: feedback, error } = await supabaseClient
+                    .from('manager_feedback')
                     .select('*')
-                    .eq('user_id', session.session.user.id)
-                    .eq('is_private', false)
+                    .eq('team_member_id', session.session.user.id)
                     .order('created_at', { ascending: false })
-                    .limit(10);
+                    .limit(5);
 
-                if (error) throw error;
+                if (error) {
+                    console.error('Error fetching feedback:', error);
+                    throw error;
+                }
 
                 loading.style.display = 'none';
 
-                if (!notes || notes.length === 0) {
+                if (!feedback || feedback.length === 0) {
                     container.innerHTML = '<p style="text-align: center; opacity: 0.6; padding: 30px;">No coaching notes yet</p>';
                     return;
                 }
 
-                container.innerHTML = notes.map(note => {
+                container.innerHTML = feedback.map(note => {
                     const createdDate = new Date(note.created_at).toLocaleDateString('en-US', {
                         month: 'short',
                         day: 'numeric',
                         year: 'numeric'
                     });
 
-                    const severityColor = note.severity === 'high' ? 'var(--brand-pink)'
-                        : note.severity === 'medium' ? 'var(--brand-gold)'
-                        : 'var(--brand-teal)';
-
                     return `
-                        <div class="manager-note type-${note.note_type}" style="border-left: 4px solid ${severityColor};">
-                            <div class="note-header">
-                                <div class="note-type-badge ${note.note_type}">${note.note_type.replace(/_/g, ' ').toUpperCase()}</div>
-                                <div class="note-date">${createdDate}</div>
+                        <div class="manager-note" style="background: rgba(16, 195, 176, 0.05); padding: 20px; border-radius: 15px; margin-bottom: 15px; border-left: 4px solid var(--brand-teal);">
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                                <div style="font-weight: 700; color: var(--brand-aqua); font-size: 1.1rem;">💬 Coaching Feedback</div>
+                                <div style="font-size: 0.85rem; opacity: 0.7;">${createdDate}</div>
                             </div>
-                            <div class="note-subject" style="font-weight: 700; color: var(--brand-aqua); margin-bottom: 8px;">
-                                ${escapeHtml(note.subject)}
+
+                            <div style="margin-bottom: 15px; padding: 15px; background: rgba(244, 176, 58, 0.1); border-radius: 10px;">
+                                <div style="font-weight: 600; color: var(--brand-gold); margin-bottom: 8px;">📊 Performance Summary</div>
+                                <p style="line-height: 1.6;">${note.performance_vs_average || 'No summary available'}</p>
                             </div>
-                            <div class="note-text">${escapeHtml(note.content)}</div>
-                            ${note.category ? `
-                                <div class="note-related-metric" style="margin-top: 10px; font-size: 0.85rem; color: var(--brand-gold);">
-                                    📊 Category: ${note.category}
+
+                            ${note.areas_of_improvement && note.areas_of_improvement.length > 0 ? `
+                                <div style="margin-bottom: 15px; padding: 15px; background: rgba(16, 195, 176, 0.1); border-radius: 10px;">
+                                    <div style="font-weight: 600; color: var(--brand-teal); margin-bottom: 8px;">📈 Focus Areas</div>
+                                    <ul style="margin-left: 20px;">
+                                        ${note.areas_of_improvement.map(item => `<li style="margin: 5px 0; line-height: 1.5;">${item}</li>`).join('')}
+                                    </ul>
                                 </div>
                             ` : ''}
+
+                            ${note.omissions && note.omissions.length > 0 ? `
+                                <div style="margin-bottom: 15px; padding: 15px; background: rgba(230, 69, 99, 0.1); border-radius: 10px;">
+                                    <div style="font-weight: 600; color: var(--brand-pink); margin-bottom: 8px;">🚨 Critical Gaps</div>
+                                    <ul style="margin-left: 20px;">
+                                        ${note.omissions.map(item => `<li style="margin: 5px 0; line-height: 1.5; color: var(--brand-pink);">${item}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+
+                            ${note.recommendations && note.recommendations.length > 0 ? `
+                                <div style="margin-bottom: 15px; padding: 15px; background: rgba(61, 224, 210, 0.1); border-radius: 10px;">
+                                    <div style="font-weight: 600; color: var(--brand-aqua); margin-bottom: 8px;">💡 Recommended Actions</div>
+                                    <ul style="margin-left: 20px;">
+                                        ${note.recommendations.map(item => `<li style="margin: 5px 0; line-height: 1.5;">${item}</li>`).join('')}
+                                    </ul>
+                                </div>
+                            ` : ''}
+
+                            ${note.full_message ? `
+                                <div style="margin-top: 15px; padding: 15px; background: rgba(255, 255, 255, 0.02); border-radius: 10px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                                    <p style="line-height: 1.8; white-space: pre-wrap;">${note.full_message}</p>
+                                </div>
+                            ` : ''}
+
+                            <button onclick="markFeedbackAsRead('${note.id}')" class="btn-secondary" style="margin-top: 15px; padding: 8px 16px; font-size: 0.9rem;">
+                                ✅ Mark as Read
+                            </button>
                         </div>
                     `;
                 }).join('');
@@ -1804,6 +1835,22 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 console.error('Error loading manager notes:', error);
                 loading.style.display = 'none';
                 container.innerHTML = '<p style="text-align: center; opacity: 0.6; padding: 30px;">No coaching notes yet</p>';
+            }
+        }
+
+        async function markFeedbackAsRead(feedbackId) {
+            try {
+                const { error } = await supabaseClient
+                    .from('manager_feedback')
+                    .update({ is_read: true })
+                    .eq('id', feedbackId);
+
+                if (error) throw error;
+
+                showAlert('✅ Marked as read!', 'success');
+                loadManagerNotes();
+            } catch (error) {
+                console.error('Error marking feedback as read:', error);
             }
         }
 
@@ -1821,7 +1868,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 loading.style.display = 'block';
 
                 const { data: goals, error } = await supabaseClient
-                    .from('User_Goals')
+                    .from('user_goals')
                     .select('*')
                     .eq('user_id', session.session.user.id)
                     .eq('status', 'active')

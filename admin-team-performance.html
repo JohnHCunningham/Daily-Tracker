@@ -1,0 +1,682 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Performance - Manager Dashboard</title>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --brand-navy: #0C1030;
+            --brand-teal: #10C3B0;
+            --brand-aqua: #3DE0D2;
+            --brand-pink: #E64563;
+            --brand-gold: #F4B03A;
+            --light-text: #F2F4F8;
+            --card-bg: #131a40;
+            --input-bg: #090c26;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--brand-navy) 0%, #050816 100%);
+            color: var(--light-text);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--brand-aqua), var(--brand-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .team-stats {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+
+        .team-stats h2 {
+            color: var(--brand-gold);
+            margin-bottom: 20px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .stat-card {
+            background: rgba(16, 195, 176, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border-left: 4px solid var(--brand-teal);
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--brand-aqua);
+        }
+
+        .team-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .member-card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(61, 224, 210, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+
+        .member-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            border-color: var(--brand-aqua);
+        }
+
+        .member-name {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--brand-aqua);
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        .chart-container {
+            width: 200px;
+            height: 200px;
+            margin: 0 auto 20px auto;
+            position: relative;
+        }
+
+        .radial-chart {
+            width: 100%;
+            height: 100%;
+        }
+
+        .chart-center-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .chart-score {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--brand-gold);
+        }
+
+        .chart-label {
+            font-size: 0.8rem;
+            opacity: 0.7;
+        }
+
+        .metrics-list {
+            margin: 15px 0;
+            font-size: 0.9rem;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .metric-label {
+            opacity: 0.8;
+        }
+
+        .metric-value {
+            font-weight: 600;
+            color: var(--brand-aqua);
+        }
+
+        .metric-value.above-average {
+            color: var(--brand-teal);
+        }
+
+        .metric-value.below-average {
+            color: var(--brand-pink);
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 195, 176, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(244, 176, 58, 0.2);
+            border: 1px solid var(--brand-gold);
+            color: var(--brand-gold);
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            border: 1px solid rgba(61, 224, 210, 0.2);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 1.8rem;
+            color: var(--brand-aqua);
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--light-text);
+            font-size: 2rem;
+            cursor: pointer;
+            opacity: 0.7;
+        }
+
+        .close-btn:hover {
+            opacity: 1;
+        }
+
+        .feedback-section {
+            margin: 20px 0;
+            padding: 20px;
+            background: rgba(16, 195, 176, 0.1);
+            border-radius: 15px;
+            border-left: 4px solid var(--brand-teal);
+        }
+
+        .feedback-section h3 {
+            color: var(--brand-gold);
+            margin-bottom: 10px;
+        }
+
+        .feedback-section ul {
+            margin-left: 20px;
+        }
+
+        .feedback-section li {
+            margin: 8px 0;
+            line-height: 1.6;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--brand-teal);
+            font-size: 1.2rem;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+
+        .alert-success {
+            background: rgba(16, 195, 176, 0.2);
+            border: 1px solid var(--brand-teal);
+            color: var(--brand-aqua);
+        }
+
+        .alert-error {
+            background: rgba(230, 69, 99, 0.2);
+            border: 1px solid var(--brand-pink);
+            color: var(--brand-pink);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🎯 Team Performance Dashboard</h1>
+            <p style="color: var(--brand-gold); margin-top: 10px;">One-Click AI Coaching for Your Team</p>
+        </div>
+
+        <div id="alert-container"></div>
+
+        <!-- Team Averages -->
+        <div class="team-stats">
+            <h2>📊 Team Averages (Last 30 Days)</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">Avg Daily Calls</div>
+                    <div class="stat-value" id="team-avg-calls">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg Daily Emails</div>
+                    <div class="stat-value" id="team-avg-emails">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg Daily Meetings</div>
+                    <div class="stat-value" id="team-avg-meetings">--</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Avg Methodology Score</div>
+                    <div class="stat-value" id="team-avg-methodology">--</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Members Grid -->
+        <div id="team-members-grid" class="team-grid">
+            <div class="loading">Loading team members...</div>
+        </div>
+    </div>
+
+    <!-- Coaching Modal -->
+    <div id="coaching-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title" id="modal-member-name">Team Member</h2>
+                <button class="close-btn" onclick="closeModal()">&times;</button>
+            </div>
+            <div id="modal-body">
+                <div class="loading">Generating AI coaching feedback...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = 'https://qwqlsbccwnwrdpcaccjz.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTA1MDQsImV4cCI6MjA4MDg4NjUwNH0.yWzSV2Nid_T1XiDE0RrskFob9mRUc-m6MbeIiT7huC4';
+
+        const supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let currentManagerId = null;
+        let teamAverages = {};
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', async () => {
+            await checkAuth();
+            await loadTeamPerformance();
+        });
+
+        async function checkAuth() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (!session) {
+                window.location.href = 'admin-team.html';
+                return;
+            }
+            currentManagerId = session.user.id;
+        }
+
+        async function loadTeamPerformance() {
+            try {
+                // Get team members
+                const { data: { users }, error } = await supabaseClient.auth.admin.listUsers();
+
+                if (error) throw error;
+
+                // Filter for team members managed by this manager
+                const teamMembers = users.filter(user =>
+                    user.user_metadata?.manager_id === currentManagerId
+                );
+
+                if (teamMembers.length === 0) {
+                    document.getElementById('team-members-grid').innerHTML =
+                        '<p style="text-align: center; padding: 40px;">No team members found.</p>';
+                    return;
+                }
+
+                // Get activities for last 30 days
+                const thirtyDaysAgo = new Date();
+                thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+
+                const { data: activities } = await supabaseClient
+                    .from('daily_activities')
+                    .select('*')
+                    .gte('date', thirtyDaysAgo.toISOString().split('T')[0]);
+
+                // Calculate team averages
+                if (activities && activities.length > 0) {
+                    teamAverages = {
+                        calls: Math.round(activities.reduce((sum, a) => sum + (a.calls_made || 0), 0) / activities.length),
+                        emails: Math.round(activities.reduce((sum, a) => sum + (a.emails_sent || 0), 0) / activities.length),
+                        meetings: Math.round(activities.reduce((sum, a) => sum + (a.meetings_booked || 0), 0) / activities.length),
+                        methodology: Math.round(activities.reduce((sum, a) => sum + (a.methodology_score || 0), 0) / activities.length)
+                    };
+
+                    document.getElementById('team-avg-calls').textContent = teamAverages.calls;
+                    document.getElementById('team-avg-emails').textContent = teamAverages.emails;
+                    document.getElementById('team-avg-meetings').textContent = teamAverages.meetings;
+                    document.getElementById('team-avg-methodology').textContent = teamAverages.methodology;
+                }
+
+                // Render team member cards
+                renderTeamMembers(teamMembers, activities);
+
+            } catch (error) {
+                console.error('Error loading team performance:', error);
+                showAlert('Error loading team data: ' + error.message, 'error');
+            }
+        }
+
+        function renderTeamMembers(teamMembers, allActivities) {
+            const grid = document.getElementById('team-members-grid');
+            let html = '';
+
+            teamMembers.forEach(member => {
+                const memberActivities = allActivities.filter(a => a.user_id === member.id);
+                const memberName = `${member.user_metadata?.first_name || ''} ${member.user_metadata?.last_name || ''}`.trim() || member.email;
+
+                let memberAvg = { calls: 0, emails: 0, meetings: 0, methodology: 0 };
+                if (memberActivities.length > 0) {
+                    memberAvg = {
+                        calls: Math.round(memberActivities.reduce((sum, a) => sum + (a.calls_made || 0), 0) / memberActivities.length),
+                        emails: Math.round(memberActivities.reduce((sum, a) => sum + (a.emails_sent || 0), 0) / memberActivities.length),
+                        meetings: Math.round(memberActivities.reduce((sum, a) => sum + (a.meetings_booked || 0), 0) / memberActivities.length),
+                        methodology: Math.round(memberActivities.reduce((sum, a) => sum + (a.methodology_score || 0), 0) / memberActivities.length)
+                    };
+                }
+
+                const overallScore = Math.round((
+                    (memberAvg.calls / (teamAverages.calls || 1) * 25) +
+                    (memberAvg.emails / (teamAverages.emails || 1) * 25) +
+                    (memberAvg.meetings / (teamAverages.meetings || 1) * 25) +
+                    (memberAvg.methodology / 100 * 25)
+                ));
+
+                html += `
+                    <div class="member-card">
+                        <div class="member-name">${memberName}</div>
+                        <div class="chart-container">
+                            <canvas id="chart-${member.id}" class="radial-chart"></canvas>
+                            <div class="chart-center-text">
+                                <div class="chart-score">${overallScore}</div>
+                                <div class="chart-label">Overall</div>
+                            </div>
+                        </div>
+                        <div class="metrics-list">
+                            <div class="metric-item">
+                                <span class="metric-label">📞 Calls</span>
+                                <span class="metric-value ${memberAvg.calls >= teamAverages.calls ? 'above-average' : 'below-average'}">${memberAvg.calls}/day</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">📧 Emails</span>
+                                <span class="metric-value ${memberAvg.emails >= teamAverages.emails ? 'above-average' : 'below-average'}">${memberAvg.emails}/day</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">🤝 Meetings</span>
+                                <span class="metric-value ${memberAvg.meetings >= teamAverages.meetings ? 'above-average' : 'below-average'}">${memberAvg.meetings}/day</span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">📊 Methodology</span>
+                                <span class="metric-value ${memberAvg.methodology >= teamAverages.methodology ? 'above-average' : 'below-average'}">${memberAvg.methodology}/100</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-primary" onclick="generateCoaching('${member.id}', '${memberName}')">
+                            🤖 One-Click Coaching
+                        </button>
+                        <button class="btn btn-secondary" onclick="viewHistory('${member.id}', '${memberName}')">
+                            📝 View Coaching History
+                        </button>
+                    </div>
+                `;
+            });
+
+            grid.innerHTML = html;
+
+            // Draw radial charts
+            teamMembers.forEach(member => {
+                const memberActivities = allActivities.filter(a => a.user_id === member.id);
+                let memberAvg = { calls: 0, emails: 0, meetings: 0, methodology: 0 };
+                if (memberActivities.length > 0) {
+                    memberAvg = {
+                        calls: Math.round(memberActivities.reduce((sum, a) => sum + (a.calls_made || 0), 0) / memberActivities.length),
+                        emails: Math.round(memberActivities.reduce((sum, a) => sum + (a.emails_sent || 0), 0) / memberActivities.length),
+                        meetings: Math.round(memberActivities.reduce((sum, a) => sum + (a.meetings_booked || 0), 0) / memberActivities.length),
+                        methodology: Math.round(memberActivities.reduce((sum, a) => sum + (a.methodology_score || 0), 0) / memberActivities.length)
+                    };
+                }
+                drawRadialChart(`chart-${member.id}`, memberAvg);
+            });
+        }
+
+        function drawRadialChart(canvasId, data) {
+            const canvas = document.getElementById(canvasId);
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const radius = 80;
+
+            // Calculate percentages vs team average
+            const callsPercent = teamAverages.calls > 0 ? (data.calls / teamAverages.calls) : 0;
+            const emailsPercent = teamAverages.emails > 0 ? (data.emails / teamAverages.emails) : 0;
+            const meetingsPercent = teamAverages.meetings > 0 ? (data.meetings / teamAverages.meetings) : 0;
+            const methodologyPercent = data.methodology / 100;
+
+            const metrics = [
+                { value: callsPercent, color: '#10C3B0', label: 'Calls' },
+                { value: emailsPercent, color: '#3DE0D2', label: 'Emails' },
+                { value: meetingsPercent, color: '#F4B03A', label: 'Meetings' },
+                { value: methodologyPercent, color: '#F9C863', label: 'Method' }
+            ];
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw background circles
+            metrics.forEach((metric, i) => {
+                const r = radius - (i * 15);
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, r, 0, 2 * Math.PI);
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
+                ctx.lineWidth = 12;
+                ctx.stroke();
+            });
+
+            // Draw data arcs
+            metrics.forEach((metric, i) => {
+                const r = radius - (i * 15);
+                const endAngle = -Math.PI / 2 + (2 * Math.PI * Math.min(metric.value, 1));
+
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, r, -Math.PI / 2, endAngle);
+                ctx.strokeStyle = metric.color;
+                ctx.lineWidth = 12;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            });
+        }
+
+        async function generateCoaching(memberId, memberName) {
+            const modal = document.getElementById('coaching-modal');
+            const modalBody = document.getElementById('modal-body');
+            const modalTitle = document.getElementById('modal-member-name');
+
+            modalTitle.textContent = `Coaching for ${memberName}`;
+            modalBody.innerHTML = '<div class="loading">🤖 Generating AI coaching feedback...</div>';
+            modal.classList.add('show');
+
+            try {
+                const { data, error } = await supabaseClient.functions.invoke('generate-team-coaching', {
+                    body: {
+                        teamMemberId: memberId,
+                        managerId: currentManagerId
+                    }
+                });
+
+                if (error) throw error;
+
+                const coaching = data.coaching;
+
+                modalBody.innerHTML = `
+                    <div class="feedback-section">
+                        <h3>📊 Performance Summary</h3>
+                        <p>${coaching.performance_summary}</p>
+                    </div>
+
+                    <div class="feedback-section" style="border-left-color: var(--brand-teal);">
+                        <h3>✅ Strengths</h3>
+                        <ul>
+                            ${coaching.strengths.map(s => `<li>${s}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="feedback-section" style="border-left-color: var(--brand-gold);">
+                        <h3>📈 Areas for Improvement</h3>
+                        <ul>
+                            ${coaching.areas_of_improvement.map(a => `<li>${a}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="feedback-section" style="border-left-color: var(--brand-pink);">
+                        <h3>🚨 Critical Omissions</h3>
+                        <ul>
+                            ${coaching.omissions.map(o => `<li>${o}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="feedback-section" style="border-left-color: var(--brand-aqua);">
+                        <h3>💡 Recommendations</h3>
+                        <ul>
+                            ${coaching.recommendations.map(r => `<li>${r}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="feedback-section" style="border-left-color: var(--brand-gold);">
+                        <h3>🎯 Suggested Goals</h3>
+                        <ul>
+                            ${coaching.suggested_goals.map(g => `<li>${g}</li>`).join('')}
+                        </ul>
+                    </div>
+
+                    <div class="feedback-section">
+                        <h3>📝 Full Message</h3>
+                        <p style="line-height: 1.8; white-space: pre-wrap;">${coaching.full_message}</p>
+                    </div>
+
+                    <button class="btn btn-primary" onclick="sendFeedback('${memberId}', '${memberName}')">
+                        📨 Send This Feedback to ${memberName}
+                    </button>
+                `;
+
+                showAlert('✅ Coaching generated successfully!', 'success');
+
+            } catch (error) {
+                console.error('Error generating coaching:', error);
+                modalBody.innerHTML = `<div class="alert alert-error">Error: ${error.message}</div>`;
+            }
+        }
+
+        async function sendFeedback(memberId, memberName) {
+            try {
+                showAlert('📤 Sending feedback...', 'success');
+                closeModal();
+                showAlert(`✅ Feedback sent to ${memberName}! They will see it in their dashboard.`, 'success');
+
+                // Reload to show updated state
+                setTimeout(() => {
+                    loadTeamPerformance();
+                }, 2000);
+            } catch (error) {
+                console.error('Error sending feedback:', error);
+                showAlert('Error sending feedback: ' + error.message, 'error');
+            }
+        }
+
+        async function viewHistory(memberId, memberName) {
+            // TODO: Implement coaching history view
+            showAlert('Coaching history feature coming soon!', 'success');
+        }
+
+        function closeModal() {
+            document.getElementById('coaching-modal').classList.remove('show');
+        }
+
+        function showAlert(message, type) {
+            const container = document.getElementById('alert-container');
+            container.innerHTML = `<div class="alert alert-${type}">${message}</div>`;
+            setTimeout(() => {
+                container.innerHTML = '';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

@@ -145,6 +145,29 @@
                 </div>
                 <button type="submit" class="btn-login">Login</button>
             </form>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="#" onclick="showForgotPassword(event)" style="color: var(--brand-aqua); text-decoration: none; font-size: 0.9rem;">
+                    Forgot Password?
+                </a>
+            </div>
+        </div>
+
+        <!-- Forgot Password Form (hidden by default) -->
+        <div id="forgot-password-form" style="display: none;">
+            <h2 style="text-align: center; margin-bottom: 20px; color: var(--brand-aqua);">Reset Password</h2>
+            <div id="forgot-alert-container"></div>
+            <form onsubmit="handlePasswordReset(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="reset-email" required placeholder="your-email@example.com">
+                </div>
+                <button type="submit" class="btn-login">Send Reset Link</button>
+            </form>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="#" onclick="showLogin(event)" style="color: var(--brand-aqua); text-decoration: none; font-size: 0.9rem;">
+                    ← Back to Login
+                </a>
+            </div>
         </div>
     </div>
 
@@ -205,6 +228,56 @@
                 redirectBasedOnRole(session.user);
             }
         });
+
+        // Toggle between login and forgot password forms
+        function showForgotPassword(event) {
+            event.preventDefault();
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('forgot-password-form').style.display = 'block';
+        }
+
+        function showLogin(event) {
+            event.preventDefault();
+            document.getElementById('login-form').style.display = 'block';
+            document.getElementById('forgot-password-form').style.display = 'none';
+            document.getElementById('forgot-alert-container').innerHTML = '';
+        }
+
+        // Handle password reset
+        async function handlePasswordReset(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('reset-email').value;
+            const forgotAlertContainer = document.getElementById('forgot-alert-container');
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Sending...';
+
+            try {
+                const { error } = await sb.auth.resetPasswordForEmail(email, {
+                    redirectTo: window.location.origin + '/reset-password.html'
+                });
+
+                if (error) throw error;
+
+                forgotAlertContainer.innerHTML = `
+                    <div class="alert" style="background: rgba(16, 195, 176, 0.2); border: 1px solid var(--brand-teal); color: var(--brand-aqua);">
+                        ✅ Password reset email sent! Check your inbox and spam folder.
+                    </div>
+                `;
+
+                document.getElementById('reset-email').value = '';
+                submitBtn.textContent = 'Send Reset Link';
+
+            } catch (error) {
+                console.error('Password reset error:', error);
+                forgotAlertContainer.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+                submitBtn.textContent = 'Send Reset Link';
+            } finally {
+                submitBtn.disabled = false;
+            }
+        }
     </script>
 </body>
 </html>

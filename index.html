@@ -739,6 +739,9 @@
                 <a href="sandler-email-generator.html" style="display: inline-block; background: linear-gradient(135deg, var(--brand-gold), var(--brand-yellow)); color: var(--brand-navy); padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: 700; transition: all 0.2s ease; position: relative; z-index: 10; pointer-events: auto; box-shadow: 0 2px 8px rgba(244, 176, 58, 0.3);">
                     📧 Open Email Generator
                 </a>
+                <div id="sync-indicator" style="font-size: 0.85rem; padding: 8px 16px; background: rgba(16, 195, 176, 0.1); border-radius: 20px; border: 1px solid rgba(16, 195, 176, 0.3);">
+                    <span style="color: var(--brand-aqua);">💾 Sync ready</span>
+                </div>
             </div>
         </div>
 
@@ -1618,6 +1621,94 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             }
         }
 
+        // ============================================
+        // USER SETTINGS PERSISTENCE (Supabase)
+        // ============================================
+
+        // Sync user settings to Supabase
+        async function syncUserSettings(settingsData) {
+            try {
+                if (!currentUser) {
+                    console.warn('No user logged in, skipping Supabase sync');
+                    return false;
+                }
+
+                const { data, error } = await supabaseClient
+                    .from('user_settings')
+                    .upsert({
+                        user_id: currentUser.id,
+                        ...settingsData,
+                        last_synced_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'user_id'
+                    });
+
+                if (error) {
+                    console.error('Error syncing to Supabase:', error);
+                    return false;
+                }
+
+                console.log('Settings synced to Supabase successfully');
+                updateSyncIndicator(true);
+                return true;
+            } catch (error) {
+                console.error('Sync error:', error);
+                return false;
+            }
+        }
+
+        // Load user settings from Supabase
+        async function loadUserSettingsFromSupabase() {
+            try {
+                if (!currentUser) {
+                    console.warn('No user logged in, cannot load from Supabase');
+                    return null;
+                }
+
+                const { data, error } = await supabaseClient
+                    .from('user_settings')
+                    .select('*')
+                    .eq('user_id', currentUser.id)
+                    .single();
+
+                if (error) {
+                    if (error.code === 'PGRST116') {
+                        // No settings found yet - this is normal for new users
+                        console.log('No settings found in Supabase yet');
+                        return null;
+                    }
+                    console.error('Error loading from Supabase:', error);
+                    return null;
+                }
+
+                console.log('Settings loaded from Supabase successfully');
+                updateSyncIndicator(true);
+                return data;
+            } catch (error) {
+                console.error('Load error:', error);
+                return null;
+            }
+        }
+
+        // Update sync indicator in UI
+        function updateSyncIndicator(synced) {
+            const indicator = document.getElementById('sync-indicator');
+            if (!indicator) return;
+
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', {
+                hour: 'numeric',
+                minute: '2-digit',
+                hour12: true
+            });
+
+            if (synced) {
+                indicator.innerHTML = `<span style="color: var(--brand-teal);">✓ Last synced: ${timeString}</span>`;
+            } else {
+                indicator.innerHTML = `<span style="color: var(--brand-gold);">⚠ Sync pending</span>`;
+            }
+        }
+
         // Add logout button to page
         function addLogoutButton() {
             const buttonContainer = document.getElementById('header-buttons');
@@ -2165,7 +2256,12 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                     sales: parseInt(document.getElementById('goal-sales').value) || 1
                 };
 
+                // Save to localStorage (for offline access)
                 localStorage.setItem('activityGoals', JSON.stringify(goals));
+
+                // Sync to Supabase (for persistence)
+                await syncUserSettings({ activity_goals: goals });
+
                 showAlert('Activity goals saved successfully!', 'success');
 
                 // Refresh goal progress display (async but don't await to avoid blocking)
@@ -2177,7 +2273,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             }
         }
 
-        // Get activity goals from localStorage
+        // Get activity goals from localStorage (synchronous for compatibility)
         function getActivityGoals() {
             const saved = localStorage.getItem('activityGoals');
             if (saved) {
@@ -2192,8 +2288,20 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         }
 
         // Load activity goals into form
-        function loadActivityGoalsForm() {
-            const goals = getActivityGoals();
+        async function loadActivityGoalsForm() {
+            // Try loading from Supabase first
+            const supabaseSettings = await loadUserSettingsFromSupabase();
+            let goals = null;
+
+            if (supabaseSettings && supabaseSettings.activity_goals) {
+                goals = supabaseSettings.activity_goals;
+                // Also update localStorage for offline access
+                localStorage.setItem('activityGoals', JSON.stringify(goals));
+            } else {
+                // Fallback to localStorage or defaults
+                goals = getActivityGoals();
+            }
+
             document.getElementById('goal-dials').value = goals.dials;
             document.getElementById('goal-conversations').value = goals.conversations;
             document.getElementById('goal-meetings').value = goals.meetings;
@@ -2314,6 +2422,11 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 // Get monthly quota from input or localStorage
                 const monthlyQuota = parseFloat(document.getElementById('monthly-quota').value) || 10000;
                 localStorage.setItem('monthlyQuota', monthlyQuota);
+
+                // Sync to Supabase (for persistence) - fire and forget
+                syncUserSettings({ monthly_quota: monthlyQuota }).catch(err =>
+                    console.error('Error syncing monthly quota:', err)
+                );
 
                 // Calculate MTD revenue
                 const mtdSales = salesData.filter(s => s.date.startsWith(currentMonth));
@@ -3423,7 +3536,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         // ICP (IDEAL CUSTOMER PROFILE) FUNCTIONS
         // ============================================
 
-        function saveICP() {
+        async function saveICP() {
             const icp = {
                 industry: document.getElementById('icp-industry').value.trim(),
                 companySize: document.getElementById('icp-company-size').value.trim(),
@@ -3438,16 +3551,35 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 return;
             }
 
+            // Save to localStorage (for offline access)
             localStorage.setItem('icp', JSON.stringify(icp));
+
+            // Sync to Supabase (for persistence)
+            await syncUserSettings({ icp: icp });
+
             showAlert('✅ Ideal Customer Profile saved!', 'success');
             celebrateWithConfetti('default');
             displayICP();
         }
 
-        function loadICP() {
-            const saved = localStorage.getItem('icp');
-            if (saved) {
-                const icp = JSON.parse(saved);
+        async function loadICP() {
+            // Try loading from Supabase first
+            const supabaseSettings = await loadUserSettingsFromSupabase();
+            let icp = null;
+
+            if (supabaseSettings && supabaseSettings.icp) {
+                icp = supabaseSettings.icp;
+                // Also update localStorage for offline access
+                localStorage.setItem('icp', JSON.stringify(icp));
+            } else {
+                // Fallback to localStorage
+                const saved = localStorage.getItem('icp');
+                if (saved) {
+                    icp = JSON.parse(saved);
+                }
+            }
+
+            if (icp) {
                 document.getElementById('icp-industry').value = icp.industry || '';
                 document.getElementById('icp-company-size').value = icp.companySize || '';
                 document.getElementById('icp-job-titles').value = icp.jobTitles || '';
@@ -3514,7 +3646,12 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                     objections: elements.objections.value.trim()
                 };
 
+                // Save to localStorage (for offline access)
                 localStorage.setItem('salesScripts', JSON.stringify(scripts));
+
+                // Sync to Supabase (for persistence)
+                await syncUserSettings({ sales_scripts: scripts });
+
                 showAlert('✅ Scripts saved successfully!', 'success');
                 console.log('Scripts saved to localStorage:', scripts);
             } catch (error) {
@@ -3523,10 +3660,24 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             }
         }
 
-        function loadScripts() {
-            const saved = localStorage.getItem('salesScripts');
-            if (saved) {
-                const scripts = JSON.parse(saved);
+        async function loadScripts() {
+            // Try loading from Supabase first
+            const supabaseSettings = await loadUserSettingsFromSupabase();
+            let scripts = null;
+
+            if (supabaseSettings && supabaseSettings.sales_scripts) {
+                scripts = supabaseSettings.sales_scripts;
+                // Also update localStorage for offline access
+                localStorage.setItem('salesScripts', JSON.stringify(scripts));
+            } else {
+                // Fallback to localStorage
+                const saved = localStorage.getItem('salesScripts');
+                if (saved) {
+                    scripts = JSON.parse(saved);
+                }
+            }
+
+            if (scripts) {
                 document.getElementById('script-business-description').value = scripts.businessDescription || '';
                 document.getElementById('script-icp').value = scripts.icp || '';
                 document.getElementById('script-opening').value = scripts.opening || '';
@@ -3675,16 +3826,34 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             }
         };
 
-        function saveMethodology() {
+        async function saveMethodology() {
             const methodology = document.getElementById('sales-methodology').value;
+
+            // Save to localStorage (for offline access)
             localStorage.setItem('salesMethodology', methodology);
+
+            // Sync to Supabase (for persistence)
+            await syncUserSettings({ selected_methodology: methodology });
+
             displayMethodology();
             showAlert(`✅ Methodology set to ${METHODOLOGIES[methodology].name}`, 'success');
         }
 
-        function loadMethodology() {
-            const saved = localStorage.getItem('salesMethodology') || 'meddic';
-            document.getElementById('sales-methodology').value = saved;
+        async function loadMethodology() {
+            // Try loading from Supabase first
+            const supabaseSettings = await loadUserSettingsFromSupabase();
+            let methodology = null;
+
+            if (supabaseSettings && supabaseSettings.selected_methodology) {
+                methodology = supabaseSettings.selected_methodology;
+                // Also update localStorage for offline access
+                localStorage.setItem('salesMethodology', methodology);
+            } else {
+                // Fallback to localStorage or default
+                methodology = localStorage.getItem('salesMethodology') || 'meddic';
+            }
+
+            document.getElementById('sales-methodology').value = methodology;
             displayMethodology();
         }
 
@@ -3874,11 +4043,8 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 loadScripts();
                 loadSetupState();
 
-                // Load monthly quota from localStorage if exists
-                const savedQuota = localStorage.getItem('monthlyQuota');
-                if (savedQuota) {
-                    document.getElementById('monthly-quota').value = savedQuota;
-                }
+                // Load monthly quota from Supabase first, then localStorage
+                loadMonthlyQuota();
 
                 // Load dashboard data
                 loadDashboardData();
@@ -3888,12 +4054,32 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             }
         });
 
+        // Load monthly quota from Supabase
+        async function loadMonthlyQuota() {
+            // Try loading from Supabase first
+            const supabaseSettings = await loadUserSettingsFromSupabase();
+            let quota = null;
+
+            if (supabaseSettings && supabaseSettings.monthly_quota) {
+                quota = supabaseSettings.monthly_quota;
+                // Also update localStorage for offline access
+                localStorage.setItem('monthlyQuota', quota);
+            } else {
+                // Fallback to localStorage
+                quota = localStorage.getItem('monthlyQuota');
+            }
+
+            if (quota) {
+                document.getElementById('monthly-quota').value = quota;
+            }
+        }
+
         // ============================================
         // FIREFLIES INTEGRATION FUNCTIONS
         // ============================================
 
         // Save Fireflies settings
-        function saveFirefliesSettings() {
+        async function saveFirefliesSettings() {
             const apiKey = document.getElementById('fireflies-api-key').value.trim();
 
             if (!apiKey) {
@@ -3902,7 +4088,12 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             }
 
             try {
+                // Save to localStorage (for offline access)
                 localStorage.setItem('fireflies_api_key', apiKey);
+
+                // Sync to Supabase (for persistence)
+                await syncUserSettings({ fireflies_api_key: apiKey });
+
                 showAlert('✅ Fireflies settings saved! Webhook is ready to receive calls.', 'success');
 
                 // Show status
@@ -3919,8 +4110,19 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         }
 
         // Load Fireflies settings
-        function loadFirefliesSettings() {
-            const apiKey = localStorage.getItem('fireflies_api_key');
+        async function loadFirefliesSettings() {
+            // Try loading from Supabase first
+            const supabaseSettings = await loadUserSettingsFromSupabase();
+            let apiKey = null;
+
+            if (supabaseSettings && supabaseSettings.fireflies_api_key) {
+                apiKey = supabaseSettings.fireflies_api_key;
+                // Also update localStorage for offline access
+                localStorage.setItem('fireflies_api_key', apiKey);
+            } else {
+                // Fallback to localStorage
+                apiKey = localStorage.getItem('fireflies_api_key');
+            }
 
             if (apiKey) {
                 document.getElementById('fireflies-api-key').value = apiKey;

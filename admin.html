@@ -727,14 +727,8 @@
         const SUPABASE_URL = 'https://qwqlsbccwnwrdpcaccjz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTA1MDQsImV4cCI6MjA4MDg4NjUwNH0.yWzSV2Nid_T1XiDE0RrskFob9mRUc-m6MbeIiT7huC4';
 
-        // Admin email whitelist (add authorized admin emails here)
-        // For production: move this to database or environment variables
-        const ADMIN_EMAILS = [
-            'admin@aiadvantagesolutions.com',
-            'admin@aiadvantagesolutions.ca',
-            'john@aiadvantagesolutions.com'
-            // Add more admin emails as needed
-        ];
+        // Admin access is now role-based (set in user_metadata)
+        // No hardcoded email list needed
 
         let supabaseClient;
         let currentDateRange = { days: 30 };
@@ -764,12 +758,12 @@
                     return false;
                 }
 
-                // Check if user email is in admin whitelist
+                // Check if user has admin role
+                const userRole = session.user.user_metadata?.role;
                 const userEmail = session.user.email;
-                const isAdmin = ADMIN_EMAILS.includes(userEmail);
 
-                if (!isAdmin) {
-                    console.warn(`Unauthorized access attempt by: ${userEmail}`);
+                if (userRole !== 'admin') {
+                    console.warn(`Unauthorized access attempt by: ${userEmail} (role: ${userRole})`);
                     await supabaseClient.auth.signOut();
                     return false;
                 }
@@ -802,8 +796,9 @@
                     throw error;
                 }
 
-                // Check if user is in admin whitelist
-                if (!ADMIN_EMAILS.includes(email)) {
+                // Check if user has admin role
+                const userRole = data.user.user_metadata?.role;
+                if (userRole !== 'admin') {
                     await supabaseClient.auth.signOut();
                     loginAlertContainer.innerHTML = '<div class="alert alert-error">Unauthorized: Not an admin account</div>';
                     return;

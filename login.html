@@ -203,6 +203,7 @@
 
         function redirectBasedOnRole(user) {
             const role = user.user_metadata?.role;
+            const alertContainer = document.getElementById('alert-container');
 
             console.log('User:', user.email, 'Role:', role);
 

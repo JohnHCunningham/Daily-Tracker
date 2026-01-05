@@ -449,8 +449,8 @@
 </head>
 <body>
 
-    <!-- Login Modal -->
-    <div id="login-modal" class="login-modal hidden">
+    <!-- Login Modal - Deprecated: Now using unified login.html -->
+    <div id="login-modal" class="login-modal hidden" style="display: none !important;">
         <div class="login-box">
             <h2>Manager Login</h2>
             <p>Sign in with your admin account</p>
@@ -512,11 +512,8 @@
         const SUPABASE_URL = 'https://qwqlsbccwnwrdpcaccjz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTA1MDQsImV4cCI6MjA4MDg4NjUwNH0.yWzSV2Nid_T1XiDE0RrskFob9mRUc-m6MbeIiT7huC4';
 
-        const ADMIN_EMAILS = [
-            'admin@aiadvantagesolutions.com',
-            'admin@aiadvantagesolutions.ca',
-            'john@aiadvantagesolutions.com'
-        ];
+        // Admin access is now role-based (set in user_metadata)
+        // No hardcoded email list needed
 
         let supabaseClient;
 
@@ -539,12 +536,13 @@
                     return false;
                 }
 
+                // Check if user has admin role
+                const userRole = session.user.user_metadata?.role;
                 const userEmail = session.user.email;
-                const isAdmin = ADMIN_EMAILS.includes(userEmail);
 
-                if (!isAdmin) {
-                    console.warn(`Unauthorized access attempt by: ${userEmail}`);
-                    await supabaseClient.auth.signOut();
+                if (userRole !== 'admin') {
+                    console.warn(`Unauthorized access attempt by: ${userEmail} (role: ${userRole})`);
+                    // Don't sign out - just redirect to login which will handle role-based redirect
                     return false;
                 }
 
@@ -573,7 +571,9 @@
 
                 if (error) throw error;
 
-                if (!ADMIN_EMAILS.includes(email)) {
+                // Check if user has admin role
+                const userRole = data.user.user_metadata?.role;
+                if (userRole !== 'admin') {
                     await supabaseClient.auth.signOut();
                     loginAlertContainer.innerHTML = '<div class="alert alert-error">Unauthorized: Not an admin account</div>';
                     return;
@@ -753,7 +753,8 @@
                 document.getElementById('main-dashboard').classList.remove('hidden');
                 loadTeamDashboard();
             } else {
-                document.getElementById('login-modal').classList.remove('hidden');
+                // Redirect to unified login page instead of showing modal
+                window.location.href = 'login.html';
             }
 
             // Allow Enter key to submit login

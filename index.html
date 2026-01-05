@@ -1530,6 +1530,12 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
 
             // Save current tab to localStorage
             localStorage.setItem('currentTab', tabName);
+
+            // Scroll to top of the page for better UX
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
         }
 
         // Load last active tab on page load

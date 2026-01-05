@@ -152,12 +152,6 @@
         const SUPABASE_URL = 'https://qwqlsbccwnwrdpcaccjz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTA1MDQsImV4cCI6MjA4MDg4NjUwNH0.yWzSV2Nid_T1XiDE0RrskFob9mRUc-m6MbeIiT7huC4';
 
-        const ADMIN_EMAILS = [
-            'admin@aiadvantagesolutions.com',
-            'admin@aiadvantagesolutions.ca',
-            'john@aiadvantagesolutions.com'
-        ];
-
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         async function handleLogin(event) {
@@ -175,16 +169,31 @@
 
                 if (error) throw error;
 
-                // Automatically detect if admin based on email and redirect
-                if (ADMIN_EMAILS.includes(email)) {
-                    window.location.href = 'admin-team.html';
-                } else {
-                    window.location.href = 'index.html';
-                }
+                // Redirect based on role in user_metadata
+                redirectBasedOnRole(data.user);
 
             } catch (error) {
                 console.error('Login error:', error);
                 alertContainer.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+            }
+        }
+
+        function redirectBasedOnRole(user) {
+            const role = user.user_metadata?.role;
+
+            console.log('User:', user.email, 'Role:', role);
+
+            if (role === 'admin') {
+                alertContainer.innerHTML = `<div class="alert" style="background: rgba(16, 195, 176, 0.2); border: 1px solid var(--brand-teal); color: var(--brand-aqua);">✅ Admin access! Redirecting...</div>`;
+                setTimeout(() => {
+                    window.location.href = 'admin-team-performance.html';
+                }, 800);
+            } else {
+                // Default to rep dashboard (including users without role set)
+                alertContainer.innerHTML = `<div class="alert" style="background: rgba(16, 195, 176, 0.2); border: 1px solid var(--brand-teal); color: var(--brand-aqua);">✅ Welcome! Redirecting...</div>`;
+                setTimeout(() => {
+                    window.location.href = 'index.html';
+                }, 800);
             }
         }
 
@@ -193,11 +202,7 @@
             const { data: { session } } = await sb.auth.getSession();
 
             if (session) {
-                if (ADMIN_EMAILS.includes(session.user.email)) {
-                    window.location.href = 'admin-team.html';
-                } else {
-                    window.location.href = 'index.html';
-                }
+                redirectBasedOnRole(session.user);
             }
         });
     </script>

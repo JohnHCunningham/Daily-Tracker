@@ -313,8 +313,20 @@
 <body>
     <div class="container">
         <div class="header">
-            <h1>🎯 Team Performance Dashboard</h1>
-            <p style="color: var(--brand-gold); margin-top: 10px;">One-Click AI Coaching for Your Team</p>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1>🎯 Team Performance Dashboard</h1>
+                    <p style="color: var(--brand-gold); margin-top: 10px;">One-Click AI Coaching for Your Team</p>
+                </div>
+                <div style="display: flex; gap: 15px;">
+                    <button onclick="window.location.href='index.html'" style="padding: 10px 20px; background: rgba(61, 224, 210, 0.2); border: 1px solid var(--brand-aqua); color: var(--brand-aqua); border-radius: 10px; cursor: pointer; font-weight: 600;">
+                        📊 My Dashboard
+                    </button>
+                    <button onclick="handleLogout()" style="padding: 10px 20px; background: rgba(230, 69, 99, 0.2); border: 1px solid var(--brand-pink); color: var(--brand-pink); border-radius: 10px; cursor: pointer; font-weight: 600;">
+                        🚪 Logout
+                    </button>
+                </div>
+            </div>
         </div>
 
         <div id="alert-container"></div>
@@ -379,9 +391,18 @@
         async function checkAuth() {
             const { data: { session } } = await supabaseClient.auth.getSession();
             if (!session) {
-                window.location.href = 'admin-team.html';
+                window.location.href = 'login.html';
                 return;
             }
+
+            // Check if user has admin role
+            const role = session.user.user_metadata?.role;
+            if (role !== 'admin') {
+                alert('Access denied: Admin privileges required');
+                window.location.href = 'index.html';
+                return;
+            }
+
             currentManagerId = session.user.id;
         }
 
@@ -660,6 +681,16 @@
         async function viewHistory(memberId, memberName) {
             // TODO: Implement coaching history view
             showAlert('Coaching history feature coming soon!', 'success');
+        }
+
+        async function handleLogout() {
+            try {
+                await supabaseClient.auth.signOut();
+                window.location.href = 'login.html';
+            } catch (error) {
+                console.error('Logout error:', error);
+                showAlert('Error logging out: ' + error.message, 'error');
+            }
         }
 
         function closeModal() {

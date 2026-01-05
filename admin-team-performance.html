@@ -387,15 +387,11 @@
 
         async function loadTeamPerformance() {
             try {
-                // Get team members
-                const { data: { users }, error } = await supabaseClient.auth.admin.listUsers();
+                // Get team members using database function
+                const { data: teamMembers, error } = await supabaseClient
+                    .rpc('get_team_members', { manager_user_id: currentManagerId });
 
                 if (error) throw error;
-
-                // Filter for team members managed by this manager
-                const teamMembers = users.filter(user =>
-                    user.user_metadata?.manager_id === currentManagerId
-                );
 
                 if (teamMembers.length === 0) {
                     document.getElementById('team-members-grid').innerHTML =
@@ -442,7 +438,7 @@
 
             teamMembers.forEach(member => {
                 const memberActivities = allActivities.filter(a => a.user_id === member.id);
-                const memberName = `${member.user_metadata?.first_name || ''} ${member.user_metadata?.last_name || ''}`.trim() || member.email;
+                const memberName = `${member.first_name || ''} ${member.last_name || ''}`.trim() || member.email;
 
                 let memberAvg = { calls: 0, emails: 0, meetings: 0, methodology: 0 };
                 if (memberActivities.length > 0) {

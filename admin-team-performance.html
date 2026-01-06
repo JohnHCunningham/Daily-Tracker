@@ -381,6 +381,7 @@
 
         let currentManagerId = null;
         let teamAverages = {};
+        let currentCoachingData = null; // Store coaching data for sending to database
 
         // Initialize
         document.addEventListener('DOMContentLoaded', async () => {
@@ -549,11 +550,18 @@
             const meetingsPercent = teamAverages.meetings > 0 ? (data.meetings / teamAverages.meetings) : 0;
             const methodologyPercent = data.methodology / 100;
 
+            // Determine color based on performance (red if below 75%, yellow if 75-99%, green if 100%+)
+            const getPerformanceColor = (value, defaultColor) => {
+                if (value < 0.75) return '#E64563'; // Red for below 75%
+                if (value < 1.0) return '#F4B03A'; // Yellow/gold for 75-99%
+                return defaultColor; // Original color for 100%+
+            };
+
             const metrics = [
-                { value: callsPercent, color: '#10C3B0', label: 'Calls' },
-                { value: emailsPercent, color: '#3DE0D2', label: 'Emails' },
-                { value: meetingsPercent, color: '#F4B03A', label: 'Meetings' },
-                { value: methodologyPercent, color: '#F9C863', label: 'Method' }
+                { value: callsPercent, color: getPerformanceColor(callsPercent, '#10C3B0'), label: 'Calls', baseline: callsPercent },
+                { value: emailsPercent, color: getPerformanceColor(emailsPercent, '#3DE0D2'), label: 'Emails', baseline: emailsPercent },
+                { value: meetingsPercent, color: getPerformanceColor(meetingsPercent, '#F4B03A'), label: 'Meetings', baseline: meetingsPercent },
+                { value: methodologyPercent, color: getPerformanceColor(methodologyPercent, '#F9C863'), label: 'Method', baseline: methodologyPercent }
             ];
 
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -602,6 +610,13 @@
                 if (error) throw error;
 
                 const coaching = data.coaching;
+
+                // Store coaching data globally for sendFeedback to use
+                currentCoachingData = {
+                    memberId: memberId,
+                    memberName: memberName,
+                    coaching: coaching
+                };
 
                 modalBody.innerHTML = `
                     <div class="feedback-section">
@@ -664,9 +679,58 @@
 
         async function sendFeedback(memberId, memberName) {
             try {
+                if (!currentCoachingData || currentCoachingData.memberId !== memberId) {
+                    showAlert('❌ Please generate coaching first before sending', 'error');
+                    return;
+                }
+
                 showAlert('📤 Sending feedback...', 'success');
+
+                const coaching = currentCoachingData.coaching;
+
+                // Create full message combining all sections
+                const fullMessage = `
+📊 Performance Summary:
+${coaching.performance_summary}
+
+✅ Strengths:
+${coaching.strengths.map(s => `• ${s}`).join('\n')}
+
+⚠️ Areas for Improvement:
+${coaching.weaknesses.map(w => `• ${w}`).join('\n')}
+
+🎯 Action Items:
+${coaching.corrective_actions.map(a => `• ${a}`).join('\n')}
+
+🏆 Goals:
+${coaching.goals.map(g => `• ${g}`).join('\n')}
+
+💪 Encouragement:
+${coaching.encouragement}
+                `.trim();
+
+                // Save to database
+                const { error } = await supabaseClient
+                    .from('manager_feedback')
+                    .insert({
+                        manager_id: currentManagerId,
+                        team_member_id: memberId,
+                        performance_vs_average: coaching.performance_summary,
+                        areas_of_improvement: coaching.weaknesses || [],
+                        omissions: [], // Not provided by AI
+                        recommendations: coaching.corrective_actions || [],
+                        goals_set: coaching.goals || [],
+                        full_message: fullMessage,
+                        is_read: false
+                    });
+
+                if (error) throw error;
+
                 closeModal();
                 showAlert(`✅ Feedback sent to ${memberName}! They will see it in their dashboard.`, 'success');
+
+                // Clear stored coaching data
+                currentCoachingData = null;
 
                 // Reload to show updated state
                 setTimeout(() => {

@@ -176,6 +176,52 @@
             background: rgba(255, 255, 255, 0.02);
         }
 
+        .csv-upload-area {
+            border: 2px dashed var(--brand-teal);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 20px;
+            background: rgba(16, 195, 176, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        .csv-upload-area:hover {
+            background: rgba(16, 195, 176, 0.1);
+            border-color: var(--brand-aqua);
+        }
+
+        .csv-upload-area.dragover {
+            background: rgba(16, 195, 176, 0.15);
+            border-color: var(--brand-aqua);
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .upload-label {
+            cursor: pointer;
+            color: var(--brand-aqua);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 15px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua));
+            transition: width 0.3s ease;
+        }
+
         .hidden {
             display: none !important;
         }
@@ -196,9 +242,36 @@
 
         <div id="alert-container"></div>
 
+        <!-- CSV Bulk Import -->
+        <div class="card">
+            <h2>📂 Bulk Import Team Members</h2>
+            <p style="margin-bottom: 20px; opacity: 0.8;">Import multiple users at once using a CSV file</p>
+
+            <div class="csv-upload-area" id="csv-upload-area">
+                <input type="file" id="csv-file-input" accept=".csv" onchange="handleCSVUpload(event)">
+                <label for="csv-file-input" class="upload-label">
+                    📁 Click to upload CSV or drag & drop here
+                </label>
+                <p style="margin-top: 10px; font-size: 0.9rem; opacity: 0.7;">
+                    Supported format: CSV with columns: email, password, first_name, last_name, methodology
+                </p>
+                <button onclick="downloadCSVTemplate()" class="btn btn-secondary" style="margin-top: 15px;">
+                    ⬇️ Download CSV Template
+                </button>
+            </div>
+
+            <div id="csv-progress" class="hidden">
+                <p id="csv-status" style="margin-bottom: 10px;">Processing...</p>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill" style="width: 0%;"></div>
+                </div>
+                <p id="csv-results" style="margin-top: 15px; font-size: 0.9rem;"></p>
+            </div>
+        </div>
+
         <!-- Create User Form -->
         <div class="card">
-            <h2>Create New Team Member</h2>
+            <h2>➕ Create New Team Member</h2>
             <form id="create-user-form" onsubmit="createUser(event)">
                 <div class="form-group">
                     <label>Email Address *</label>
@@ -261,11 +334,8 @@
         const SUPABASE_URL = 'https://qwqlsbccwnwrdpcaccjz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTA1MDQsImV4cCI6MjA4MDg4NjUwNH0.yWzSV2Nid_T1XiDE0RrskFob9mRUc-m6MbeIiT7huC4';
 
-        const ADMIN_EMAILS = [
-            'admin@aiadvantagesolutions.com',
-            'admin@aiadvantagesolutions.ca',
-            'john@aiadvantagesolutions.com'
-        ];
+        // Admin access is now role-based (set in user_metadata)
+        // No hardcoded email list needed
 
         let supabaseClient;
         let currentAdminId;
@@ -281,8 +351,8 @@
         async function checkAdmin() {
             const { data: { session } } = await supabaseClient.auth.getSession();
 
-            if (!session || !ADMIN_EMAILS.includes(session.user.email)) {
-                window.location.href = 'admin-team.html';
+            if (!session || session.user.user_metadata?.role !== 'admin') {
+                window.location.href = 'login.html';
                 return false;
             }
 
@@ -429,6 +499,225 @@
                 console.error('Error loading users:', error);
                 loading.textContent = 'Unable to load users list';
             }
+        }
+
+        // ============================================
+        // CSV BULK IMPORT FUNCTIONS
+        // ============================================
+
+        function downloadCSVTemplate() {
+            const csvContent = `email,password,first_name,last_name,methodology
+john.doe@example.com,TempPass123,John,Doe,sandler
+jane.smith@example.com,TempPass456,Jane,Smith,meddic
+bob.jones@example.com,TempPass789,Bob,Jones,challenger`;
+
+            const blob = new Blob([csvContent], { type: 'text/csv' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'user_import_template.csv';
+            a.click();
+            window.URL.revokeObjectURL(url);
+
+            showAlert('📥 CSV template downloaded! Fill it out and upload to import users.', 'success');
+        }
+
+        function handleCSVUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            if (!file.name.endsWith('.csv')) {
+                showAlert('❌ Please upload a CSV file', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const csvData = e.target.result;
+                parseAndImportCSV(csvData);
+            };
+            reader.readAsText(file);
+        }
+
+        function parseAndImportCSV(csvData) {
+            try {
+                // Split by lines and remove empty lines
+                const lines = csvData.split('\n').filter(line => line.trim());
+
+                if (lines.length < 2) {
+                    showAlert('❌ CSV file is empty or invalid', 'error');
+                    return;
+                }
+
+                // Parse header
+                const headers = lines[0].split(',').map(h => h.trim().toLowerCase());
+
+                // Validate required columns
+                const requiredColumns = ['email', 'password'];
+                const missingColumns = requiredColumns.filter(col => !headers.includes(col));
+
+                if (missingColumns.length > 0) {
+                    showAlert(`❌ Missing required columns: ${missingColumns.join(', ')}`, 'error');
+                    return;
+                }
+
+                // Parse data rows
+                const users = [];
+                for (let i = 1; i < lines.length; i++) {
+                    const values = lines[i].split(',').map(v => v.trim());
+
+                    if (values.length !== headers.length) {
+                        console.warn(`Skipping row ${i + 1}: column count mismatch`);
+                        continue;
+                    }
+
+                    const user = {};
+                    headers.forEach((header, index) => {
+                        user[header] = values[index];
+                    });
+
+                    // Validate email
+                    if (!user.email || !user.email.includes('@')) {
+                        console.warn(`Skipping row ${i + 1}: invalid email`);
+                        continue;
+                    }
+
+                    // Validate password
+                    if (!user.password || user.password.length < 6) {
+                        console.warn(`Skipping row ${i + 1}: password too short (min 6 characters)`);
+                        continue;
+                    }
+
+                    users.push(user);
+                }
+
+                if (users.length === 0) {
+                    showAlert('❌ No valid users found in CSV', 'error');
+                    return;
+                }
+
+                // Start bulk import
+                bulkCreateUsers(users);
+
+            } catch (error) {
+                console.error('CSV parse error:', error);
+                showAlert('❌ Error parsing CSV file: ' + error.message, 'error');
+            }
+        }
+
+        async function bulkCreateUsers(users) {
+            const progressDiv = document.getElementById('csv-progress');
+            const statusText = document.getElementById('csv-status');
+            const progressFill = document.getElementById('progress-fill');
+            const resultsText = document.getElementById('csv-results');
+
+            progressDiv.classList.remove('hidden');
+            statusText.textContent = `Importing ${users.length} users...`;
+            progressFill.style.width = '0%';
+            resultsText.textContent = '';
+
+            let successCount = 0;
+            let errorCount = 0;
+            const errors = [];
+
+            for (let i = 0; i < users.length; i++) {
+                const user = users[i];
+                const progress = ((i + 1) / users.length) * 100;
+                progressFill.style.width = progress + '%';
+                statusText.textContent = `Importing ${i + 1} of ${users.length}: ${user.email}`;
+
+                try {
+                    // Create user via Supabase Auth
+                    const { data, error } = await supabaseClient.auth.signUp({
+                        email: user.email,
+                        password: user.password,
+                        options: {
+                            data: {
+                                first_name: user.first_name || '',
+                                last_name: user.last_name || '',
+                                sales_methodology: user.methodology || 'sandler',
+                                manager_id: currentAdminId,
+                                role: 'rep'
+                            },
+                            emailRedirectTo: window.location.origin
+                        }
+                    });
+
+                    if (error) {
+                        throw error;
+                    }
+
+                    successCount++;
+                    console.log(`✓ Created user: ${user.email}`);
+
+                    // Small delay to avoid rate limiting
+                    await new Promise(resolve => setTimeout(resolve, 500));
+
+                } catch (error) {
+                    errorCount++;
+                    errors.push(`${user.email}: ${error.message}`);
+                    console.error(`✗ Failed to create user ${user.email}:`, error);
+                }
+            }
+
+            // Show final results
+            progressFill.style.width = '100%';
+            statusText.textContent = 'Import completed!';
+
+            let resultHTML = `<strong style="color: var(--brand-teal);">✓ Successfully imported: ${successCount} users</strong>`;
+            if (errorCount > 0) {
+                resultHTML += `<br><strong style="color: var(--brand-pink);">✗ Failed: ${errorCount} users</strong>`;
+                resultHTML += `<br><details style="margin-top: 10px;"><summary style="cursor: pointer; color: var(--brand-gold);">View errors</summary><ul style="margin-top: 10px; padding-left: 20px;">`;
+                errors.forEach(err => {
+                    resultHTML += `<li style="margin: 5px 0; font-size: 0.85rem;">${err}</li>`;
+                });
+                resultHTML += `</ul></details>`;
+            }
+
+            resultsText.innerHTML = resultHTML;
+
+            // Show alert
+            if (successCount > 0) {
+                showAlert(`✅ Successfully imported ${successCount} of ${users.length} users!`, 'success');
+
+                // Reload users list after a delay
+                setTimeout(() => {
+                    loadUsers();
+                    // Reset CSV upload
+                    document.getElementById('csv-file-input').value = '';
+                    setTimeout(() => {
+                        progressDiv.classList.add('hidden');
+                    }, 5000);
+                }, 2000);
+            } else {
+                showAlert('❌ All user imports failed. Check the results for details.', 'error');
+            }
+        }
+
+        // Drag and drop event handlers
+        const uploadArea = document.getElementById('csv-upload-area');
+        if (uploadArea) {
+            uploadArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                uploadArea.classList.add('dragover');
+            });
+
+            uploadArea.addEventListener('dragleave', () => {
+                uploadArea.classList.remove('dragover');
+            });
+
+            uploadArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                uploadArea.classList.remove('dragover');
+
+                const file = e.dataTransfer.files[0];
+                if (file && file.name.endsWith('.csv')) {
+                    document.getElementById('csv-file-input').files = e.dataTransfer.files;
+                    handleCSVUpload({ target: { files: e.dataTransfer.files } });
+                } else {
+                    showAlert('❌ Please drop a CSV file', 'error');
+                }
+            });
         }
 
         // Initialize

@@ -736,6 +736,10 @@
 
             <!-- Button Container -->
             <div id="header-buttons" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 20px;">
+                <!-- Admin Dashboard button (only shown to admins) -->
+                <a href="admin.html" id="admin-dashboard-btn" style="display: none; background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua)); color: white; padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: 700; transition: all 0.2s ease; position: relative; z-index: 10; pointer-events: auto; box-shadow: 0 2px 8px rgba(16, 195, 176, 0.3);">
+                    👥 Admin Dashboard
+                </a>
                 <a href="sandler-email-generator.html" style="display: inline-block; background: linear-gradient(135deg, var(--brand-gold), var(--brand-yellow)); color: var(--brand-navy); padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: 700; transition: all 0.2s ease; position: relative; z-index: 10; pointer-events: auto; box-shadow: 0 2px 8px rgba(244, 176, 58, 0.3);">
                     📧 Open Email Generator
                 </a>
@@ -1599,7 +1603,19 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             // Display user info in header
             updateUserDisplay();
 
+            // Show admin dashboard button if user is admin
+            showAdminButtonIfAdmin();
+
             return true;
+        }
+
+        function showAdminButtonIfAdmin() {
+            if (currentUser && currentUser.user_metadata?.role === 'admin') {
+                const adminBtn = document.getElementById('admin-dashboard-btn');
+                if (adminBtn) {
+                    adminBtn.style.display = 'inline-block';
+                }
+            }
         }
 
         function redirectToLogin() {

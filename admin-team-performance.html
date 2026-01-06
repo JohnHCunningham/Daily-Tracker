@@ -354,6 +354,34 @@
             </div>
         </div>
 
+        <!-- Performance Legend -->
+        <div class="team-stats" style="margin-bottom: 20px;">
+            <h2>🎨 Performance Color Guide</h2>
+            <div style="display: flex; gap: 30px; flex-wrap: wrap; margin-top: 15px;">
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #E64563; border: 3px solid #E64563;"></div>
+                    <div>
+                        <strong style="color: #E64563;">Critical</strong>
+                        <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 4px;">Below 75% of target</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #F4B03A; border: 3px solid #F4B03A;"></div>
+                    <div>
+                        <strong style="color: #F4B03A;">Warning</strong>
+                        <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 4px;">75-99% of target</p>
+                    </div>
+                </div>
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <div style="width: 40px; height: 40px; border-radius: 50%; background: #10C3B0; border: 3px solid #10C3B0;"></div>
+                    <div>
+                        <strong style="color: #10C3B0;">Excellent</strong>
+                        <p style="font-size: 0.85rem; opacity: 0.8; margin-top: 4px;">100%+ of target</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Team Members Grid -->
         <div id="team-members-grid" class="team-grid">
             <div class="loading">Loading team members...</div>
@@ -743,8 +771,95 @@ ${coaching.encouragement}
         }
 
         async function viewHistory(memberId, memberName) {
-            // TODO: Implement coaching history view
-            showAlert('Coaching history feature coming soon!', 'success');
+            const modal = document.getElementById('coaching-modal');
+            const modalBody = document.getElementById('modal-body');
+            const modalTitle = document.getElementById('modal-member-name');
+
+            modalTitle.textContent = `Coaching History - ${memberName}`;
+            modalBody.innerHTML = '<div class="loading">📚 Loading feedback history...</div>';
+            modal.classList.add('show');
+
+            try {
+                // Fetch all feedback for this team member
+                const { data: feedbackHistory, error } = await supabaseClient
+                    .from('manager_feedback')
+                    .select('*')
+                    .eq('team_member_id', memberId)
+                    .eq('manager_id', currentManagerId)
+                    .order('created_at', { ascending: false });
+
+                if (error) throw error;
+
+                if (!feedbackHistory || feedbackHistory.length === 0) {
+                    modalBody.innerHTML = '<p style="text-align: center; opacity: 0.6; padding: 40px;">No coaching history yet. Generate your first coaching session!</p>';
+                    return;
+                }
+
+                modalBody.innerHTML = `
+                    <div style="margin-bottom: 20px;">
+                        <p style="opacity: 0.8;">Total coaching sessions: <strong style="color: var(--brand-aqua);">${feedbackHistory.length}</strong></p>
+                    </div>
+
+                    ${feedbackHistory.map((feedback, index) => {
+                        const feedbackDate = new Date(feedback.created_at).toLocaleDateString('en-US', {
+                            month: 'long',
+                            day: 'numeric',
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+
+                        const readStatus = feedback.is_read ?
+                            '<span style="color: var(--brand-teal);">✓ Read</span>' :
+                            '<span style="color: var(--brand-gold);">⚠ Unread</span>';
+
+                        return `
+                            <div class="feedback-section" style="margin-bottom: 20px; border: 1px solid rgba(255, 255, 255, 0.1);">
+                                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                                    <h3>Session #${feedbackHistory.length - index}</h3>
+                                    <div style="text-align: right;">
+                                        <div style="font-size: 0.9rem; opacity: 0.8;">${feedbackDate}</div>
+                                        <div style="font-size: 0.85rem; margin-top: 4px;">${readStatus}</div>
+                                    </div>
+                                </div>
+
+                                ${feedback.performance_vs_average ? `
+                                    <div style="margin-bottom: 10px;">
+                                        <strong style="color: var(--brand-gold);">Performance:</strong>
+                                        <p style="margin-top: 5px; line-height: 1.6;">${feedback.performance_vs_average}</p>
+                                    </div>
+                                ` : ''}
+
+                                ${feedback.goals_set && feedback.goals_set.length > 0 ? `
+                                    <div style="margin-bottom: 10px;">
+                                        <strong style="color: var(--brand-aqua);">Goals Set:</strong>
+                                        <ul style="margin: 8px 0; padding-left: 25px;">
+                                            ${feedback.goals_set.map(goal => `<li style="margin: 4px 0;">${goal}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
+
+                                ${feedback.recommendations && feedback.recommendations.length > 0 ? `
+                                    <div>
+                                        <strong style="color: var(--brand-teal);">Action Items:</strong>
+                                        <ul style="margin: 8px 0; padding-left: 25px;">
+                                            ${feedback.recommendations.map(rec => `<li style="margin: 4px 0;">${rec}</li>`).join('')}
+                                        </ul>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        `;
+                    }).join('')}
+
+                    <button class="btn btn-secondary" onclick="closeModal()" style="margin-top: 20px;">
+                        Close
+                    </button>
+                `;
+
+            } catch (error) {
+                console.error('Error loading feedback history:', error);
+                modalBody.innerHTML = `<div class="alert alert-error">Error loading history: ${error.message}</div>`;
+            }
         }
 
         async function handleLogout() {

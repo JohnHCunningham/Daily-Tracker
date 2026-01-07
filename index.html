@@ -3673,6 +3673,15 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             }
         }
 
+        // Get ICP from localStorage (synchronous for compatibility)
+        function getICP() {
+            const saved = localStorage.getItem('icp');
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            return null;
+        }
+
         // ============================================
         // SALES SCRIPTS FUNCTIONS
         // ============================================

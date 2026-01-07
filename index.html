@@ -2323,6 +2323,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 await syncUserSettings({ activity_goals: goals });
 
                 showAlert('Activity goals saved successfully!', 'success');
+                celebrateWithConfetti('default'); // 🎉 Add confetti celebration
 
                 // Refresh goal progress display (async but don't await to avoid blocking)
                 loadGoalProgress().catch(err => console.error('Error loading goal progress:', err));
@@ -3713,6 +3714,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 await syncUserSettings({ sales_scripts: scripts });
 
                 showAlert('✅ Scripts saved successfully!', 'success');
+                celebrateWithConfetti('default'); // 🎉 Add confetti celebration
                 console.log('Scripts saved to localStorage:', scripts);
             } catch (error) {
                 console.error('Error saving scripts:', error);
@@ -3897,6 +3899,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
 
             displayMethodology();
             showAlert(`✅ Methodology set to ${METHODOLOGIES[methodology].name}`, 'success');
+            celebrateWithConfetti('default'); // 🎉 Add confetti celebration
         }
 
         async function loadMethodology() {
@@ -4155,6 +4158,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 await syncUserSettings({ fireflies_api_key: apiKey });
 
                 showAlert('✅ Fireflies settings saved! Webhook is ready to receive calls.', 'success');
+                celebrateWithConfetti('default'); // 🎉 Add confetti celebration
 
                 // Show status
                 document.getElementById('fireflies-status').innerHTML = `

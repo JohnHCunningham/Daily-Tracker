@@ -145,9 +145,61 @@
                 </div>
                 <button type="submit" class="btn-login">Login</button>
             </form>
-            <div style="text-align: center; margin-top: 20px;">
+            <div style="text-align: center; margin-top: 20px; display: flex; justify-content: space-between; gap: 20px;">
                 <a href="#" onclick="showForgotPassword(event)" style="color: var(--brand-aqua); text-decoration: none; font-size: 0.9rem;">
                     Forgot Password?
+                </a>
+                <a href="#" onclick="showSignup(event)" style="color: var(--brand-gold); text-decoration: none; font-size: 0.9rem;">
+                    Create Account
+                </a>
+            </div>
+        </div>
+
+        <!-- Signup Form (hidden by default) -->
+        <div id="signup-form" style="display: none;">
+            <h2 style="text-align: center; margin-bottom: 20px; color: var(--brand-aqua);">Create Account</h2>
+            <div id="signup-alert-container"></div>
+            <form onsubmit="handleSignup(event)">
+                <div class="form-group">
+                    <label>Email</label>
+                    <input type="email" id="signup-email" required placeholder="your-email@example.com">
+                </div>
+                <div class="form-group">
+                    <label>Password</label>
+                    <input type="password" id="signup-password" required placeholder="Minimum 6 characters" minlength="6">
+                </div>
+                <div class="form-group">
+                    <label>First Name</label>
+                    <input type="text" id="signup-first-name" placeholder="John">
+                </div>
+                <div class="form-group">
+                    <label>Last Name</label>
+                    <input type="text" id="signup-last-name" placeholder="Doe">
+                </div>
+                <div class="form-group">
+                    <label>I am a:</label>
+                    <div style="display: flex; flex-direction: column; gap: 15px; margin-top: 10px;">
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 15px; background: var(--input-bg); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 10px; transition: all 0.2s;">
+                            <input type="radio" name="user-role" value="admin" required style="width: 20px; height: 20px; cursor: pointer;">
+                            <div>
+                                <strong style="color: var(--brand-aqua); display: block; margin-bottom: 5px;">Manager / Team Leader</strong>
+                                <span style="font-size: 0.85rem; opacity: 0.8;">Can manage team members and access admin features</span>
+                            </div>
+                        </label>
+                        <label style="display: flex; align-items: center; gap: 10px; cursor: pointer; padding: 15px; background: var(--input-bg); border: 2px solid rgba(255, 255, 255, 0.1); border-radius: 10px; transition: all 0.2s;">
+                            <input type="radio" name="user-role" value="rep" required style="width: 20px; height: 20px; cursor: pointer;">
+                            <div>
+                                <strong style="color: var(--brand-gold); display: block; margin-bottom: 5px;">Sales Representative</strong>
+                                <span style="font-size: 0.85rem; opacity: 0.8;">Individual sales tracking and performance</span>
+                            </div>
+                        </label>
+                    </div>
+                </div>
+                <button type="submit" class="btn-login">Create Account</button>
+            </form>
+            <div style="text-align: center; margin-top: 20px;">
+                <a href="#" onclick="showLogin(event)" style="color: var(--brand-aqua); text-decoration: none; font-size: 0.9rem;">
+                    ← Back to Login
                 </a>
             </div>
         </div>
@@ -241,7 +293,16 @@
             event.preventDefault();
             document.getElementById('login-form').style.display = 'block';
             document.getElementById('forgot-password-form').style.display = 'none';
+            document.getElementById('signup-form').style.display = 'none';
             document.getElementById('forgot-alert-container').innerHTML = '';
+            document.getElementById('signup-alert-container').innerHTML = '';
+        }
+
+        function showSignup(event) {
+            event.preventDefault();
+            document.getElementById('login-form').style.display = 'none';
+            document.getElementById('signup-form').style.display = 'block';
+            document.getElementById('forgot-password-form').style.display = 'none';
         }
 
         // Handle password reset
@@ -276,6 +337,74 @@
                 forgotAlertContainer.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
                 submitBtn.textContent = 'Send Reset Link';
             } finally {
+                submitBtn.disabled = false;
+            }
+        }
+
+        // Handle signup
+        async function handleSignup(event) {
+            event.preventDefault();
+
+            const email = document.getElementById('signup-email').value;
+            const password = document.getElementById('signup-password').value;
+            const firstName = document.getElementById('signup-first-name').value;
+            const lastName = document.getElementById('signup-last-name').value;
+            const selectedRole = document.querySelector('input[name="user-role"]:checked')?.value;
+            const signupAlertContainer = document.getElementById('signup-alert-container');
+            const submitBtn = event.target.querySelector('button[type="submit"]');
+
+            if (!selectedRole) {
+                signupAlertContainer.innerHTML = `<div class="alert alert-error">Please select a role (Manager or Sales Rep)</div>`;
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating Account...';
+
+            try {
+                const { data, error } = await sb.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            first_name: firstName,
+                            last_name: lastName,
+                            role: selectedRole
+                        }
+                    }
+                });
+
+                if (error) throw error;
+
+                signupAlertContainer.innerHTML = `
+                    <div class="alert" style="background: rgba(16, 195, 176, 0.2); border: 1px solid var(--brand-teal); color: var(--brand-aqua);">
+                        ✅ Account created successfully! ${selectedRole === 'admin' ? 'You have manager access.' : 'You have sales rep access.'}
+                        ${data.user.identities.length === 0 ? 'Please check your email to confirm your account.' : 'Redirecting...'}
+                    </div>
+                `;
+
+                // If email confirmation is not required, redirect based on role
+                if (data.user && data.session) {
+                    setTimeout(() => {
+                        redirectBasedOnRole(data.user);
+                    }, 1500);
+                } else {
+                    // Email confirmation required
+                    submitBtn.textContent = 'Create Account';
+                    submitBtn.disabled = false;
+
+                    // Clear form
+                    document.getElementById('signup-email').value = '';
+                    document.getElementById('signup-password').value = '';
+                    document.getElementById('signup-first-name').value = '';
+                    document.getElementById('signup-last-name').value = '';
+                    document.querySelectorAll('input[name="user-role"]').forEach(radio => radio.checked = false);
+                }
+
+            } catch (error) {
+                console.error('Signup error:', error);
+                signupAlertContainer.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+                submitBtn.textContent = 'Create Account';
                 submitBtn.disabled = false;
             }
         }

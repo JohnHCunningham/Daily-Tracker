@@ -317,11 +317,8 @@
         const SUPABASE_URL = 'https://qwqlsbccwnwrdpcaccjz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTA1MDQsImV4cCI6MjA4MDg4NjUwNH0.yWzSV2Nid_T1XiDE0RrskFob9mRUc-m6MbeIiT7huC4';
 
-        const ADMIN_EMAILS = [
-            'admin@aiadvantagesolutions.com',
-            'admin@aiadvantagesolutions.ca',
-            'john@aiadvantagesolutions.com'
-        ];
+        // Admin access is now role-based (set in user_metadata)
+        // No hardcoded email list needed
 
         let supabase;
         let currentManagerId;
@@ -336,8 +333,8 @@
         async function checkAdmin() {
             const { data: { session } } = await supabase.auth.getSession();
 
-            if (!session || !ADMIN_EMAILS.includes(session.user.email)) {
-                window.location.href = 'admin-team.html';
+            if (!session || session.user.user_metadata?.role !== 'admin') {
+                window.location.href = 'login.html';
                 return false;
             }
 

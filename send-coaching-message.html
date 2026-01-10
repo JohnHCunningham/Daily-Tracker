@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Send Coaching Message</title>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --brand-navy: #0C1030;
+            --brand-teal: #10C3B0;
+            --brand-aqua: #3DE0D2;
+            --brand-pink: #E64563;
+            --brand-gold: #F4B03A;
+            --brand-yellow: #F9C863;
+            --light-text: #F2F4F8;
+            --card-bg: #131a40;
+            --input-bg: #090c26;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--brand-navy) 0%, #050816 100%);
+            color: var(--light-text);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: var(--brand-teal);
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--brand-aqua);
+            font-weight: 600;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--light-text);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 200px;
+            line-height: 1.6;
+        }
+
+        .hint {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+        }
+
+        button {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua));
+            color: white;
+            flex: 1;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 195, 176, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--input-bg);
+            color: var(--light-text);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.1);
+        }
+
+        .message-template {
+            background: var(--input-bg);
+            border: 1px solid var(--brand-teal);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .message-template h3 {
+            color: var(--brand-gold);
+            font-size: 14px;
+            margin-bottom: 10px;
+        }
+
+        .message-template p {
+            font-size: 13px;
+            line-height: 1.6;
+            opacity: 0.9;
+            white-space: pre-wrap;
+        }
+
+        .copy-btn {
+            margin-top: 10px;
+            padding: 8px 15px;
+            background: var(--brand-gold);
+            color: var(--brand-navy);
+            border: none;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .success-message {
+            background: var(--brand-teal);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .error-message {
+            background: var(--brand-pink);
+            color: white;
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📬 Send Coaching Message</h1>
+        <p class="subtitle">Send personalized coaching feedback to your team members</p>
+
+        <form id="coaching-form">
+            <div class="form-group">
+                <label for="recipient">Recipient Email *</label>
+                <input type="email" id="recipient" required placeholder="rep@example.com">
+                <div class="hint">Enter the team member's email address</div>
+            </div>
+
+            <div class="form-group">
+                <label for="subject">Subject *</label>
+                <input type="text" id="subject" required placeholder="Quick Coaching: Upfront Contracts">
+                <div class="hint">Brief summary of the coaching topic</div>
+            </div>
+
+            <div class="form-group">
+                <label for="message">Message *</label>
+                <textarea id="message" required placeholder="Hey [Name],
+
+I reviewed your recent calls and noticed...
+
+📩 Try this on your next 5 calls:
+[Specific action with script]
+
+✅ Let's follow up in 2 days to see how it went.
+
+Keep up the great work!
+"></textarea>
+                <div class="hint">Your coaching message (use the 3-part format: Issue → Action → Follow-up)</div>
+            </div>
+
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px;">
+                <div class="form-group">
+                    <label for="metric">Related Metric (Optional)</label>
+                    <select id="metric">
+                        <option value="">-- Select Metric --</option>
+                        <option value="Upfront Contract">Upfront Contract</option>
+                        <option value="Pain Funnel">Pain Funnel</option>
+                        <option value="Budget Discussion">Budget Discussion</option>
+                        <option value="Decision Process">Decision Process</option>
+                        <option value="Talk Ratio">Talk Ratio</option>
+                        <option value="MEDDIC - Metrics">MEDDIC - Metrics</option>
+                        <option value="MEDDIC - Economic Buyer">MEDDIC - Economic Buyer</option>
+                        <option value="MEDDIC - Decision Criteria">MEDDIC - Decision Criteria</option>
+                        <option value="Challenger - Teaching">Challenger - Teaching</option>
+                        <option value="Challenger - Tailoring">Challenger - Tailoring</option>
+                        <option value="Challenger - Taking Control">Challenger - Taking Control</option>
+                        <option value="SPIN - Situation Questions">SPIN - Situation Questions</option>
+                        <option value="SPIN - Problem Questions">SPIN - Problem Questions</option>
+                        <option value="SPIN - Implication Questions">SPIN - Implication Questions</option>
+                        <option value="SPIN - Need-Payoff Questions">SPIN - Need-Payoff Questions</option>
+                        <option value="Gap - Current State">Gap - Current State</option>
+                        <option value="Gap - Future State">Gap - Future State</option>
+                        <option value="Gap - Impact">Gap - Impact</option>
+                        <option value="General">General Coaching</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label for="priority">Priority</label>
+                    <select id="priority">
+                        <option value="medium">🟡 Medium</option>
+                        <option value="high">🔴 High</option>
+                        <option value="low">🟢 Low</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-bottom: 20px; text-align: center;">
+                <a href="manager-sent-messages.html" style="color: var(--brand-teal); text-decoration: none; font-size: 14px;">📋 View Sent Messages & Read Receipts →</a>
+            </div>
+
+            <div class="button-group">
+                <button type="button" class="btn-secondary" onclick="window.history.back()">Cancel</button>
+                <button type="submit" class="btn-primary">📤 Send Message</button>
+            </div>
+        </form>
+
+        <div id="success-message" class="success-message"></div>
+        <div id="error-message" class="error-message"></div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://qwqlsbccwnwrdpcaccjz.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTA1MDQsImV4cCI6MjA4MDg4NjUwNH0.yWzSV2Nid_T1XiDE0RrskFob9mRUc-m6MbeIiT7huC4';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let currentUser = null;
+
+        // Check authentication
+        async function checkAuth() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            if (!session) {
+                alert('Please log in first');
+                window.location.href = 'login.html';
+                return false;
+            }
+
+            currentUser = session.user;
+            return true;
+        }
+
+        // Handle form submission
+        document.getElementById('coaching-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const recipient = document.getElementById('recipient').value;
+            const subject = document.getElementById('subject').value;
+            const message = document.getElementById('message').value;
+            const metric = document.getElementById('metric').value || null;
+            const priority = document.getElementById('priority').value;
+
+            const successMsg = document.getElementById('success-message');
+            const errorMsg = document.getElementById('error-message');
+
+            successMsg.style.display = 'none';
+            errorMsg.style.display = 'none';
+
+            try {
+                const { data, error } = await supabaseClient.rpc('send_coaching_message', {
+                    recipient_email: recipient,
+                    message_subject: subject,
+                    message_body: message,
+                    metric_name: metric,
+                    performance_date: null,
+                    message_priority: priority
+                });
+
+                if (error) throw error;
+
+                successMsg.textContent = `✅ Message sent successfully to ${recipient}!`;
+                successMsg.style.display = 'block';
+
+                // Clear form
+                document.getElementById('coaching-form').reset();
+
+                // Scroll to success message
+                successMsg.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+                // Optionally redirect back after 2 seconds
+                setTimeout(() => {
+                    window.history.back();
+                }, 2000);
+
+            } catch (error) {
+                console.error('Error sending message:', error);
+                errorMsg.textContent = `❌ Error: ${error.message}`;
+                errorMsg.style.display = 'block';
+            }
+        });
+
+        // Pre-fill from URL parameters if provided
+        const urlParams = new URLSearchParams(window.location.search);
+        if (urlParams.has('recipient')) {
+            document.getElementById('recipient').value = urlParams.get('recipient');
+        }
+        if (urlParams.has('subject')) {
+            document.getElementById('subject').value = urlParams.get('subject');
+        }
+        if (urlParams.has('message')) {
+            document.getElementById('message').value = decodeURIComponent(urlParams.get('message'));
+        }
+        if (urlParams.has('metric')) {
+            document.getElementById('metric').value = urlParams.get('metric');
+        }
+        if (urlParams.has('priority')) {
+            document.getElementById('priority').value = urlParams.get('priority');
+        }
+
+        // Check auth on page load
+        checkAuth();
+    </script>
+</body>
+</html>

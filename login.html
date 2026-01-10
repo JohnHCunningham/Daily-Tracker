@@ -152,12 +152,6 @@
         const SUPABASE_URL = 'https://qwqlsbccwnwrdpcaccjz.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTA1MDQsImV4cCI6MjA4MDg4NjUwNH0.yWzSV2Nid_T1XiDE0RrskFob9mRUc-m6MbeIiT7huC4';
 
-        const ADMIN_EMAILS = [
-            'admin@aiadvantagesolutions.com',
-            'admin@aiadvantagesolutions.ca',
-            'john@aiadvantagesolutions.com'
-        ];
-
         const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         async function handleLogin(event) {
@@ -175,16 +169,22 @@
 
                 if (error) throw error;
 
-                // Automatically detect if admin based on email and redirect
-                if (ADMIN_EMAILS.includes(email)) {
-                    window.location.href = 'admin-team.html';
-                } else {
-                    window.location.href = 'index.html';
-                }
+                // Always redirect to index.html - it will show appropriate features based on role
+                window.location.href = 'index.html';
 
             } catch (error) {
                 console.error('Login error:', error);
-                alertContainer.innerHTML = `<div class="alert alert-error">${error.message}</div>`;
+
+                // Show user-friendly error messages
+                let errorMessage = error.message;
+
+                if (error.message.includes('Email not confirmed')) {
+                    errorMessage = 'Please check your email and confirm your account before logging in.';
+                } else if (error.message.includes('Invalid login credentials')) {
+                    errorMessage = 'Invalid email or password. Please try again.';
+                }
+
+                alertContainer.innerHTML = `<div class="alert alert-error">${errorMessage}</div>`;
             }
         }
 
@@ -193,11 +193,8 @@
             const { data: { session } } = await sb.auth.getSession();
 
             if (session) {
-                if (ADMIN_EMAILS.includes(session.user.email)) {
-                    window.location.href = 'admin-team.html';
-                } else {
-                    window.location.href = 'index.html';
-                }
+                // Redirect to dashboard - features shown based on role
+                window.location.href = 'index.html';
             }
         });
     </script>

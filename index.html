@@ -736,7 +736,7 @@
 
             <!-- Button Container -->
             <div id="header-buttons" style="display: flex; gap: 15px; align-items: center; flex-wrap: wrap; margin-top: 20px;">
-                <a href="sandler-email-generator.html" style="display: inline-block; background: linear-gradient(135deg, var(--brand-gold), var(--brand-yellow)); color: var(--brand-navy); padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: 700; transition: all 0.2s ease; position: relative; z-index: 10; pointer-events: auto; box-shadow: 0 2px 8px rgba(244, 176, 58, 0.3);">
+                <a href="sales-email-generator.html" style="display: inline-block; background: linear-gradient(135deg, var(--brand-gold), var(--brand-yellow)); color: var(--brand-navy); padding: 12px 24px; border-radius: 25px; text-decoration: none; font-weight: 700; transition: all 0.2s ease; position: relative; z-index: 10; pointer-events: auto; box-shadow: 0 2px 8px rgba(244, 176, 58, 0.3);">
                     📧 Open Email Generator
                 </a>
             </div>
@@ -1021,87 +1021,59 @@
                     <span class="card-icon">🎯</span>
                 </div>
 
-                <p style="opacity: 0.9; margin-bottom: 15px;">Your proven script for mixed-income community providers. Click sections to expand.</p>
+                <p style="opacity: 0.9; margin-bottom: 15px;">Your personalized sales script. Click sections to expand.</p>
 
-                <div style="background: rgba(16, 195, 176, 0.1); padding: 20px; border-radius: 12px; margin-bottom: 15px;">
+                <div id="script-display-container" style="background: rgba(16, 195, 176, 0.1); padding: 20px; border-radius: 12px; margin-bottom: 15px;">
                     <details style="margin-bottom: 15px;">
                         <summary style="cursor: pointer; font-weight: 700; color: var(--brand-aqua); font-size: 1.1rem; margin-bottom: 10px;">
                             📞 Opening Script
                         </summary>
                         <div style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                            <div style="margin-bottom: 15px;">
-                                <strong style="color: var(--brand-gold);">Opener & Pacing:</strong>
-                                <p style="margin-top: 8px; line-height: 1.6;">
-                                    "Hi <strong>[Person]</strong>, this is John from AI Advantage Solutions here in Hamilton. I know I'm catching you cold, so I'll be brief."
-                                </p>
-                                <p style="opacity: 0.7; font-size: 0.85rem; margin-top: 5px;">💡 Mention local connection and respect their time.</p>
-                            </div>
-
-                            <div style="margin-bottom: 15px;">
-                                <strong style="color: var(--brand-gold);">Value Proposition:</strong>
-                                <p style="margin-top: 8px; line-height: 1.6;">
-                                    "I help mixed-income community providers like <strong>[Person]</strong> save up to 20 hours per week by automating repetitive tasks—things like maintenance requests, tenant communications, and compliance tracking."
-                                </p>
-                                <p style="opacity: 0.7; font-size: 0.85rem; margin-top: 5px;">💡 Clearly state the benefit (time savings) and how (automation).</p>
-                            </div>
-
                             <div>
-                                <strong style="color: var(--brand-gold);">Call to Action:</strong>
-                                <p style="margin-top: 8px; line-height: 1.6;">
-                                    "I'd love to show you how in a quick 15-minute online meeting. Do you have your calendar handy, or would <strong>[Date]</strong> at <strong>[Time]</strong> work better?"
+                                <strong style="color: var(--brand-gold);">Your Opening:</strong>
+                                <p id="display-opening" style="margin-top: 8px; line-height: 1.6;">
+                                    No script saved yet. Add your opening script in the Setup section above.
                                 </p>
-                                <p style="opacity: 0.7; font-size: 0.85rem; margin-top: 5px;">💡 Use a soft commitment to a short meeting and offer a choice of times.</p>
                             </div>
                         </div>
                     </details>
 
                     <details style="margin-bottom: 15px;">
                         <summary style="cursor: pointer; font-weight: 700; color: var(--brand-aqua); font-size: 1.1rem; margin-bottom: 10px;">
-                            🛡️ Objection: "Not interested"
+                            💎 Value Proposition
                         </summary>
                         <div style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                            <strong style="color: var(--brand-pink);">Response:</strong>
-                            <p style="margin-top: 8px; line-height: 1.6;">
-                                "I appreciate your honesty. Can I ask—is it because you've already automated most of your operations, or is this just not a priority right now?"
-                            </p>
-                            <p style="margin-top: 12px;"><strong>If they answer:</strong></p>
-                            <p style="margin-top: 8px; line-height: 1.6;">
-                                Listen, then follow up with: "That makes sense. Would it be okay if I followed up in [3-6 months] when things might be different?"
-                            </p>
+                            <div>
+                                <strong style="color: var(--brand-gold);">Your Value Prop:</strong>
+                                <p id="display-value-prop" style="margin-top: 8px; line-height: 1.6;">
+                                    No value proposition saved yet. Add it in the Setup section above.
+                                </p>
+                            </div>
                         </div>
                     </details>
 
                     <details style="margin-bottom: 15px;">
                         <summary style="cursor: pointer; font-weight: 700; color: var(--brand-aqua); font-size: 1.1rem; margin-bottom: 10px;">
-                            🛡️ Objection: "I already have it covered"
+                            🎯 Call to Action
                         </summary>
                         <div style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                            <strong style="color: var(--brand-pink);">Response:</strong>
-                            <p style="margin-top: 8px; line-height: 1.6;">
-                                "That's great you're thinking about this. Just curious—are you handling it internally, or working with someone?"
-                            </p>
-                            <p style="margin-top: 12px;"><strong>Acknowledge and pivot:</strong></p>
-                            <p style="margin-top: 8px; line-height: 1.6;">
-                                "Got it. Well, if you ever want a second opinion on what else might be possible, I'm happy to share some ideas specific to mixed-income providers. Can I send you a quick case study?"
-                            </p>
+                            <div>
+                                <strong style="color: var(--brand-gold);">Your CTA:</strong>
+                                <p id="display-cta" style="margin-top: 8px; line-height: 1.6;">
+                                    No call to action saved yet. Add it in the Setup section above.
+                                </p>
+                            </div>
                         </div>
                     </details>
 
                     <details>
                         <summary style="cursor: pointer; font-weight: 700; color: var(--brand-aqua); font-size: 1.1rem; margin-bottom: 10px;">
-                            🛡️ Objection: "Send me some information"
+                            🛡️ Objection Handling
                         </summary>
                         <div style="margin-top: 15px; padding: 15px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-                            <strong style="color: var(--brand-pink);">Response:</strong>
-                            <p style="margin-top: 8px; line-height: 1.6;">
-                                "Absolutely, I can do that. To make sure I send something relevant—what's your biggest time drain right now? Maintenance coordination, leasing, compliance reporting?"
-                            </p>
-                            <p style="margin-top: 12px;"><strong>Close on the meeting:</strong></p>
-                            <p style="margin-top: 8px; line-height: 1.6;">
-                                "Perfect. I'll send that over today. How about we schedule 15 minutes next week so I can walk you through how [specific solution] would work for your situation?"
-                            </p>
-                            <p style="opacity: 0.8; margin-top: 12px; padding: 10px; background: rgba(244, 176, 58, 0.2); border-radius: 6px;">
-                                <strong>⚠️ Pro Tip:</strong> Always follow up within 48 hours with a specific meeting time suggestion rather than asking "Did you get a chance to review it?"
+                            <strong style="color: var(--brand-pink);">Your Response:</strong>
+                            <p id="display-objections" style="margin-top: 8px; line-height: 1.6;">
+                                No objection handling saved yet. Add it in the Setup section above.
                             </p>
                         </div>
                     </details>
@@ -1349,6 +1321,23 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         </div>
     </div>
 
+    <!-- Notification Panel (Hidden by default) -->
+    <div id="notification-panel" style="display: none; position: fixed; top: 80px; right: 20px; width: 400px; max-width: calc(100vw - 40px); max-height: 600px; background: var(--card-bg); border: 2px solid var(--brand-teal); border-radius: 15px; box-shadow: 0 10px 40px rgba(0,0,0,0.5); z-index: 1000; overflow: hidden;">
+        <div style="background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua)); padding: 15px; display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0; color: white; font-size: 18px;">📬 Coaching Messages</h3>
+            <div style="display: flex; gap: 10px;">
+                <button id="mark-all-read-btn" onclick="markAllAsRead()" style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 12px;">Mark All Read</button>
+                <button onclick="toggleNotificationPanel()" style="background: transparent; border: none; color: white; font-size: 24px; cursor: pointer; line-height: 1;">×</button>
+            </div>
+        </div>
+
+        <div id="notification-list" style="padding: 15px; overflow-y: auto; max-height: 520px;">
+            <div style="text-align: center; padding: 40px 20px; opacity: 0.7;">
+                <p>Loading messages...</p>
+            </div>
+        </div>
+    </div>
+
     <script>
         // ============================================
         // SUPABASE CONFIGURATION
@@ -1421,6 +1410,230 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             window.location.href = 'login.html';
         }
 
+        // ============================================
+        // ROLE MANAGEMENT
+        // ============================================
+
+        async function checkIfManager() {
+            try {
+                const { data, error } = await supabaseClient.rpc('is_manager');
+
+                if (error) {
+                    console.error('Error checking manager status:', error);
+                    return false;
+                }
+
+                return data === true;
+            } catch (error) {
+                console.error('Error checking manager status:', error);
+                return false;
+            }
+        }
+
+        async function getUserAccount() {
+            try {
+                const { data, error } = await supabaseClient.rpc('get_user_account');
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    return data[0];
+                }
+
+                return null;
+            } catch (error) {
+                console.error('Error getting user account:', error);
+                return null;
+            }
+        }
+
+        // ============================================
+        // NOTIFICATION FUNCTIONS
+        // ============================================
+
+        async function fetchUnreadCount() {
+            try {
+                const { data, error } = await supabaseClient.rpc('get_unread_message_count');
+
+                if (error) throw error;
+
+                const badge = document.getElementById('notification-badge');
+                if (badge) {
+                    if (data > 0) {
+                        badge.textContent = data > 9 ? '9+' : data;
+                        badge.style.display = 'flex';
+                    } else {
+                        badge.style.display = 'none';
+                    }
+                }
+
+                return data;
+            } catch (error) {
+                console.error('Error fetching unread count:', error);
+                return 0;
+            }
+        }
+
+        async function fetchMessages() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('User_Messages')
+                    .select('*')
+                    .order('created_at', { ascending: false })
+                    .limit(50);
+
+                if (error) throw error;
+
+                displayMessages(data || []);
+                return data;
+            } catch (error) {
+                console.error('Error fetching messages:', error);
+                displayMessages([]);
+            }
+        }
+
+        function displayMessages(messages) {
+            const container = document.getElementById('notification-list');
+
+            if (!messages || messages.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 20px; opacity: 0.7;">
+                        <p style="font-size: 48px; margin-bottom: 10px;">📭</p>
+                        <p>No coaching messages yet</p>
+                    </div>
+                `;
+                return;
+            }
+
+            container.innerHTML = messages.map(msg => {
+                const date = new Date(msg.created_at);
+                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+                const priorityColors = {
+                    high: 'var(--brand-pink)',
+                    medium: 'var(--brand-gold)',
+                    low: 'var(--brand-teal)'
+                };
+
+                const priorityEmoji = {
+                    high: '🔴',
+                    medium: '🟡',
+                    low: '🟢'
+                };
+
+                return `
+                    <div class="message-item" data-message-id="${msg.id}" style="
+                        background: ${msg.is_read ? 'rgba(255,255,255,0.03)' : 'rgba(16, 195, 176, 0.1)'};
+                        border: 1px solid ${msg.is_read ? 'rgba(255,255,255,0.1)' : 'var(--brand-teal)'};
+                        border-radius: 10px;
+                        padding: 15px;
+                        margin-bottom: 12px;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    " onclick="viewMessage('${msg.id}', ${!msg.is_read})">
+                        <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                            <div style="flex: 1;">
+                                <span style="background: ${priorityColors[msg.priority]}; color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold; margin-right: 8px;">
+                                    ${priorityEmoji[msg.priority]} ${msg.priority.toUpperCase()}
+                                </span>
+                                ${!msg.is_read ? '<span style="background: var(--brand-pink); color: white; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: bold;">NEW</span>' : ''}
+                            </div>
+                            <span style="font-size: 12px; opacity: 0.7; white-space: nowrap;">${dateStr} ${timeStr}</span>
+                        </div>
+
+                        <h4 style="margin: 8px 0; color: var(--brand-teal); font-size: 14px;">${msg.subject}</h4>
+
+                        ${msg.related_metric ? `<div style="font-size: 12px; opacity: 0.7; margin-bottom: 8px;">📊 ${msg.related_metric}</div>` : ''}
+
+                        <p style="margin: 0; font-size: 13px; opacity: 0.9; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
+                            ${msg.message_body.substring(0, 150)}${msg.message_body.length > 150 ? '...' : ''}
+                        </p>
+
+                        <div style="margin-top: 10px; font-size: 11px; opacity: 0.6;">
+                            From: ${msg.from_name || msg.from_email}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        async function viewMessage(messageId, isUnread) {
+            try {
+                // Fetch full message
+                const { data: msg, error } = await supabaseClient
+                    .from('Coaching_Messages')
+                    .select('*, from_user:from_user_id(email, raw_user_meta_data)')
+                    .eq('id', messageId)
+                    .single();
+
+                if (error) throw error;
+
+                // Mark as read if unread
+                if (isUnread) {
+                    await supabaseClient.rpc('mark_message_as_read', { message_id: messageId });
+                    await fetchUnreadCount();
+                    await fetchMessages(); // Refresh list
+                }
+
+                // Display full message in modal
+                const date = new Date(msg.created_at);
+                const dateStr = date.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+                const timeStr = date.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+
+                alert(`📬 ${msg.subject}\n\n${msg.message_body}\n\n---\nFrom: ${msg.from_user?.raw_user_meta_data?.full_name || msg.from_user?.email}\nDate: ${dateStr} at ${timeStr}\nMetric: ${msg.related_metric || 'General'}`);
+
+            } catch (error) {
+                console.error('Error viewing message:', error);
+                alert('Error loading message. Please try again.');
+            }
+        }
+
+        async function markAllAsRead() {
+            try {
+                const { data, error } = await supabaseClient.rpc('mark_all_messages_as_read');
+
+                if (error) throw error;
+
+                if (data > 0) {
+                    await fetchUnreadCount();
+                    await fetchMessages();
+                    alert(`✅ Marked ${data} message${data > 1 ? 's' : ''} as read`);
+                } else {
+                    alert('No unread messages');
+                }
+            } catch (error) {
+                console.error('Error marking all as read:', error);
+                alert('Error marking messages as read. Please try again.');
+            }
+        }
+
+        function toggleNotificationPanel() {
+            const panel = document.getElementById('notification-panel');
+            const isHidden = panel.style.display === 'none';
+
+            if (isHidden) {
+                panel.style.display = 'block';
+                fetchMessages(); // Load messages when opening
+            } else {
+                panel.style.display = 'none';
+            }
+        }
+
+        // Poll for new messages every 30 seconds
+        setInterval(() => {
+            if (currentUser) {
+                fetchUnreadCount();
+            }
+        }, 30000);
+
+        // Fetch initial unread count
+        setTimeout(() => {
+            if (currentUser) {
+                fetchUnreadCount();
+            }
+        }, 2000);
+
         function updateUserDisplay() {
             const header = document.querySelector('.header h1');
             if (header && currentUser) {
@@ -1440,18 +1653,40 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         function addLogoutButton() {
             const buttonContainer = document.getElementById('header-buttons');
             if (buttonContainer) {
-                // Check if user is admin
-                const adminEmails = ['admin@aiadvantagesolutions.com', 'admin@aiadvantagesolutions.ca', 'john@aiadvantagesolutions.com'];
-                const isAdmin = adminEmails.includes(userEmail);
+                // Check if user is manager using database role
+                checkIfManager().then(isManager => {
+                    if (isManager) {
+                        // Team Dashboard button
+                        const adminBtn = document.createElement('a');
+                        adminBtn.href = 'admin-team.html';
+                        adminBtn.textContent = '👥 Team Dashboard';
+                        adminBtn.style.cssText = 'display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua)); color: white; text-decoration: none; border-radius: 25px; font-weight: 700; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(16, 195, 176, 0.3); position: relative; z-index: 10; pointer-events: auto;';
+                        buttonContainer.appendChild(adminBtn);
 
-                // Add admin dashboard link if admin
-                if (isAdmin) {
-                    const adminBtn = document.createElement('a');
-                    adminBtn.href = 'admin-team.html';
-                    adminBtn.textContent = '👥 Team Dashboard';
-                    adminBtn.style.cssText = 'display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua)); color: white; text-decoration: none; border-radius: 25px; font-weight: 700; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(16, 195, 176, 0.3); position: relative; z-index: 10; pointer-events: auto;';
-                    buttonContainer.appendChild(adminBtn);
-                }
+                        // Fireflies Auto-Sync button
+                        const firefliesBtn = document.createElement('a');
+                        firefliesBtn.href = 'fireflies-settings.html';
+                        firefliesBtn.textContent = '🔥 Auto-Sync';
+                        firefliesBtn.style.cssText = 'display: inline-block; padding: 12px 24px; background: linear-gradient(135deg, #FF6B35, #FF8C42); color: white; text-decoration: none; border-radius: 25px; font-weight: 700; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3); position: relative; z-index: 10; pointer-events: auto;';
+                        firefliesBtn.title = 'Fireflies Auto-Sync Settings';
+                        buttonContainer.appendChild(firefliesBtn);
+                    }
+                });
+
+                // Add notification bell
+                const notifBtn = document.createElement('button');
+                notifBtn.id = 'notification-bell';
+                notifBtn.innerHTML = '🔔';
+                notifBtn.style.cssText = 'padding: 12px 20px; background: linear-gradient(135deg, var(--brand-gold), var(--brand-yellow)); color: var(--brand-navy); border: none; border-radius: 25px; font-size: 20px; cursor: pointer; transition: all 0.2s ease; box-shadow: 0 2px 8px rgba(244, 176, 58, 0.3); position: relative; z-index: 10; pointer-events: auto;';
+                notifBtn.onclick = toggleNotificationPanel;
+
+                // Add badge for unread count
+                const badge = document.createElement('span');
+                badge.id = 'notification-badge';
+                badge.style.cssText = 'position: absolute; top: 5px; right: 5px; background: var(--brand-pink); color: white; border-radius: 50%; width: 20px; height: 20px; display: none; align-items: center; justify-content: center; font-size: 11px; font-weight: bold;';
+                notifBtn.appendChild(badge);
+
+                buttonContainer.appendChild(notifBtn);
 
                 const logoutBtn = document.createElement('button');
                 logoutBtn.textContent = 'Logout';
@@ -2583,53 +2818,53 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
             const meetingRate = totalConversations > 0 ? (totalMeetings / totalConversations) * 100 : 0;
             const closeRate = totalMeetings > 0 ? (salesData.length / totalMeetings) * 100 : 0;
 
-            // INSIGHT 1: Daily Activity - Consistency & Volume
+            // INSIGHT 1: Daily Activity - Consistency & Volume (SELF-DIRECTED ACTIONS)
             if (avgDials < 10) {
                 insights.push({
                     type: 'suggestion',
-                    title: '📞 Increase Daily Activity',
-                    content: `You're averaging ${avgDials.toFixed(1)} dials per day. Sales principle: "You can't control outcomes, only behaviors." Target 20-30 prospecting calls daily. Block time like a real appointment - no interruptions.`,
+                    title: '📞 Your Next Action: Increase Daily Dials',
+                    content: `Current average: ${avgDials.toFixed(1)} dials/day. **ACTION PLAN:** (1) Block 9-11am daily for prospecting - treat it like a client meeting. (2) Set a daily goal of 20 dials minimum. (3) Use this script to start: "Hi [Name], this is [You] with [Company]. I know I'm catching you cold - do you have 30 seconds?" Sales principle: Control your behaviors, not outcomes.`,
                     priority: 'high'
                 });
             } else if (avgDials >= 20) {
                 insights.push({
                     type: 'milestone',
-                    title: '🌟 Excellent Activity Level',
-                    content: `You're averaging ${avgDials.toFixed(1)} dials per day - outstanding execution! Remember: "Success = Activity × Effectiveness". Keep this momentum going.`,
+                    title: '🌟 Winning Behavior: High Activity Level',
+                    content: `You're crushing it with ${avgDials.toFixed(1)} dials/day! **KEEP DOING:** Maintain this daily prospecting block. Your consistent activity is building momentum. Success = Activity × Effectiveness. Now focus on improving conversion rates.`,
                     priority: 'low'
                 });
             }
 
-            // INSIGHT 2: Dial to Conversation Conversion
+            // INSIGHT 2: Dial to Conversation Conversion (SPECIFIC SCRIPTS)
             if (conversionRate < 15 && totalDials >= 20) {
                 insights.push({
                     type: 'performance',
-                    title: '🤝 Improve Conversation Rate',
-                    content: `Your dial-to-conversation rate is ${conversionRate.toFixed(1)}%. Key tip: People buy from people they trust. Focus on building rapport in the first 30 seconds. Ask: "How's your day going?" before jumping into business. Remove pressure with: "I'm not sure if we're a fit, but..."`,
+                    title: '🤝 Your Script: Boost Conversation Rate',
+                    content: `Current rate: ${conversionRate.toFixed(1)}%. **USE THIS OPENER:** "Hi [Name], [You] with [Company]. I know I'm catching you cold - do you have 30 seconds? ...Great! I'm calling because [specific reason]. I'm not even sure if we're a fit, but would it make sense to spend 10 minutes exploring that?" **KEY:** Remove pressure. People trust low-pressure reps.`,
                     priority: 'high'
                 });
             } else if (conversionRate >= 25) {
                 insights.push({
                     type: 'milestone',
-                    title: '🎯 Strong Connection Skills',
-                    content: `Your ${conversionRate.toFixed(1)}% conversation rate shows excellent rapport building! You're connecting effectively with prospects. Keep using curiosity-based questions and avoiding premature presentations.`,
+                    title: '🎯 Winning Behavior: Strong Rapport Building',
+                    content: `Your ${conversionRate.toFixed(1)}% conversation rate is excellent! **KEEP DOING:** Your opening approach is working. Continue with curiosity-based questions and no-pressure language. This is building trust fast.`,
                     priority: 'low'
                 });
             }
 
-            // INSIGHT 3: Conversation to Meeting Conversion
+            // INSIGHT 3: Conversation to Meeting Conversion (CLEAR CTA SCRIPT)
             if (meetingRate < 20 && totalConversations >= 10) {
                 insights.push({
                     type: 'suggestion',
-                    title: '📋 Increase Meeting Bookings',
-                    content: `${meetingRate.toFixed(1)}% of conversations lead to meetings. Key principle: Set clear expectations. Try: "Would it make sense to schedule 15 minutes to explore if we're a fit? At the end, you can tell me 'yes,' 'no,' or 'let's talk again.' Fair enough?" This removes pressure and increases bookings.`,
+                    title: '📋 Your Script: Book More Meetings',
+                    content: `Current rate: ${meetingRate.toFixed(1)}%. **SAY THIS EXACTLY:** "Would it make sense to schedule 15 minutes to explore if we're a fit? At the end, you can tell me 'yes,' 'no,' or 'let's talk again.' Fair enough?" **THEN:** Stay silent. Let them respond. **ACTION:** Use this on your next 5 calls and track results.`,
                     priority: 'high'
                 });
             } else if (meetingRate >= 30) {
                 insights.push({
                     type: 'milestone',
-                    title: '📋 Excellent Meeting Conversion',
-                    content: `${meetingRate.toFixed(1)}% meeting conversion shows you're setting clear expectations! Keep building trust and reducing no-shows with this approach.`,
+                    title: '📋 Winning Behavior: Strong Meeting Conversion',
+                    content: `${meetingRate.toFixed(1)}% meeting conversion is excellent! **KEEP DOING:** Your clear expectations approach is working. Prospects appreciate the transparency and it builds trust. Continue this exact pattern.`,
                     priority: 'low'
                 });
             }
@@ -2646,60 +2881,60 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                     priority: 'low'
                 });
 
-                // Close rate coaching
+                // Close rate coaching (DEEP DISCOVERY QUESTIONS)
                 if (closeRate < 25 && totalMeetings >= 5) {
                     insights.push({
                         type: 'suggestion',
-                        title: '🔍 Improve Discovery Process',
-                        content: `Your ${closeRate.toFixed(1)}% close rate suggests qualification gaps. In discovery meetings, dig deeper: "Tell me more about that... How long has that been a problem? What have you tried? How much is it costing you? What happens if you don't fix it?" Uncover COMPELLING pain, not just surface-level needs.`,
+                        title: '🔍 Your Discovery Questions: Uncover Real Pain',
+                        content: `Current close rate: ${closeRate.toFixed(1)}%. **ASK THESE IN EVERY DISCOVERY:** (1) "Tell me more about that problem..." [stay silent] (2) "How long has this been an issue?" (3) "What have you already tried?" (4) "What's this costing you monthly?" (5) "What happens if you don't fix it in the next 90 days?" **GOAL:** Get them saying the problem is urgent and expensive. Surface-level needs don't close. Compelling pain does.`,
                         priority: 'high'
                     });
                 } else if (closeRate >= 40) {
                     insights.push({
                         type: 'milestone',
-                        title: '🎯 Excellent Qualification',
-                        content: `Your ${closeRate.toFixed(1)}% close rate shows you're qualifying well! You're uncovering real pain and only moving forward with qualified prospects. This is true sales discipline.`,
+                        title: '🎯 Winning Behavior: Excellent Qualification',
+                        content: `Your ${closeRate.toFixed(1)}% close rate is outstanding! **KEEP DOING:** You're digging deep to uncover compelling pain. You're qualifying hard and only moving forward with real opportunities. This discipline is why you're closing more deals.`,
                         priority: 'low'
                     });
                 }
             }
 
-            // INSIGHT 5: Budget & Decision Process Qualification
+            // INSIGHT 5: Budget & Decision Process Qualification (EXACT QUESTIONS)
             if (totalMeetings >= 5 && salesData.length === 0) {
                 insights.push({
                     type: 'alert',
-                    title: '💵 Qualify Budget & Decision Process Early',
-                    content: `You've held ${totalMeetings} meetings but no sales yet. Key tip: Don't waste time on unqualified prospects. In first call, ask: "If this makes sense, what kind of budget have you set aside?" and "Who else needs to be involved in this decision?" Disqualify fast to focus on real opportunities.`,
+                    title: '💵 Your Budget Questions: Qualify Faster',
+                    content: `${totalMeetings} meetings, zero sales. You're meeting with tire-kickers. **ASK THESE IN FIRST CALL:** (1) "If this makes sense, what kind of budget have you allocated for this?" (2) "Who else besides you will be involved in making this decision?" (3) "Walk me through your typical buying process." **RULE:** No budget discussion = no second meeting. Disqualify fast. Your time is valuable.`,
                     priority: 'high'
                 });
             }
 
-            // INSIGHT 6: Activity Consistency & Daily Discipline
+            // INSIGHT 6: Activity Consistency & Daily Discipline (CALENDAR BLOCKING)
             const activeDays = dailyData.filter(day => (day.dials || 0) > 0).length;
             const consistencyRate = (activeDays / dailyData.length) * 100;
 
             if (consistencyRate < 70) {
                 insights.push({
                     type: 'alert',
-                    title: '📅 Build Daily Consistency',
-                    content: `You've been active ${activeDays} out of ${dailyData.length} days (${consistencyRate.toFixed(0)}%). Sales principle: "Consistency is your recipe for success." Treat prospecting time as sacred. Block your calendar and protect it like you would a meeting with your best client. Consistency compounds.`,
+                    title: '📅 Your Action Plan: Build Daily Consistency',
+                    content: `Active ${activeDays} of ${dailyData.length} days (${consistencyRate.toFixed(0)}%). **DO THIS NOW:** (1) Open your calendar. (2) Block 9-11am EVERY day for prospecting - label it "Prospecting - DO NOT MOVE". (3) Turn off Slack/email during this time. (4) Set a daily alarm at 8:55am. **COMMITMENT:** Protect this block like a CEO meeting. Consistency compounds. Miss a day = start over.`,
                     priority: 'high'
                 });
             } else if (consistencyRate >= 85) {
                 insights.push({
                     type: 'milestone',
-                    title: '📖 Excellent Daily Discipline',
-                    content: `${consistencyRate.toFixed(0)}% consistency shows true sales discipline! You're treating sales as a science, not an art. This consistent behavior WILL drive predictable results.`,
+                    title: '📖 Winning Behavior: Elite Daily Discipline',
+                    content: `${consistencyRate.toFixed(0)}% consistency is elite! **KEEP DOING:** Your daily prospecting block is working. You're treating sales as a predictable system. This discipline is the foundation of all your success. Don't break the streak.`,
                     priority: 'low'
                 });
             }
 
-            // INSIGHT 7: Remove Sales Pressure
+            // INSIGHT 7: Remove Sales Pressure (NO-PRESSURE SCRIPT)
             if (totalConversations >= 10 && conversionRate < 20) {
                 insights.push({
                     type: 'suggestion',
-                    title: '🔄 Remove Sales Pressure',
-                    content: `Low conversation-to-meeting rate? Try removing pressure with: "I'm not sure if what we do is a fit for you, but would it make sense to spend 10 minutes finding out? Worst case, we'll both know it's not a match." This approach often INCREASES interest by removing the "sales pressure."`,
+                    title: '🔄 Your Script: Remove Sales Pressure',
+                    content: `Low conversion. **USE THIS EXACT PHRASE:** "I'm not sure if what we do is even a fit for you, but would it make sense to spend 10 minutes finding out? Worst case, we'll both know it's not a match. Fair enough?" **WHY THIS WORKS:** Removes "sales pressure." Makes prospects relax. Paradoxically INCREASES interest. **ACTION:** Say this verbatim on your next 10 calls.`,
                     priority: 'medium'
                 });
             }
@@ -3149,11 +3384,18 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
         // Load setup visibility state on page load
         function loadSetupState() {
             const setupVisible = localStorage.getItem('setupVisible');
+            const setupSection = document.getElementById('setup-section');
+            const toggleBtn = document.getElementById('setup-toggle-btn');
+
+            // Default to visible if no preference stored, or if explicitly set to visible
             if (setupVisible === 'false') {
-                const setupSection = document.getElementById('setup-section');
-                const toggleBtn = document.getElementById('setup-toggle-btn');
                 setupSection.style.display = 'none';
                 toggleBtn.textContent = 'Show Setup';
+            } else {
+                // Show setup by default
+                setupSection.style.display = 'contents';
+                toggleBtn.textContent = 'Hide Setup';
+                localStorage.setItem('setupVisible', 'true');
             }
         }
 
@@ -3255,6 +3497,9 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 localStorage.setItem('salesScripts', JSON.stringify(scripts));
                 showAlert('✅ Scripts saved successfully!', 'success');
                 console.log('Scripts saved to localStorage:', scripts);
+
+                // Update the script display in Daily Actions section
+                updateScriptDisplay();
             } catch (error) {
                 console.error('Error saving scripts:', error);
                 showAlert('❌ Failed to save scripts: ' + error.message, 'error');
@@ -3289,6 +3534,35 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 cta: 'I\'d love to show you how in a quick 15-minute online meeting. Do you have your calendar handy, or would [Date] at [Time] work better?',
                 objections: 'I understand. A lot of our clients felt the same way initially. What if I could show you how one client saved 15 hours in their first week?'
             };
+        }
+
+        // Update the Cold Call Script display in Daily Actions section
+        function updateScriptDisplay() {
+            const scripts = getScripts();
+
+            // Update Opening Script
+            const openingEl = document.getElementById('display-opening');
+            if (openingEl) {
+                openingEl.textContent = scripts.opening || 'No opening script saved yet. Add your opening script in the Setup section above.';
+            }
+
+            // Update Value Proposition
+            const valuePropEl = document.getElementById('display-value-prop');
+            if (valuePropEl) {
+                valuePropEl.textContent = scripts.valueProp || 'No value proposition saved yet. Add it in the Setup section above.';
+            }
+
+            // Update Call to Action
+            const ctaEl = document.getElementById('display-cta');
+            if (ctaEl) {
+                ctaEl.textContent = scripts.cta || 'No call to action saved yet. Add it in the Setup section above.';
+            }
+
+            // Update Objection Handling
+            const objectionsEl = document.getElementById('display-objections');
+            if (objectionsEl) {
+                objectionsEl.textContent = scripts.objections || 'No objection handling saved yet. Add it in the Setup section above.';
+            }
         }
 
         async function rewriteScriptsWithAI() {
@@ -3610,6 +3884,7 @@ Rep: I wanted to learn more about your housing operations..."></textarea>
                 loadICP();
                 loadProducts();
                 loadScripts();
+                updateScriptDisplay(); // Display saved scripts in Daily Actions section
                 loadSetupState();
 
                 // Load monthly quota from localStorage if exists

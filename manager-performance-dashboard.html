@@ -1,0 +1,1468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Revenue Factory - Manager Performance Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Confetti Animation Library -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.2/dist/confetti.browser.min.js"></script>
+    <style>
+        :root {
+            --brand-navy: #0C1030;
+            --brand-teal: #10C3B0;
+            --brand-aqua: #3DE0D2;
+            --brand-pink: #E64563;
+            --brand-gold: #F4B03A;
+            --light-text: #F2F4F8;
+            --card-bg: #131a40;
+            --success-green: #10C3B0;
+            --warning-yellow: #F9C863;
+            --danger-red: #E64563;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--brand-navy) 0%, #050816 100%);
+            color: var(--light-text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .dashboard-container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        .dashboard-header {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(61, 224, 210, 0.1);
+        }
+
+        .dashboard-header h1 {
+            font-size: 2rem;
+            background: linear-gradient(135deg, var(--brand-aqua), var(--brand-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 10px;
+        }
+
+        .team-stats {
+            display: flex;
+            gap: 30px;
+            color: var(--brand-gold);
+            font-size: 0.95rem;
+        }
+
+        .team-stats span {
+            opacity: 0.9;
+        }
+
+        /* View Toggle */
+        .view-toggle {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .toggle-btn {
+            padding: 10px 20px;
+            border: 1px solid var(--brand-teal);
+            background: rgba(61, 224, 210, 0.1);
+            color: var(--brand-aqua);
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 700;
+            transition: all 0.2s ease;
+        }
+
+        .toggle-btn.active {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua));
+            color: white;
+        }
+
+        .toggle-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .view-container {
+            display: none;
+        }
+
+        .view-container.active {
+            display: block;
+        }
+
+        /* Rep Grid */
+        .rep-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+            gap: 25px;
+        }
+
+        /* Table View */
+        .table-container {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(61, 224, 210, 0.1);
+            overflow-x: auto;
+        }
+
+        .performance-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .performance-table th {
+            background: rgba(61, 224, 210, 0.1);
+            padding: 15px;
+            text-align: left;
+            font-weight: 700;
+            color: var(--brand-aqua);
+            border-bottom: 2px solid var(--brand-teal);
+            cursor: pointer;
+            user-select: none;
+            white-space: nowrap;
+        }
+
+        .performance-table th:hover {
+            background: rgba(61, 224, 210, 0.2);
+        }
+
+        .performance-table th::after {
+            content: ' ⇅';
+            opacity: 0.3;
+            font-size: 0.8em;
+        }
+
+        .performance-table th.sorted-asc::after {
+            content: ' ↑';
+            opacity: 1;
+        }
+
+        .performance-table th.sorted-desc::after {
+            content: ' ↓';
+            opacity: 1;
+        }
+
+        .performance-table td {
+            padding: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .performance-table tr:hover {
+            background: rgba(61, 224, 210, 0.05);
+        }
+
+        .performance-table tr.row-critical {
+            background: rgba(230, 69, 99, 0.1);
+        }
+
+        .performance-table tr.row-watch {
+            background: rgba(249, 200, 99, 0.05);
+        }
+
+        .performance-table tr.row-healthy {
+            background: rgba(16, 195, 176, 0.05);
+        }
+
+        .table-rep-name {
+            font-weight: 700;
+            color: var(--brand-aqua);
+            font-size: 1.05rem;
+        }
+
+        .table-methodology {
+            font-size: 0.85rem;
+            color: var(--brand-gold);
+            opacity: 0.8;
+        }
+
+        .table-metric {
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .table-metric.good {
+            color: var(--success-green);
+        }
+
+        .table-metric.warning {
+            color: var(--warning-yellow);
+        }
+
+        .table-metric.bad {
+            color: var(--danger-red);
+        }
+
+        .table-vs-avg {
+            display: block;
+            font-size: 0.75rem;
+            opacity: 0.7;
+            font-weight: 400;
+        }
+
+        .table-status {
+            text-align: center;
+            font-size: 1.5rem;
+        }
+
+        .table-actions {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .table-btn {
+            padding: 6px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .table-btn-coach {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua));
+            color: white;
+        }
+
+        .table-btn-coach.urgent {
+            background: linear-gradient(135deg, var(--danger-red), #c13752);
+        }
+
+        .table-btn-details {
+            background: rgba(61, 224, 210, 0.2);
+            color: var(--brand-aqua);
+            border: 1px solid var(--brand-teal);
+        }
+
+        .table-btn:hover {
+            transform: scale(1.05);
+        }
+
+        /* Rep Card */
+        .rep-card {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 2px solid rgba(61, 224, 210, 0.1);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .rep-card.status-healthy {
+            border-color: var(--success-green);
+        }
+
+        .rep-card.status-watch {
+            border-color: var(--warning-yellow);
+            animation: pulse-yellow 2s infinite;
+        }
+
+        .rep-card.status-critical {
+            border-color: var(--danger-red);
+            animation: pulse-red 2s infinite;
+        }
+
+        .rep-card.coached-unread {
+            border-color: #FF8C42;
+            background: linear-gradient(135deg, rgba(255, 140, 66, 0.05), rgba(230, 69, 99, 0.05));
+        }
+
+        .rep-card.coached-read {
+            opacity: 0.6;
+        }
+
+        @keyframes pulse-yellow {
+            0%, 100% { box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+            50% { box-shadow: 0 10px 40px rgba(249, 200, 99, 0.4); }
+        }
+
+        @keyframes pulse-red {
+            0%, 100% { box-shadow: 0 10px 30px rgba(0,0,0,0.3); }
+            50% { box-shadow: 0 10px 40px rgba(230, 69, 99, 0.6); }
+        }
+
+        /* Rep Header */
+        .rep-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .rep-info h3 {
+            font-size: 1.4rem;
+            color: var(--brand-aqua);
+            margin-bottom: 5px;
+        }
+
+        .rep-methodology {
+            font-size: 0.85rem;
+            color: var(--brand-gold);
+            opacity: 0.8;
+        }
+
+        .status-indicator {
+            font-size: 2.5rem;
+            line-height: 1;
+        }
+
+        /* Radial Rings Container */
+        .radial-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 25px 0;
+            position: relative;
+        }
+
+        .radial-canvas {
+            display: block;
+        }
+
+        /* Metrics Display */
+        .metrics-display {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 8px;
+        }
+
+        .metric-label {
+            font-size: 0.85rem;
+            color: rgba(242, 244, 248, 0.7);
+        }
+
+        .metric-value {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .metric-value.good {
+            color: var(--success-green);
+        }
+
+        .metric-value.warning {
+            color: var(--warning-yellow);
+        }
+
+        .metric-value.bad {
+            color: var(--danger-red);
+        }
+
+        .metric-vs-avg {
+            font-size: 0.75rem;
+            opacity: 0.7;
+            margin-left: 8px;
+        }
+
+        /* Action Buttons */
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 0.95rem;
+        }
+
+        .btn-coach {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua));
+            color: white;
+        }
+
+        .btn-coach.urgent {
+            background: linear-gradient(135deg, var(--danger-red), #c13752);
+            animation: pulse-button 2s infinite;
+        }
+
+        .btn-coached-unread {
+            background: linear-gradient(135deg, #FF8C42, #FF6B35);
+            color: white;
+        }
+
+        .btn-coached-read {
+            background: rgba(61, 224, 210, 0.2);
+            color: var(--brand-aqua);
+            border: 1px solid var(--brand-teal);
+        }
+
+        @keyframes pulse-button {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        .btn-details {
+            background: linear-gradient(135deg, rgba(61, 224, 210, 0.2), rgba(16, 195, 176, 0.2));
+            border: 1px solid var(--brand-teal);
+            color: var(--brand-aqua);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Coaching Status */
+        .coaching-status {
+            text-align: center;
+            font-size: 0.8rem;
+            margin-top: 10px;
+            padding: 8px;
+            border-radius: 8px;
+        }
+
+        .coaching-status.unread {
+            background: rgba(255, 140, 66, 0.2);
+            color: #FF8C42;
+        }
+
+        .coaching-status.read {
+            color: rgba(242, 244, 248, 0.5);
+        }
+
+        /* Legend */
+        .legend {
+            background-color: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(61, 224, 210, 0.1);
+        }
+
+        .legend h3 {
+            color: var(--brand-gold);
+            margin-bottom: 15px;
+            font-size: 1.1rem;
+        }
+
+        .legend-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .legend-color {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 3px solid;
+        }
+
+        .legend-text {
+            font-size: 0.9rem;
+            color: rgba(242, 244, 248, 0.8);
+        }
+
+        /* Achievement Badges */
+        .achievement-badges {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 5px;
+            z-index: 10;
+        }
+
+        .badge {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 2px solid;
+            background: var(--card-bg);
+        }
+
+        .badge.streak {
+            border-color: #FF6B35;
+            box-shadow: 0 0 10px rgba(255, 107, 53, 0.3);
+        }
+
+        .badge.mastery {
+            border-color: var(--brand-gold);
+            box-shadow: 0 0 10px rgba(244, 176, 58, 0.3);
+        }
+
+        .badge.personal-best {
+            border-color: var(--brand-aqua);
+            box-shadow: 0 0 10px rgba(61, 224, 210, 0.3);
+        }
+
+        .badge.first-win {
+            border-color: var(--success-green);
+            box-shadow: 0 0 10px rgba(16, 195, 176, 0.3);
+        }
+
+        .badge:hover {
+            transform: scale(1.15);
+            box-shadow: 0 0 20px currentColor;
+        }
+
+        /* Celebration Modal */
+        .celebration-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .celebration-modal.active {
+            display: flex;
+        }
+
+        .celebration-content {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+            border: 2px solid var(--brand-teal);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .celebration-icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            animation: bounce 1s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-20px); }
+        }
+
+        .celebration-title {
+            font-size: 1.8rem;
+            background: linear-gradient(135deg, var(--brand-aqua), var(--brand-teal));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 15px;
+            font-weight: 900;
+        }
+
+        .celebration-description {
+            font-size: 1.1rem;
+            color: var(--light-text);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .celebration-details {
+            background: rgba(61, 224, 210, 0.1);
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            font-size: 0.95rem;
+            color: rgba(242, 244, 248, 0.8);
+        }
+
+        .celebration-close {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua));
+            color: white;
+            border: none;
+            padding: 12px 30px;
+            border-radius: 10px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+
+        .celebration-close:hover {
+            transform: translateY(-2px);
+        }
+
+        /* Team Celebration Feed */
+        .celebration-feed {
+            background-color: var(--card-bg);
+            border-radius: 20px;
+            padding: 25px;
+            margin-top: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+            border: 1px solid rgba(61, 224, 210, 0.1);
+        }
+
+        .celebration-feed h2 {
+            color: var(--brand-gold);
+            margin-bottom: 20px;
+            font-size: 1.5rem;
+        }
+
+        .celebration-item {
+            background: rgba(255, 255, 255, 0.03);
+            border-radius: 12px;
+            padding: 15px 20px;
+            margin-bottom: 15px;
+            border-left: 4px solid;
+            transition: all 0.2s ease;
+        }
+
+        .celebration-item:hover {
+            background: rgba(255, 255, 255, 0.06);
+            transform: translateX(5px);
+        }
+
+        .celebration-item.level-1 {
+            border-left-color: var(--brand-aqua);
+        }
+
+        .celebration-item.level-2 {
+            border-left-color: var(--brand-gold);
+        }
+
+        .celebration-item.level-3 {
+            border-left-color: #FF6B35;
+        }
+
+        .celebration-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .celebration-item-title {
+            font-weight: 700;
+            font-size: 1.05rem;
+            color: var(--brand-aqua);
+        }
+
+        .celebration-item-time {
+            font-size: 0.85rem;
+            color: rgba(242, 244, 248, 0.5);
+        }
+
+        .celebration-item-description {
+            color: rgba(242, 244, 248, 0.8);
+            font-size: 0.95rem;
+            line-height: 1.5;
+        }
+
+        .celebration-item-icon {
+            font-size: 1.3rem;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-container">
+        <!-- Header -->
+        <div class="dashboard-header">
+            <h1>The Revenue Factory</h1>
+            <div class="team-stats">
+                <span>📊 Team Average: 50 dials • 15 conversations • 5 meetings • 2 sales</span>
+                <span>📅 Last 7 Days</span>
+            </div>
+        </div>
+
+        <!-- View Toggle -->
+        <div class="view-toggle">
+            <button class="toggle-btn active" onclick="switchView('cards')">📊 Card View</button>
+            <button class="toggle-btn" onclick="switchView('table')">📋 Table View</button>
+        </div>
+
+        <!-- Card View Container -->
+        <div class="view-container active" id="card-view">
+            <div class="rep-grid" id="rep-grid"></div>
+        </div>
+
+        <!-- Table View Container -->
+        <div class="view-container" id="table-view">
+            <div class="table-container">
+                <h2 style="color: var(--brand-gold); margin-bottom: 15px;">Team Performance Table</h2>
+                <table class="performance-table" id="performance-table">
+                    <thead>
+                        <tr>
+                            <th onclick="sortTable('name')">Rep Name</th>
+                            <th onclick="sortTable('methodology')">Methodology</th>
+                            <th onclick="sortTable('status')">Status</th>
+                            <th onclick="sortTable('dials')">Dials</th>
+                            <th onclick="sortTable('conversations')">Conversations</th>
+                            <th onclick="sortTable('meetings')">Meetings</th>
+                            <th onclick="sortTable('sales')">Sales</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Legend -->
+        <div class="legend">
+            <h3>Performance Rings Guide</h3>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <div class="legend-color" style="border-color: var(--success-green); background: rgba(16, 195, 176, 0.2);"></div>
+                    <div class="legend-text"><strong>Ring 1 (Outer):</strong> Dials</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="border-color: var(--brand-aqua); background: rgba(61, 224, 210, 0.2);"></div>
+                    <div class="legend-text"><strong>Ring 2:</strong> Conversations</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="border-color: var(--brand-gold); background: rgba(244, 176, 58, 0.2);"></div>
+                    <div class="legend-text"><strong>Ring 3:</strong> Meetings</div>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-color" style="border-color: var(--brand-pink); background: rgba(230, 69, 99, 0.2);"></div>
+                    <div class="legend-text"><strong>Ring 4 (Center):</strong> Sales</div>
+                </div>
+            </div>
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(255,255,255,0.1); color: rgba(242, 244, 248, 0.6); font-size: 0.85rem;">
+                <strong>Status Indicators:</strong> 🟢 Healthy (all metrics ≥75%) • 🟡 Watch (any metric 50-74%) • 🔴 Critical (any metric &lt;50%)
+            </div>
+        </div>
+
+        <!-- Team Celebration Feed -->
+        <div class="celebration-feed">
+            <h2>🎉 Recent Team Wins</h2>
+            <div id="celebration-feed-items"></div>
+        </div>
+    </div>
+
+    <!-- Celebration Modal -->
+    <div class="celebration-modal" id="celebration-modal">
+        <div class="celebration-content">
+            <div class="celebration-icon" id="modal-icon">🎉</div>
+            <div class="celebration-title" id="modal-title">Achievement Unlocked!</div>
+            <div class="celebration-description" id="modal-description"></div>
+            <div class="celebration-details" id="modal-details"></div>
+            <button class="celebration-close" onclick="closeCelebrationModal()">Awesome!</button>
+        </div>
+    </div>
+
+    <script>
+        // ============================================
+        // DEMO DATA (Industry Standard Ratios)
+        // ============================================
+
+        const TEAM_AVERAGE = {
+            dials: 50,
+            conversations: 15,
+            meetings: 5,
+            sales: 2
+        };
+
+        const EXPECTED_BASELINES = {
+            dials: 50,
+            conversations: 15,  // 30% of dials
+            meetings: 5,        // 33% of conversations
+            sales: 2            // 40% of meetings
+        };
+
+        // Static demo data for presentation
+        const demoReps = [
+            {
+                id: 1,
+                name: "Sarah Johnson",
+                methodology: "Sandler",
+                dials: 65,
+                conversations: 20,
+                meetings: 7,
+                sales: 3,
+                coachingStatus: null,
+                achievements: [
+                    {
+                        type: 'streak',
+                        icon: '🔥🔥',
+                        title: '10-Day Activity Streak',
+                        description: 'Sarah has hit her daily baseline for 10 consecutive days!',
+                        details: '65 dials this week - her highest ever. Consistency is the foundation of success.',
+                        level: 2
+                    },
+                    {
+                        type: 'personal-best',
+                        icon: '⭐',
+                        title: 'Personal Best - Most Dials',
+                        description: '65 dials this week = 130% of baseline',
+                        details: 'This is Sarah\'s highest activity week since joining the team.',
+                        level: 1
+                    }
+                ]
+            },
+            {
+                id: 2,
+                name: "Mike Chen",
+                methodology: "MEDDIC",
+                dials: 48,
+                conversations: 14,
+                meetings: 5,
+                sales: 2,
+                coachingStatus: null,
+                achievements: [
+                    {
+                        type: 'first-win',
+                        icon: '🏆',
+                        title: 'First Sale Closed!',
+                        description: 'Mike just closed his first deal - $25,000!',
+                        details: 'Deal: TechCorp Solutions\nFrom first call to close: 14 days\nMEDDIC executed with precision ✅',
+                        level: 2
+                    }
+                ]
+            },
+            {
+                id: 3,
+                name: "Lisa Park",
+                methodology: "Challenger",
+                dials: 22,
+                conversations: 6,
+                meetings: 2,
+                sales: 0,
+                coachingStatus: { read: false, sentAt: "2 hours ago" },
+                achievements: [
+                    {
+                        type: 'first-win',
+                        icon: '💬',
+                        title: 'First Coaching Received',
+                        description: 'Lisa is taking her first step toward improvement',
+                        details: 'Every journey starts with awareness. We celebrate every step forward.',
+                        level: 1
+                    }
+                ]
+            },
+            {
+                id: 4,
+                name: "Tom Williams",
+                methodology: "SPIN",
+                dials: 58,
+                conversations: 18,
+                meetings: 6,
+                sales: 3,
+                coachingStatus: { read: true, sentAt: "1 day ago" },
+                achievements: [
+                    {
+                        type: 'mastery',
+                        icon: '🏆',
+                        title: 'SPIN Methodology Master',
+                        description: 'Tom unlocked SPIN mastery badge!',
+                        details: '5 consecutive calls with complete SPIN sequence:\n✅ Situation questions\n✅ Problem questions\n✅ Implication questions\n✅ Need-Payoff questions',
+                        level: 3
+                    },
+                    {
+                        type: 'streak',
+                        icon: '🔥',
+                        title: '5-Day Streak',
+                        description: 'Consistent execution builds excellence',
+                        details: 'Hit baseline 5 days in a row.',
+                        level: 1
+                    }
+                ]
+            },
+            {
+                id: 5,
+                name: "Alex Rivera",
+                methodology: "Gap Selling",
+                dials: 42,
+                conversations: 12,
+                meetings: 4,
+                sales: 1,
+                coachingStatus: null,
+                achievements: []
+            }
+        ];
+
+        // Team celebration feed data
+        const teamCelebrations = [
+            {
+                repName: 'Tom Williams',
+                icon: '🏆',
+                title: 'SPIN Methodology Master Unlocked',
+                description: 'Tom executed complete SPIN sequence in 5 consecutive calls. This is mastery.',
+                time: '2 hours ago',
+                level: 3
+            },
+            {
+                repName: 'Mike Chen',
+                icon: '💰',
+                title: 'First Sale Closed - $25,000',
+                description: 'Mike closed his first deal! TechCorp Solutions, 14-day sales cycle.',
+                time: '5 hours ago',
+                level: 2
+            },
+            {
+                repName: 'Sarah Johnson',
+                icon: '🔥',
+                title: '10-Day Activity Streak',
+                description: 'Sarah hit baseline 10 days straight. This is discipline and consistency.',
+                time: '1 day ago',
+                level: 2
+            },
+            {
+                repName: 'Alex Rivera',
+                icon: '⭐',
+                title: 'Personal Best - Conversion Rate',
+                description: 'Alex hit 29% dial-to-conversation rate, up from 22% last week.',
+                time: '1 day ago',
+                level: 1
+            },
+            {
+                repName: 'Lisa Park',
+                icon: '💬',
+                title: 'First Coaching Session',
+                description: 'Lisa received her first coaching. Every improvement journey starts here.',
+                time: '2 hours ago',
+                level: 1
+            }
+        ];
+
+        // ============================================
+        // RADIAL RING DRAWING
+        // ============================================
+
+        function drawRadialRings(canvas, metrics) {
+            const ctx = canvas.getContext('2d');
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const maxRadius = Math.min(centerX, centerY) - 10;
+
+            // Clear canvas
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Calculate percentages vs expected
+            const percentages = {
+                dials: Math.min((metrics.dials / EXPECTED_BASELINES.dials) * 100, 100),
+                conversations: Math.min((metrics.conversations / EXPECTED_BASELINES.conversations) * 100, 100),
+                meetings: Math.min((metrics.meetings / EXPECTED_BASELINES.meetings) * 100, 100),
+                sales: Math.min((metrics.sales / EXPECTED_BASELINES.sales) * 100, 100)
+            };
+
+            // Ring configuration (outer to inner)
+            const rings = [
+                {
+                    label: 'Dials',
+                    percentage: percentages.dials,
+                    radius: maxRadius,
+                    thickness: 15,
+                    color: getColorForPercentage(percentages.dials),
+                    bgColor: 'rgba(16, 195, 176, 0.1)'
+                },
+                {
+                    label: 'Conversations',
+                    percentage: percentages.conversations,
+                    radius: maxRadius - 20,
+                    thickness: 15,
+                    color: getColorForPercentage(percentages.conversations),
+                    bgColor: 'rgba(61, 224, 210, 0.1)'
+                },
+                {
+                    label: 'Meetings',
+                    percentage: percentages.meetings,
+                    radius: maxRadius - 40,
+                    thickness: 15,
+                    color: getColorForPercentage(percentages.meetings),
+                    bgColor: 'rgba(244, 176, 58, 0.1)'
+                },
+                {
+                    label: 'Sales',
+                    percentage: percentages.sales,
+                    radius: maxRadius - 60,
+                    thickness: 20,
+                    color: getColorForPercentage(percentages.sales),
+                    bgColor: 'rgba(230, 69, 99, 0.1)'
+                }
+            ];
+
+            // Draw each ring
+            rings.forEach(ring => {
+                // Background ring
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, ring.radius, 0, 2 * Math.PI);
+                ctx.strokeStyle = ring.bgColor;
+                ctx.lineWidth = ring.thickness;
+                ctx.stroke();
+
+                // Progress ring
+                const endAngle = -Math.PI / 2 + (2 * Math.PI * ring.percentage / 100);
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, ring.radius, -Math.PI / 2, endAngle);
+                ctx.strokeStyle = ring.color;
+                ctx.lineWidth = ring.thickness;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+            });
+
+            // Center icon
+            ctx.font = 'bold 32px Arial';
+            ctx.fillStyle = percentages.sales >= 75 ? '#10C3B0' : percentages.sales >= 50 ? '#F9C863' : '#E64563';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText('💰', centerX, centerY);
+        }
+
+        function getColorForPercentage(percentage) {
+            if (percentage >= 75) return '#10C3B0'; // Green
+            if (percentage >= 50) return '#F9C863'; // Yellow
+            return '#E64563'; // Red
+        }
+
+        // ============================================
+        // STATUS CALCULATION
+        // ============================================
+
+        function getRepStatus(metrics) {
+            const percentages = [
+                (metrics.dials / EXPECTED_BASELINES.dials) * 100,
+                (metrics.conversations / EXPECTED_BASELINES.conversations) * 100,
+                (metrics.meetings / EXPECTED_BASELINES.meetings) * 100,
+                (metrics.sales / EXPECTED_BASELINES.sales) * 100
+            ];
+
+            const hasRed = percentages.some(p => p < 50);
+            const hasYellow = percentages.some(p => p >= 50 && p < 75);
+
+            if (hasRed) return { status: 'critical', icon: '🔴' };
+            if (hasYellow) return { status: 'watch', icon: '🟡' };
+            return { status: 'healthy', icon: '🟢' };
+        }
+
+        function getMetricClass(value, expected) {
+            const percentage = (value / expected) * 100;
+            if (percentage >= 100) return 'good';
+            if (percentage >= 75) return 'warning';
+            return 'bad';
+        }
+
+        function getVsAverage(value, avgValue) {
+            const percentage = ((value - avgValue) / avgValue * 100).toFixed(0);
+            if (percentage > 0) return `+${percentage}%`;
+            return `${percentage}%`;
+        }
+
+        // ============================================
+        // RENDER REP CARDS
+        // ============================================
+
+        function renderRepCards() {
+            const grid = document.getElementById('rep-grid');
+
+            grid.innerHTML = demoReps.map(rep => {
+                const status = getRepStatus(rep);
+                const cardClass = rep.coachingStatus
+                    ? (rep.coachingStatus.read ? 'coached-read' : 'coached-unread')
+                    : `status-${status.status}`;
+
+                const canvasId = `canvas-${rep.id}`;
+
+                return `
+                    <div class="rep-card ${cardClass}">
+                        ${renderAchievementBadges(rep)}
+
+                        <!-- Rep Header -->
+                        <div class="rep-header">
+                            <div class="rep-info">
+                                <h3>${rep.name}</h3>
+                                <div class="rep-methodology">${rep.methodology}</div>
+                            </div>
+                            <div class="status-indicator">${status.icon}</div>
+                        </div>
+
+                        <!-- Radial Rings -->
+                        <div class="radial-container">
+                            <canvas id="${canvasId}" class="radial-canvas" width="250" height="250"></canvas>
+                        </div>
+
+                        <!-- Metrics Display -->
+                        <div class="metrics-display">
+                            <div class="metric-item">
+                                <span class="metric-label">Dials</span>
+                                <span class="metric-value ${getMetricClass(rep.dials, EXPECTED_BASELINES.dials)}">
+                                    ${rep.dials}
+                                    <span class="metric-vs-avg">${getVsAverage(rep.dials, TEAM_AVERAGE.dials)}</span>
+                                </span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Conversations</span>
+                                <span class="metric-value ${getMetricClass(rep.conversations, EXPECTED_BASELINES.conversations)}">
+                                    ${rep.conversations}
+                                    <span class="metric-vs-avg">${getVsAverage(rep.conversations, TEAM_AVERAGE.conversations)}</span>
+                                </span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Meetings</span>
+                                <span class="metric-value ${getMetricClass(rep.meetings, EXPECTED_BASELINES.meetings)}">
+                                    ${rep.meetings}
+                                    <span class="metric-vs-avg">${getVsAverage(rep.meetings, TEAM_AVERAGE.meetings)}</span>
+                                </span>
+                            </div>
+                            <div class="metric-item">
+                                <span class="metric-label">Sales</span>
+                                <span class="metric-value ${getMetricClass(rep.sales, EXPECTED_BASELINES.sales)}">
+                                    ${rep.sales}
+                                    <span class="metric-vs-avg">${getVsAverage(rep.sales, TEAM_AVERAGE.sales)}</span>
+                                </span>
+                            </div>
+                        </div>
+
+                        <!-- Action Buttons -->
+                        <div class="action-buttons">
+                            ${getCoachButton(rep, status)}
+                            <button class="btn btn-details">📊 Details</button>
+                        </div>
+
+                        ${rep.coachingStatus ? `
+                        <div class="coaching-status ${rep.coachingStatus.read ? 'read' : 'unread'}">
+                            ${rep.coachingStatus.read
+                                ? `✅ Coaching read ${rep.coachingStatus.sentAt}`
+                                : `⏳ Coaching sent ${rep.coachingStatus.sentAt} - waiting for read`
+                            }
+                        </div>
+                        ` : ''}
+                    </div>
+                `;
+            }).join('');
+
+            // Draw canvases after rendering
+            setTimeout(() => {
+                demoReps.forEach(rep => {
+                    const canvas = document.getElementById(`canvas-${rep.id}`);
+                    if (canvas) {
+                        drawRadialRings(canvas, {
+                            dials: rep.dials,
+                            conversations: rep.conversations,
+                            meetings: rep.meetings,
+                            sales: rep.sales
+                        });
+                    }
+                });
+            }, 100);
+        }
+
+        function getCoachButton(rep, status) {
+            const repData = JSON.stringify(rep).replace(/"/g, '&quot;');
+            const statusData = JSON.stringify(status).replace(/"/g, '&quot;');
+
+            if (rep.coachingStatus) {
+                if (rep.coachingStatus.read) {
+                    return '<button class="btn btn-coached-read">💬 Coached ✓</button>';
+                } else {
+                    return '<button class="btn btn-coached-unread">💬 Coached ⏳</button>';
+                }
+            }
+
+            if (status.status === 'critical') {
+                return `<button class="btn btn-coach urgent" onclick="handleCoachClick(${repData}, ${statusData}); event.stopPropagation();">🤖 Coach (URGENT)</button>`;
+            }
+
+            return `<button class="btn btn-coach" onclick="handleCoachClick(${repData}, ${statusData}); event.stopPropagation();">🤖 Coach</button>`;
+        }
+
+        // ============================================
+        // TABLE VIEW
+        // ============================================
+
+        let currentSort = { column: null, direction: 'asc' };
+
+        function renderTable() {
+            const tableBody = document.getElementById('table-body');
+
+            tableBody.innerHTML = demoReps.map(rep => {
+                const status = getRepStatus(rep);
+                const rowClass = `row-${status.status}`;
+
+                return `
+                    <tr class="${rowClass}">
+                        <td>
+                            <div class="table-rep-name">${rep.name}</div>
+                            <div class="table-methodology">${rep.methodology}</div>
+                        </td>
+                        <td>${rep.methodology}</td>
+                        <td class="table-status">${status.icon}</td>
+                        <td class="table-metric ${getMetricClass(rep.dials, EXPECTED_BASELINES.dials)}">
+                            ${rep.dials}
+                            <span class="table-vs-avg">${getVsAverage(rep.dials, TEAM_AVERAGE.dials)} avg</span>
+                        </td>
+                        <td class="table-metric ${getMetricClass(rep.conversations, EXPECTED_BASELINES.conversations)}">
+                            ${rep.conversations}
+                            <span class="table-vs-avg">${getVsAverage(rep.conversations, TEAM_AVERAGE.conversations)} avg</span>
+                        </td>
+                        <td class="table-metric ${getMetricClass(rep.meetings, EXPECTED_BASELINES.meetings)}">
+                            ${rep.meetings}
+                            <span class="table-vs-avg">${getVsAverage(rep.meetings, TEAM_AVERAGE.meetings)} avg</span>
+                        </td>
+                        <td class="table-metric ${getMetricClass(rep.sales, EXPECTED_BASELINES.sales)}">
+                            ${rep.sales}
+                            <span class="table-vs-avg">${getVsAverage(rep.sales, TEAM_AVERAGE.sales)} avg</span>
+                        </td>
+                        <td>
+                            <div class="table-actions">
+                                ${getTableCoachButton(rep, status)}
+                                <button class="table-btn table-btn-details">Details</button>
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function getTableCoachButton(rep, status) {
+            if (rep.coachingStatus) {
+                if (rep.coachingStatus.read) {
+                    return '<button class="table-btn table-btn-details">Coached ✓</button>';
+                } else {
+                    return '<button class="table-btn table-btn-coach">Coached ⏳</button>';
+                }
+            }
+
+            const urgentClass = status.status === 'critical' ? ' urgent' : '';
+            const urgentText = status.status === 'critical' ? 'URGENT' : 'Coach';
+            return `<button class="table-btn table-btn-coach${urgentClass}">🤖 ${urgentText}</button>`;
+        }
+
+        function sortTable(column) {
+            // Update sort state
+            if (currentSort.column === column) {
+                currentSort.direction = currentSort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentSort.column = column;
+                currentSort.direction = 'asc';
+            }
+
+            // Update header indicators
+            document.querySelectorAll('.performance-table th').forEach(th => {
+                th.classList.remove('sorted-asc', 'sorted-desc');
+            });
+            const header = Array.from(document.querySelectorAll('.performance-table th'))
+                .find(th => th.textContent.toLowerCase().includes(column.toLowerCase()));
+            if (header) {
+                header.classList.add(currentSort.direction === 'asc' ? 'sorted-asc' : 'sorted-desc');
+            }
+
+            // Sort data
+            demoReps.sort((a, b) => {
+                let aVal, bVal;
+
+                switch(column) {
+                    case 'name':
+                        aVal = a.name;
+                        bVal = b.name;
+                        break;
+                    case 'methodology':
+                        aVal = a.methodology;
+                        bVal = b.methodology;
+                        break;
+                    case 'status':
+                        const aStatus = getRepStatus(a).status;
+                        const bStatus = getRepStatus(b).status;
+                        const statusOrder = { critical: 0, watch: 1, healthy: 2 };
+                        aVal = statusOrder[aStatus];
+                        bVal = statusOrder[bStatus];
+                        break;
+                    default:
+                        aVal = a[column] || 0;
+                        bVal = b[column] || 0;
+                }
+
+                if (aVal < bVal) return currentSort.direction === 'asc' ? -1 : 1;
+                if (aVal > bVal) return currentSort.direction === 'asc' ? 1 : -1;
+                return 0;
+            });
+
+            renderTable();
+        }
+
+        // ============================================
+        // VIEW SWITCHING
+        // ============================================
+
+        function switchView(viewType) {
+            // Update toggle buttons
+            document.querySelectorAll('.toggle-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+
+            // Update view containers
+            document.querySelectorAll('.view-container').forEach(container => {
+                container.classList.remove('active');
+            });
+
+            if (viewType === 'cards') {
+                document.getElementById('card-view').classList.add('active');
+            } else {
+                document.getElementById('table-view').classList.add('active');
+                renderTable(); // Render table when switching to it
+            }
+        }
+
+        // ============================================
+        // CELEBRATION SYSTEM
+        // ============================================
+
+        function triggerConfetti(level = 1) {
+            const count = level === 3 ? 200 : level === 2 ? 100 : 50;
+            const duration = level === 3 ? 5000 : level === 2 ? 3000 : 2000;
+
+            const end = Date.now() + duration;
+
+            (function frame() {
+                confetti({
+                    particleCount: level === 3 ? 7 : 5,
+                    angle: 60,
+                    spread: 55,
+                    origin: { x: 0 },
+                    colors: ['#10C3B0', '#3DE0D2', '#F4B03A', '#E64563']
+                });
+                confetti({
+                    particleCount: level === 3 ? 7 : 5,
+                    angle: 120,
+                    spread: 55,
+                    origin: { x: 1 },
+                    colors: ['#10C3B0', '#3DE0D2', '#F4B03A', '#E64563']
+                });
+
+                if (Date.now() < end) {
+                    requestAnimationFrame(frame);
+                }
+            }());
+        }
+
+        function showCelebrationModal(achievement) {
+            const modal = document.getElementById('celebration-modal');
+            const icon = document.getElementById('modal-icon');
+            const title = document.getElementById('modal-title');
+            const description = document.getElementById('modal-description');
+            const details = document.getElementById('modal-details');
+
+            icon.textContent = achievement.icon;
+            title.textContent = achievement.title;
+            description.textContent = achievement.description;
+            details.textContent = achievement.details;
+
+            modal.classList.add('active');
+            triggerConfetti(achievement.level);
+        }
+
+        function closeCelebrationModal() {
+            document.getElementById('celebration-modal').classList.remove('active');
+        }
+
+        function renderCelebrationFeed() {
+            const feedContainer = document.getElementById('celebration-feed-items');
+
+            feedContainer.innerHTML = teamCelebrations.map(celebration => `
+                <div class="celebration-item level-${celebration.level}">
+                    <div class="celebration-item-header">
+                        <div class="celebration-item-title">
+                            <span class="celebration-item-icon">${celebration.icon}</span>
+                            ${celebration.repName}
+                        </div>
+                        <div class="celebration-item-time">${celebration.time}</div>
+                    </div>
+                    <div class="celebration-item-description">
+                        <strong>${celebration.title}</strong><br>
+                        ${celebration.description}
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function renderAchievementBadges(rep) {
+            if (!rep.achievements || rep.achievements.length === 0) {
+                return '';
+            }
+
+            return `
+                <div class="achievement-badges">
+                    ${rep.achievements.map(achievement => `
+                        <div class="badge ${achievement.type}"
+                             onclick="showCelebrationModal(${JSON.stringify(achievement).replace(/"/g, '&quot;')}); event.stopPropagation();"
+                             title="${achievement.title}">
+                            ${achievement.icon}
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+        }
+
+        function handleCoachClick(rep, status) {
+            // Trigger confetti
+            triggerConfetti(status.status === 'critical' ? 2 : 1);
+
+            // Show achievement modal for coaching milestone
+            const coachingAchievement = {
+                icon: '🤖',
+                title: 'AI Coaching Activated',
+                description: `Coaching analysis generated for ${rep.name}`,
+                details: `${rep.name} will receive:\n✅ Performance analysis\n✅ Specific recommendations\n✅ Focus area for next call\n\nBased on: ${rep.methodology} methodology`,
+                level: status.status === 'critical' ? 2 : 1
+            };
+
+            setTimeout(() => {
+                showCelebrationModal(coachingAchievement);
+            }, 500);
+        }
+
+        // ============================================
+        // INITIALIZATION
+        // ============================================
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderRepCards();
+            renderTable(); // Pre-render table
+            renderCelebrationFeed(); // Render team wins feed
+        });
+
+    </script>
+</body>
+</html>

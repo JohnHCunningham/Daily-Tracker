@@ -372,6 +372,23 @@
 
                 if (authError) throw authError
 
+                // Create manager account for new user (first signup = manager)
+                try {
+                    const { data: accountData, error: accountError } = await supabase
+                        .rpc('create_account_for_user', {
+                            user_email: email,
+                            company_name_input: company || null
+                        });
+
+                    if (accountError) {
+                        console.error('Account creation error:', accountError);
+                        // Continue anyway - they can create account later
+                    }
+                } catch (accountErr) {
+                    console.error('Error creating manager account:', accountErr);
+                    // Continue anyway
+                }
+
                 showAlert('Account created successfully! Redirecting...', 'success')
 
                 // Redirect to main app
@@ -381,7 +398,29 @@
 
             } catch (error) {
                 console.error('Signup error:', error)
-                showAlert(error.message || 'Error creating account')
+
+                // Check for specific error types and show user-friendly messages
+                let errorMessage = error.message || 'Error creating account'
+
+                if (error.message) {
+                    // Check for duplicate email errors
+                    if (error.message.includes('already registered') ||
+                        error.message.includes('User already registered') ||
+                        error.message.includes('duplicate key') ||
+                        error.message.includes('already exists')) {
+                        errorMessage = 'This email is already registered. Please log in instead or use a different email.'
+                    }
+                    // Check for invalid email format
+                    else if (error.message.includes('Invalid email')) {
+                        errorMessage = 'Please enter a valid email address.'
+                    }
+                    // Check for weak password
+                    else if (error.message.includes('Password') || error.message.includes('password')) {
+                        errorMessage = 'Password must be at least 8 characters long.'
+                    }
+                }
+
+                showAlert(errorMessage)
                 signupBtn.disabled = false
                 signupBtn.textContent = 'Create Account'
             }

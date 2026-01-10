@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fireflies Integration - AI Advantage Solutions</title>
+
+    <!-- Supabase Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+        :root {
+            --brand-navy: #0C1030;
+            --brand-teal: #10C3B0;
+            --brand-aqua: #3DE0D2;
+            --brand-pink: #E64563;
+            --brand-gold: #F4B03A;
+            --brand-yellow: #F9C863;
+            --light-text: #F2F4F8;
+            --card-bg: #131a40;
+            --input-bg: #090c26;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, var(--brand-navy) 0%, #050816 100%);
+            color: var(--light-text);
+            padding: 20px;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            color: var(--brand-teal);
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            opacity: 0.8;
+            font-size: 16px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .card h2 {
+            color: var(--brand-aqua);
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .info-box {
+            background: rgba(16, 195, 176, 0.1);
+            border-left: 4px solid var(--brand-teal);
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 25px;
+        }
+
+        .info-box h3 {
+            color: var(--brand-teal);
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .info-box p, .info-box li {
+            font-size: 14px;
+            line-height: 1.6;
+            opacity: 0.9;
+        }
+
+        .info-box ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: var(--brand-aqua);
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        input[type="text"], input[type="password"] {
+            width: 100%;
+            background: var(--input-bg);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--light-text);
+            padding: 12px;
+            border-radius: 8px;
+            font-size: 14px;
+        }
+
+        input[type="text"]:focus, input[type="password"]:focus {
+            outline: none;
+            border-color: var(--brand-teal);
+        }
+
+        .toggle-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            width: 50px;
+            height: 26px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 13px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active {
+            background: var(--brand-teal);
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .toggle-switch.active .toggle-slider {
+            left: 27px;
+        }
+
+        .btn {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 25px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--brand-teal), var(--brand-aqua));
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(16, 195, 176, 0.4);
+        }
+
+        .btn-secondary {
+            background: var(--input-bg);
+            color: var(--light-text);
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .stat-card {
+            background: var(--input-bg);
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 32px;
+            font-weight: bold;
+            color: var(--brand-teal);
+        }
+
+        .stat-label {
+            font-size: 13px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .alert {
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: none;
+        }
+
+        .alert-success {
+            background: var(--brand-teal);
+            color: white;
+        }
+
+        .alert-error {
+            background: var(--brand-pink);
+            color: white;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            opacity: 0.7;
+        }
+
+        .back-link {
+            display: inline-block;
+            color: var(--brand-teal);
+            text-decoration: none;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+
+        .hint {
+            font-size: 12px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <a href="index.html" class="back-link">← Back to Dashboard</a>
+
+        <div class="header">
+            <h1>🔥 Fireflies.ai Integration</h1>
+            <p class="subtitle">Automatically sync and analyze your sales call transcripts</p>
+        </div>
+
+        <div id="alert" class="alert"></div>
+
+        <!-- How It Works -->
+        <div class="card">
+            <h2>How It Works</h2>
+            <div class="info-box">
+                <h3>✨ Zero Friction Transcript Analysis</h3>
+                <p>Once connected, every sales call recorded in Fireflies will automatically:</p>
+                <ul>
+                    <li>📥 Sync to your dashboard within 30 minutes</li>
+                    <li>🤖 Analyze using your selected sales methodology (MEDDIC, Sandler, SPIN, etc.)</li>
+                    <li>📊 Generate coaching insights and scores</li>
+                    <li>💬 Appear in your conversation history</li>
+                </ul>
+                <p style="margin-top: 15px;"><strong>No manual uploads. No copy/paste. Just automatic coaching.</strong></p>
+            </div>
+        </div>
+
+        <!-- Settings -->
+        <div class="card">
+            <h2>⚙️ Configuration</h2>
+
+            <div class="form-group">
+                <label for="api-key">Fireflies API Key *</label>
+                <input type="password" id="api-key" placeholder="Enter your Fireflies API key">
+                <div class="hint">Get your API key from: <a href="https://app.fireflies.ai/integrations/custom/fireflies" target="_blank" style="color: var(--brand-teal);">Fireflies Settings → Integrations</a></div>
+            </div>
+
+            <div class="form-group">
+                <label>Auto-Sync</label>
+                <div class="toggle-group">
+                    <div id="auto-sync-toggle" class="toggle-switch active" onclick="toggleAutoSync()">
+                        <div class="toggle-slider"></div>
+                    </div>
+                    <span id="auto-sync-label">Enabled - Syncs every 30 minutes</span>
+                </div>
+            </div>
+
+            <div style="display: flex; gap: 15px;">
+                <button class="btn btn-primary" onclick="saveSettings()">💾 Save Settings</button>
+                <button class="btn btn-secondary" onclick="testConnection()">🔍 Test Connection</button>
+            </div>
+        </div>
+
+        <!-- Stats -->
+        <div class="card">
+            <h2>📊 Sync Statistics</h2>
+            <div id="stats-loading" class="loading">Loading statistics...</div>
+            <div id="stats-content" style="display: none;">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-value" id="total-synced">0</div>
+                        <div class="stat-label">Total Synced</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="last-sync">Never</div>
+                        <div class="stat-label">Last Sync</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-value" id="analyzed-count">0</div>
+                        <div class="stat-label">Analyzed</div>
+                    </div>
+                </div>
+
+                <div style="margin-top: 20px; text-align: center;">
+                    <button class="btn btn-secondary" onclick="syncNow()">🔄 Sync Now</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Syncs -->
+        <div class="card">
+            <h2>📝 Recent Syncs</h2>
+            <div id="recent-syncs">
+                <div class="loading">Loading recent syncs...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Supabase configuration
+        const SUPABASE_URL = 'https://qwqlsbccwnwrdpcaccjz.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF3cWxzYmNjd253cmRwY2FjY2p6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjUzMTA1MDQsImV4cCI6MjA4MDg4NjUwNH0.yWzSV2Nid_T1XiDE0RrskFob9mRUc-m6MbeIiT7huC4';
+        const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let autoSyncEnabled = true;
+
+        // Check authentication
+        async function checkAuth() {
+            const { data: { session } } = await supabaseClient.auth.getSession();
+
+            if (!session) {
+                alert('Please log in first');
+                window.location.href = 'login.html';
+                return false;
+            }
+
+            // Check if manager
+            const { data: isManager } = await supabaseClient.rpc('is_manager');
+            if (!isManager) {
+                alert('Only managers can configure Fireflies integration');
+                window.location.href = 'index.html';
+                return false;
+            }
+
+            return true;
+        }
+
+        // Load settings
+        async function loadSettings() {
+            try {
+                const { data, error } = await supabaseClient.rpc('get_fireflies_settings');
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    const settings = data[0];
+                    document.getElementById('api-key').value = settings.api_key || '';
+                    autoSyncEnabled = settings.auto_sync_enabled;
+
+                    updateToggleUI();
+                    updateStats(settings);
+
+                    document.getElementById('stats-loading').style.display = 'none';
+                    document.getElementById('stats-content').style.display = 'block';
+                } else {
+                    document.getElementById('stats-loading').innerHTML = '<p>No settings configured yet</p>';
+                }
+
+            } catch (error) {
+                console.error('Error loading settings:', error);
+                showAlert('Error loading settings: ' + error.message, 'error');
+            }
+        }
+
+        // Save settings
+        async function saveSettings() {
+            const apiKey = document.getElementById('api-key').value.trim();
+
+            if (!apiKey) {
+                showAlert('Please enter your Fireflies API key', 'error');
+                return;
+            }
+
+            try {
+                const { data, error } = await supabaseClient.rpc('save_fireflies_api_key', {
+                    api_key_input: apiKey,
+                    auto_sync: autoSyncEnabled
+                });
+
+                if (error) throw error;
+
+                showAlert('✅ Settings saved successfully! Auto-sync will begin shortly.', 'success');
+                loadSettings();
+
+            } catch (error) {
+                console.error('Error saving settings:', error);
+                showAlert('Error saving settings: ' + error.message, 'error');
+            }
+        }
+
+        // Test connection
+        async function testConnection() {
+            showAlert('🔍 Testing connection to Fireflies...', 'success');
+
+            // Call edge function to test API key
+            try {
+                const { data, error } = await supabaseClient.functions.invoke('fireflies-sync', {
+                    body: { action: 'test' }
+                });
+
+                if (error) throw error;
+
+                showAlert('✅ Connection successful! Fireflies API is working.', 'success');
+
+            } catch (error) {
+                console.error('Connection test failed:', error);
+                showAlert('❌ Connection failed. Please check your API key.', 'error');
+            }
+        }
+
+        // Sync now
+        async function syncNow() {
+            showAlert('🔄 Starting manual sync...', 'success');
+
+            try {
+                const { data, error } = await supabaseClient.functions.invoke('fireflies-sync', {
+                    body: { action: 'sync' }
+                });
+
+                if (error) throw error;
+
+                showAlert(`✅ Sync complete! ${data.synced_count} new transcripts synced.`, 'success');
+                loadSettings();
+                loadRecentSyncs();
+
+            } catch (error) {
+                console.error('Sync failed:', error);
+                showAlert('❌ Sync failed: ' + error.message, 'error');
+            }
+        }
+
+        // Toggle auto-sync
+        function toggleAutoSync() {
+            autoSyncEnabled = !autoSyncEnabled;
+            updateToggleUI();
+        }
+
+        function updateToggleUI() {
+            const toggle = document.getElementById('auto-sync-toggle');
+            const label = document.getElementById('auto-sync-label');
+
+            if (autoSyncEnabled) {
+                toggle.classList.add('active');
+                label.textContent = 'Enabled - Syncs every 30 minutes';
+            } else {
+                toggle.classList.remove('active');
+                label.textContent = 'Disabled - Manual sync only';
+            }
+        }
+
+        // Update stats
+        function updateStats(settings) {
+            document.getElementById('total-synced').textContent = settings.total_synced || 0;
+
+            if (settings.last_sync_at) {
+                const date = new Date(settings.last_sync_at);
+                document.getElementById('last-sync').textContent = date.toLocaleDateString() + ' ' + date.toLocaleTimeString();
+            }
+        }
+
+        // Load recent syncs
+        async function loadRecentSyncs() {
+            try {
+                const { data, error } = await supabaseClient
+                    .from('Recent_Fireflies_Syncs')
+                    .select('*')
+                    .limit(10);
+
+                if (error) throw error;
+
+                const container = document.getElementById('recent-syncs');
+
+                if (!data || data.length === 0) {
+                    container.innerHTML = '<p style="text-align: center; opacity: 0.7; padding: 30px;">No syncs yet</p>';
+                    return;
+                }
+
+                container.innerHTML = data.map(sync => {
+                    const date = new Date(sync.synced_at);
+                    const statusColors = {
+                        synced: 'var(--brand-teal)',
+                        analyzing: 'var(--brand-gold)',
+                        analyzed: 'var(--brand-teal)',
+                        failed: 'var(--brand-pink)'
+                    };
+
+                    return `
+                        <div style="background: var(--input-bg); padding: 15px; border-radius: 10px; margin-bottom: 10px; border-left: 4px solid ${statusColors[sync.sync_status]};">
+                            <div style="display: flex; justify-content: space-between; margin-bottom: 5px;">
+                                <strong>${sync.meeting_title}</strong>
+                                <span style="font-size: 12px; opacity: 0.7;">${date.toLocaleDateString()}</span>
+                            </div>
+                            <div style="font-size: 13px; opacity: 0.8;">
+                                ${sync.duration_minutes} min • ${sync.user_name || sync.user_email}
+                            </div>
+                            <div style="font-size: 12px; margin-top: 5px;">
+                                Status: <span style="color: ${statusColors[sync.sync_status]}; font-weight: 600;">${sync.sync_status.toUpperCase()}</span>
+                                ${sync.analysis_score ? ` • Score: ${sync.analysis_score}/10` : ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+
+            } catch (error) {
+                console.error('Error loading recent syncs:', error);
+            }
+        }
+
+        // Show alert
+        function showAlert(message, type) {
+            const alert = document.getElementById('alert');
+            alert.textContent = message;
+            alert.className = `alert alert-${type}`;
+            alert.style.display = 'block';
+
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+        }
+
+        // Initialize
+        checkAuth().then(isAuth => {
+            if (isAuth) {
+                loadSettings();
+                loadRecentSyncs();
+            }
+        });
+    </script>
+</body>
+</html>

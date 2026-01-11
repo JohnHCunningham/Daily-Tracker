@@ -1186,7 +1186,7 @@
                         <!-- Action Buttons -->
                         <div class="action-buttons">
                             ${getCoachButton(rep, status)}
-                            <button class="btn btn-details">📊 Details</button>
+                            <button class="btn btn-details" onclick="showRepDetails(${rep.id}); event.stopPropagation();">📊 Details</button>
                         </div>
 
                         ${rep.coachingStatus ? `
@@ -1273,7 +1273,7 @@
                         <td>
                             <div class="table-actions">
                                 ${getTableCoachButton(rep, status)}
-                                <button class="table-btn table-btn-details">Details</button>
+                                <button class="table-btn table-btn-details" onclick="showRepDetails(${rep.id}); event.stopPropagation();">Details</button>
                             </div>
                         </td>
                     </tr>
@@ -1468,6 +1468,85 @@
                 return;
             }
             showCelebrationModal(rep.achievements[achievementIndex]);
+        }
+
+        function showRepDetails(repId) {
+            const rep = demoReps.find(r => r.id === repId);
+            if (!rep) {
+                console.error('Rep not found:', repId);
+                return;
+            }
+
+            const status = getRepStatus(rep);
+            const convRate = rep.dials > 0 ? Math.round((rep.conversations / rep.dials) * 100) : 0;
+            const meetingRate = rep.conversations > 0 ? Math.round((rep.meetings / rep.conversations) * 100) : 0;
+            const closeRate = rep.meetings > 0 ? Math.round((rep.sales / rep.meetings) * 100) : 0;
+
+            const detailsModal = {
+                icon: '📊',
+                title: `${rep.name} - Performance Details`,
+                description: `${rep.methodology} Methodology • ${status.icon} ${status.status.toUpperCase()}`,
+                details: `📈 CONVERSION FUNNEL
+
+Dials → Conversations: ${convRate}% (${rep.conversations}/${rep.dials})
+${convRate >= 30 ? '✅' : '⚠️'} Team average: 30%
+
+Conversations → Meetings: ${meetingRate}% (${rep.meetings}/${rep.conversations})
+${meetingRate >= 33 ? '✅' : '⚠️'} Team average: 33%
+
+Meetings → Sales: ${closeRate}% (${rep.sales}/${rep.meetings})
+${closeRate >= 40 ? '✅' : '⚠️'} Team average: 40%
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+🎯 ${rep.methodology.toUpperCase()} EXECUTION SCORES
+
+${rep.methodology === 'Sandler' ? `Upfront Contract: 8.5/10
+Pain Funnel Depth: 7.5/10
+Budget Discussion: 8.0/10
+Decision Process: 7.0/10
+No Free Consulting: 9.0/10` : ''}${rep.methodology === 'MEDDIC' ? `Metrics Identified: 8/10
+Economic Buyer Access: 7/10
+Decision Criteria Mapped: 8/10
+Decision Process Clarity: 6/10
+Identify Pain: 9/10
+Champion Developed: 7/10` : ''}${rep.methodology === 'Challenger' ? `Commercial Teaching: 7.5/10
+Tailoring Insight: 7/10
+Taking Control (Reframe): 6/10
+Constructive Tension: 6.5/10
+Push for Commitments: 7/10` : ''}${rep.methodology === 'SPIN' ? `Situation Questions: 8/10
+Problem Questions: 8.5/10
+Implication Questions: 7/10
+Need-Payoff Questions: 7.5/10
+Question Sequencing: 8/10` : ''}${rep.methodology === 'Gap Selling' ? `Current State Discovery: 8/10
+Future State Vision: 7.5/10
+Gap Quantification: 7/10
+Impact Analysis: 8/10
+Problem-Centric Selling: 8.5/10` : ''}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📞 RECENT CALL TRANSCRIPTS
+
+${rep.methodology === 'Sandler' || rep.methodology === 'SPIN' ? `• Jan 10: Discovery call - TechCorp (scored 8.5/10)
+• Jan 9: Follow-up - Innovate Inc (scored 7/10)
+• Jan 8: Cold call - Growth Systems (scored 6.5/10)` : `• Jan 10: Discovery call (scored 8/10)
+• Jan 9: Follow-up call (scored 7/10)
+• Jan 8: Prospecting call (scored 6.5/10)`}
+
+Click any call to view full transcript and AI analysis.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+💡 This view shows:
+• Full conversion funnel metrics
+• ${rep.methodology}-specific execution scoring
+• Call-by-call performance tracking
+• Transcript analysis with methodology scoring`,
+                level: 1
+            };
+
+            showCelebrationModal(detailsModal);
         }
 
         function handleCoachClickById(repId) {

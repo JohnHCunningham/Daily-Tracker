@@ -16,11 +16,29 @@ export default async function AppLayout({
     redirect('/login')
   }
 
-  const { data: userData } = await supabase
+  let { data: userData } = await supabase
     .from('Users')
     .select('role, full_name, account_id')
     .eq('auth_id', user.id)
     .single()
+
+  if (!userData) {
+    // Auto-repair: user signed up but account creation failed
+    const { data: repairResult, error: repairError } = await supabase
+      .rpc('ensure_user_has_account')
+
+    if (!repairError && repairResult?.created) {
+      const { data: repairedUser } = await supabase
+        .from('Users')
+        .select('role, full_name, account_id')
+        .eq('auth_id', user.id)
+        .single()
+
+      if (repairedUser) {
+        userData = repairedUser
+      }
+    }
+  }
 
   const userRole = userData?.role || 'rep'
 

@@ -51,7 +51,9 @@ export default function SignupPage() {
 
       if (rpcError) {
         console.error('Account creation error:', rpcError)
-        // Don't block signup - account can be created on first login
+        setError('Account setup failed. Please try again or contact support.')
+        setLoading(false)
+        return
       }
     }
 

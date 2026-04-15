@@ -7,7 +7,7 @@
 -- Get your user email
 DO $$
 DECLARE
-    demo_user_email TEXT := 'john@aiadvantagesolutions.ca';
+    demo_user_email TEXT := 'john@oneclickcoaching.com';
     demo_user_id UUID;
 BEGIN
     -- Get user ID

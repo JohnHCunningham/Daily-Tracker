@@ -11,7 +11,7 @@ import {
   HiChartBar,
   HiCog,
   HiSparkles,
-  HiClipboardList,
+  HiChatAlt2,
 } from 'react-icons/hi'
 import { useBrand } from './BrandProvider'
 
@@ -27,8 +27,8 @@ const navItems: NavItem[] = [
   { href: '/team', label: 'Team', icon: HiUserGroup, roles: ['admin', 'manager', 'coach'] },
   { href: '/calls', label: 'Calls', icon: HiPhone },
   { href: '/coaching', label: 'Coaching', icon: HiAcademicCap },
-  { href: '/planning', label: 'Planning', icon: HiClipboardList, roles: ['admin', 'manager', 'coach'] },
-  { href: '/goals', label: 'Goals', icon: HiChartBar },
+  { href: '/notes', label: '1-on-1 Notes', icon: HiChatAlt2 },
+  { href: '/goals', label: 'Goals & Targets', icon: HiChartBar },
   { href: '/celebrations', label: 'Wins', icon: HiSparkles },
   { href: '/integrations', label: 'Integrations', icon: HiPuzzle, roles: ['admin', 'manager'] },
   { href: '/settings', label: 'Settings', icon: HiCog, roles: ['admin'] },

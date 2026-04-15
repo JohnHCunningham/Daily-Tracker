@@ -33,3 +33,4 @@ dist/
 build/
 .vercel
 .netlify
+.env*.local

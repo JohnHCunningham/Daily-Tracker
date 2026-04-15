@@ -183,6 +183,21 @@ export default function FathomPage() {
         {!isConnected ? (
           <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-6">
             <h2 className="text-xl font-bold text-light mb-4">Connect Fathom</h2>
+
+            <details className="mb-5 group">
+              <summary className="text-sm font-medium text-teal cursor-pointer hover:text-aqua transition-colors">
+                How to get your API key
+              </summary>
+              <ol className="mt-3 ml-4 space-y-2 text-sm text-light-muted list-decimal list-outside">
+                <li>Log in to your Fathom account at <span className="text-light">fathom.video</span></li>
+                <li>Click your <span className="text-light">profile icon</span> in the top-right corner</li>
+                <li>Go to <span className="text-light">Settings</span></li>
+                <li>Navigate to the <span className="text-light">API / Integrations</span> section</li>
+                <li>Click <span className="text-light">Generate API Key</span> (the key is shown only once)</li>
+                <li>Copy the key and paste it below</li>
+              </ol>
+            </details>
+
             <p className="text-sm text-light-muted mb-4">
               Enter your Fathom API key to start syncing call transcripts.
             </p>

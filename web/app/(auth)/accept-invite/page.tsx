@@ -1,7 +1,8 @@
 'use client'
 
-import { Suspense, useEffect, useState } from 'react'
+import { Suspense, useEffect, useState, useCallback } from 'react'
 import { createClient } from '@/lib/supabase/client'
+import confetti from 'canvas-confetti'
 import Link from 'next/link'
 import { useRouter, useSearchParams } from 'next/navigation'
 
@@ -15,6 +16,7 @@ function AcceptInviteForm() {
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
   const [inviteInfo, setInviteInfo] = useState<InviteInfo | null>(null)
   const [verifying, setVerifying] = useState(true)
   const router = useRouter()
@@ -73,6 +75,8 @@ function AcceptInviteForm() {
     }
 
     // 1. Create auth user with the invited email
+    let authId: string | null = null
+
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: inviteInfo.email,
       password,
@@ -83,33 +87,50 @@ function AcceptInviteForm() {
     })
 
     if (authError) {
-      setError(authError.message)
-      setLoading(false)
-      return
+      // If user already exists, try signing in instead
+      if (authError.message.toLowerCase().includes('already registered')) {
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email: inviteInfo.email,
+          password,
+        })
+        if (signInError) {
+          setError('Account exists. Please enter the correct password to join the team.')
+          setLoading(false)
+          return
+        }
+        authId = signInData.user?.id || null
+      } else {
+        setError(authError.message)
+        setLoading(false)
+        return
+      }
+    } else {
+      authId = authData.user?.id || null
     }
 
-    // 2. Accept invitation via RPC
-    if (authData.user) {
-      const { data: result, error: rpcError } = await supabase.rpc('accept_invitation', {
-        p_token: token,
-        p_auth_id: authData.user.id,
+    // 2. Accept invitation via API route (bypasses PostgREST schema cache)
+    if (authId) {
+      const acceptRes = await fetch('/api/accept-invite', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token, authId }),
       })
 
-      if (rpcError) {
-        setError('Failed to join team. Please contact your admin.')
-        setLoading(false)
-        return
-      }
-
-      const parsed = typeof result === 'string' ? JSON.parse(result) : result
-      if (parsed?.error) {
-        setError(parsed.error)
+      if (!acceptRes.ok) {
+        const errBody = await acceptRes.json().catch(() => ({}))
+        setError(errBody.error || 'Failed to join team')
         setLoading(false)
         return
       }
     }
 
-    router.push('/dashboard')
+    setSuccess(true)
+    confetti({
+      particleCount: 150,
+      spread: 80,
+      origin: { y: 0.6 },
+    })
+    setTimeout(() => router.push('/dashboard'), 2500)
   }
 
   if (verifying) {
@@ -125,6 +146,16 @@ function AcceptInviteForm() {
         <Link href="/login" className="text-teal hover:text-aqua font-semibold text-sm">
           Go to Login
         </Link>
+      </div>
+    )
+  }
+
+  if (success) {
+    return (
+      <div className="text-center">
+        <div className="text-5xl mb-4">🎉</div>
+        <h2 className="text-2xl font-bold text-light mb-2">Welcome to the team!</h2>
+        <p className="text-light-muted">Redirecting to your dashboard...</p>
       </div>
     )
   }

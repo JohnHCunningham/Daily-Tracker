@@ -48,7 +48,7 @@ SET search_path = public
 AS $$
 BEGIN
   -- Verify caller is admin
-  IF admin_email NOT IN ('admin@aiadvantagesolutions.com', 'admin@aiadvantagesolutions.ca', 'john@aiadvantagesolutions.com') THEN
+  IF admin_email NOT IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com', 'john@oneclickcoaching.com') THEN
     RAISE EXCEPTION 'Unauthorized: Not an admin user';
   END IF;
 
@@ -161,7 +161,7 @@ BEGIN
   LEFT JOIN user_activity ua ON au.id = ua.user_id
   LEFT JOIN user_sales us ON au.id = us.user_id
   LEFT JOIN user_quality uq ON au.id = uq.user_id
-  WHERE au.email NOT IN ('admin@aiadvantagesolutions.com', 'admin@aiadvantagesolutions.ca', 'john@aiadvantagesolutions.com')
+  WHERE au.email NOT IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com', 'john@oneclickcoaching.com')
   ORDER BY performance_score DESC NULLS LAST;
 END;
 $$ LANGUAGE plpgsql;
@@ -191,7 +191,7 @@ DECLARE
   user_methodology TEXT;
 BEGIN
   -- Verify caller is admin
-  IF admin_email NOT IN ('admin@aiadvantagesolutions.com', 'admin@aiadvantagesolutions.ca', 'john@aiadvantagesolutions.com') THEN
+  IF admin_email NOT IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com', 'john@oneclickcoaching.com') THEN
     RAISE EXCEPTION 'Unauthorized: Not an admin user';
   END IF;
 
@@ -1167,7 +1167,7 @@ SET search_path = public
 AS $$
 BEGIN
   -- Verify caller is admin
-  IF admin_email NOT IN ('admin@aiadvantagesolutions.com', 'admin@aiadvantagesolutions.ca', 'john@aiadvantagesolutions.com') THEN
+  IF admin_email NOT IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com', 'john@oneclickcoaching.com') THEN
     RAISE EXCEPTION 'Unauthorized: Not an admin user';
   END IF;
 

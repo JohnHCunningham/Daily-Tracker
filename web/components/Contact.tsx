@@ -96,10 +96,10 @@ const Contact = () => {
                 <div>
                   <h4 className="font-semibold text-light mb-1">Email</h4>
                   <a
-                    href="mailto:john@aiadvantagesolutions.ca"
+                    href="mailto:john@oneclickcoaching.com"
                     className="text-light-muted hover:text-teal transition-colors"
                   >
-                    john@aiadvantagesolutions.ca
+                    john@oneclickcoaching.com
                   </a>
                 </div>
               </div>

@@ -91,7 +91,7 @@ export default function TeamPage() {
 
     if (!currentUser) return
 
-    const { error } = await supabase
+    const { data: invitation, error } = await supabase
       .from('Invitations')
       .insert({
         account_id: currentUser.account_id,
@@ -99,8 +99,24 @@ export default function TeamPage() {
         role: inviteRole,
         invited_by: user.id,
       })
+      .select('id')
+      .single()
 
-    if (!error) {
+    if (!error && invitation) {
+      // Send the invite email
+      try {
+        const emailRes = await fetch('/api/send-invite', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ invitationId: invitation.id }),
+        })
+        if (!emailRes.ok) {
+          console.error('Send invite failed:', emailRes.status)
+        }
+      } catch (e) {
+        console.error('Send invite error:', e)
+      }
+
       setInviteEmail('')
       setInviteRole('rep')
       setShowInviteModal(false)

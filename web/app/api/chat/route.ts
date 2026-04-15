@@ -133,7 +133,7 @@ export async function POST(request: Request) {
     console.error('Chat API error:', error)
     return NextResponse.json(
       {
-        message: "I'm having trouble connecting right now. Please email us at john@aiadvantagesolutions.ca or book a demo: https://tidycal.com/aiautomations/sales-coach",
+        message: "I'm having trouble connecting right now. Please email us at john@oneclickcoaching.com or book a demo: https://tidycal.com/aiautomations/sales-coach",
         leadCaptured: false
       },
       { status: 500 }

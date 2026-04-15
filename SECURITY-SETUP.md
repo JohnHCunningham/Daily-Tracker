@@ -55,7 +55,7 @@ INSERT INTO auth.users (
   gen_random_uuid(),
   'authenticated',
   'authenticated',
-  'admin@aiadvantagesolutions.com', -- YOUR EMAIL HERE
+  'john@oneclickcoaching.com', -- YOUR EMAIL HERE
   crypt('YourSecurePassword123!', gen_salt('bf')), -- YOUR PASSWORD HERE
   NOW(),
   '{"provider":"email","providers":["email"]}',
@@ -81,8 +81,8 @@ Edit `/Users/johncunningham/Daily-Tracker/admin.html` and update the admin email
 
 ```javascript
 const ADMIN_EMAILS = [
-    'admin@aiadvantagesolutions.com',
-    'john@aiadvantagesolutions.com',
+    'john@oneclickcoaching.com',
+    'john@oneclickcoaching.com',
     'your-email@example.com' // Add your email here
 ];
 ```

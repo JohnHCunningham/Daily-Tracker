@@ -17,8 +17,8 @@ DECLARE
   v_account_id UUID;
   v_user_id UUID;
 BEGIN
-  INSERT INTO "Accounts" (company_name, owner_user_id, contact_email, admin_designation)
-  VALUES (p_company_name, p_auth_id, p_email, 'owner')
+  INSERT INTO "Accounts" (company_name, owner_user_id, contact_email)
+  VALUES (p_company_name, p_auth_id, p_email)
   RETURNING id INTO v_account_id;
 
   INSERT INTO "Users" (auth_id, account_id, role, email, full_name)
@@ -59,8 +59,8 @@ BEGIN
   FROM auth.users WHERE id = v_auth_id;
 
   -- Create account + user
-  INSERT INTO "Accounts" (company_name, owner_user_id, contact_email, admin_designation)
-  VALUES (COALESCE(v_company_name, split_part(v_email, '@', 2)), v_auth_id, v_email, 'owner')
+  INSERT INTO "Accounts" (company_name, owner_user_id, contact_email)
+  VALUES (COALESCE(v_company_name, split_part(v_email, '@', 2)), v_auth_id, v_email)
   RETURNING id INTO v_account_id;
 
   INSERT INTO "Users" (auth_id, account_id, role, email, full_name)

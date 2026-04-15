@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { HiUserGroup, HiPhone, HiAcademicCap, HiRefresh, HiExclamationCircle, HiCheckCircle } from 'react-icons/hi'
+import { HiUserGroup, HiPhone, HiAcademicCap, HiRefresh, HiExclamationCircle, HiCheckCircle, HiSparkles, HiChatAlt2, HiMail, HiClipboardCheck } from 'react-icons/hi'
 import dynamic from 'next/dynamic'
 import SandlerBreakdown from '../components/SandlerBreakdown'
 
 const ScoreRadial = dynamic(() => import('../components/ScoreRadial'), { ssr: false })
 const ScoreTrendChart = dynamic(() => import('../components/ScoreTrendChart'), { ssr: false })
+const ActivityFunnel = dynamic(() => import('../components/ActivityFunnel'), { ssr: false })
+const CoachingFeed = dynamic(() => import('../components/CoachingFeed'), { ssr: false })
 
 interface UserInfo {
   role: string
@@ -17,13 +19,19 @@ interface UserInfo {
   account_id: string
 }
 
-interface TeamMemberRow {
+interface TeamMemberInfo {
+  id: string
   full_name: string
   email: string
   role: string
-  avgScore: number
-  callCount: number
-  trend: 'up' | 'down' | 'flat'
+}
+
+interface RepGoalProgress {
+  approachesPercent: number
+  discoveryPercent: number
+  proposalsPercent: number
+  salesPercent: number
+  sandlerScore: number | null
 }
 
 interface CoachingPreview {
@@ -32,6 +40,7 @@ interface CoachingPreview {
   status: string
   created_at: string
   subject: string | null
+  coaching_content: string | null
 }
 
 interface NeedsAttention {
@@ -40,28 +49,73 @@ interface NeedsAttention {
   score: number
 }
 
+interface Goal {
+  id: string
+  rep_email: string | null
+  goal_type: string
+  target_value: number
+  current_value: number
+  period: string
+  period_start: string
+  period_end: string
+}
+
+interface PipelineStage {
+  stage: string
+  actual: number
+  target: number
+}
+
+interface CelebrationPreview {
+  id: string
+  title: string
+  badge_key: string | null
+  rep_email: string | null
+  created_at: string
+}
+
+interface DirectMessagePreview {
+  unreadCount: number
+  lastMessage: string | null
+  lastSender: string | null
+}
+
+interface CommitmentItem {
+  id: string
+  commitment_text: string
+  rep_email: string
+  status: string
+  completed_at: string | null
+}
+
 export default function DashboardPage() {
   const [userInfo, setUserInfo] = useState<UserInfo | null>(null)
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
 
   // Leader state
-  const [teamMembers, setTeamMembers] = useState<TeamMemberRow[]>([])
+  const [teamMembersInfo, setTeamMembersInfo] = useState<TeamMemberInfo[]>([])
+  const [repGoalMap, setRepGoalMap] = useState<Record<string, RepGoalProgress>>({})
   const [teamAvgScore, setTeamAvgScore] = useState<number | null>(null)
   const [totalCalls, setTotalCalls] = useState(0)
-  const [quotaAttainment, setQuotaAttainment] = useState<number | null>(null)
-  const [discoveryCallsPct, setDiscoveryCallsPct] = useState<number | null>(null)
-  const [approachesPct, setApproachesPct] = useState<number | null>(null)
   const [recentCoaching, setRecentCoaching] = useState<CoachingPreview[]>([])
   const [needsAttention, setNeedsAttention] = useState<NeedsAttention[]>([])
   const [trendLabels, setTrendLabels] = useState<string[]>([])
   const [trendScores, setTrendScores] = useState<number[]>([])
+  const [pipelineData, setPipelineData] = useState<PipelineStage[]>([])
+  const [teamSandlerScores, setTeamSandlerScores] = useState<Record<string, number> | null>(null)
+  const [recentCelebrations, setRecentCelebrations] = useState<CelebrationPreview[]>([])
+
+  // Commitments state (shared)
+  const [openCommitments, setOpenCommitments] = useState<CommitmentItem[]>([])
 
   // Rep state
   const [repScores, setRepScores] = useState<Record<string, number> | null>(null)
   const [repOverallScore, setRepOverallScore] = useState<number | null>(null)
   const [repCallCount, setRepCallCount] = useState(0)
-  const [repBenchmarks, setRepBenchmarks] = useState<{ approaches: number; approachesTarget: number; discovery: number; discoveryTarget: number; conversions: number; conversionsTarget: number } | null>(null)
+  const [repPipeline, setRepPipeline] = useState<{ callsPercent: number; discoveryPercent: number; proposalsPercent: number; salesPercent: number } | null>(null)
+  const [repCoachingMessages, setRepCoachingMessages] = useState<CoachingPreview[]>([])
+  const [repNotesPreview, setRepNotesPreview] = useState<DirectMessagePreview>({ unreadCount: 0, lastMessage: null, lastSender: null })
 
   const supabase = createClient()
 
@@ -79,15 +133,68 @@ export default function DashboardPage() {
       .eq('auth_id', user.id)
       .single()
 
-    if (!userData) { setLoading(false); return }
+    if (!userData) {
+      setLoading(false)
+      return
+    }
     setUserInfo(userData)
 
     if (['admin', 'manager', 'coach'].includes(userData.role)) {
       await loadLeaderDashboard(userData.account_id)
+      await loadCommitments(userData.account_id)
     } else {
       await loadRepDashboard(userData.account_id, userData.email, user.id)
+      await loadCommitments(userData.account_id, userData.email)
     }
+
+    // Load celebrations for both views
+    await loadCelebrations(userData.account_id)
+
     setLoading(false)
+  }
+
+  function getProgressPercent(current: number, target: number): number {
+    if (target === 0) return 0
+    return Math.min(Math.round((current / target) * 100), 100)
+  }
+
+  async function loadCelebrations(accountId: string) {
+    const { data } = await supabase
+      .from('Celebrations')
+      .select('id, title, badge_key, rep_email, created_at')
+      .eq('account_id', accountId)
+      .order('created_at', { ascending: false })
+      .limit(2)
+
+    if (data) setRecentCelebrations(data)
+  }
+
+  async function loadCommitments(accountId: string, email?: string) {
+    let query = supabase
+      .from('Coaching_Commitments')
+      .select('id, commitment_text, rep_email, status, completed_at')
+      .eq('account_id', accountId)
+      .eq('status', 'open')
+      .order('created_at', { ascending: false })
+      .limit(10)
+
+    if (email) {
+      query = query.eq('rep_email', email)
+    }
+
+    const { data } = await query
+    if (data) setOpenCommitments(data)
+  }
+
+  async function handleCompleteCommitment(commitmentId: string) {
+    const { error } = await supabase
+      .from('Coaching_Commitments')
+      .update({ status: 'completed', completed_at: new Date().toISOString() })
+      .eq('id', commitmentId)
+
+    if (!error) {
+      setOpenCommitments((prev) => prev.filter((c) => c.id !== commitmentId))
+    }
   }
 
   async function loadLeaderDashboard(accountId: string) {
@@ -103,47 +210,149 @@ export default function DashboardPage() {
     // Team members
     const { data: members } = await supabase
       .from('Users')
-      .select('full_name, email, role')
+      .select('id, full_name, email, role')
       .eq('account_id', accountId)
 
     // Recent coaching
     const { data: coaching } = await supabase
       .from('Coaching_Messages')
-      .select('id, rep_email, status, created_at, subject')
+      .select('id, rep_email, status, created_at, subject, coaching_content')
       .eq('account_id', accountId)
       .order('created_at', { ascending: false })
       .limit(5)
 
     if (coaching) setRecentCoaching(coaching)
 
-    // Benchmarks for quota
-    const { data: benchmarks } = await supabase
-      .from('Benchmarks')
+    // Goals for current month
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]
+
+    const { data: goalsData } = await supabase
+      .from('Goals')
       .select('*')
       .eq('account_id', accountId)
-      .is('user_id', null)
-      .order('created_at', { ascending: false })
-      .limit(1)
+      .gte('period_end', monthStart)
+      .lte('period_start', monthEnd)
 
-    if (benchmarks && benchmarks.length > 0) {
-      const b = benchmarks[0]
-      if (b.conversions_target > 0) {
-        setQuotaAttainment(Math.round((b.conversions_actual / b.conversions_target) * 100))
+    // Try loading pipeline stats via RPC
+    try {
+      const { data: pipelineStats } = await supabase.rpc('get_pipeline_stats', {
+        p_account_id: accountId,
+        p_start_date: monthStart,
+        p_end_date: monthEnd,
+      })
+
+      if (pipelineStats && pipelineStats.length > 0) {
+        // Aggregate across all reps
+        const stageAgg: Record<string, { actual: number; target: number }> = {}
+        pipelineStats.forEach((row: { stage: string; actual_count: number; target: number }) => {
+          if (!stageAgg[row.stage]) stageAgg[row.stage] = { actual: 0, target: 0 }
+          stageAgg[row.stage].actual += Number(row.actual_count)
+          stageAgg[row.stage].target += Number(row.target)
+        })
+
+        const stageOrder = ['calls', 'discovery', 'proposals', 'sales']
+        const stageLabels: Record<string, string> = { calls: 'Calls', discovery: 'Discovery', proposals: 'Proposals', sales: 'Sales' }
+        const funnel: PipelineStage[] = stageOrder
+          .filter((s) => stageAgg[s])
+          .map((s) => ({ stage: stageLabels[s], actual: stageAgg[s].actual, target: stageAgg[s].target }))
+
+        setPipelineData(funnel)
       }
-      if (b.discovery_calls_target > 0) {
-        setDiscoveryCallsPct(Math.round((b.discovery_calls_actual / b.discovery_calls_target) * 100))
+    } catch {
+      // RPC may not exist yet if migration hasn't run — fall back to goals-based pipeline
+    }
+
+    // Build rep goal progress map (expanded with proposals + sales)
+    if (goalsData && members) {
+      const goalMap: Record<string, RepGoalProgress> = {}
+
+      // Also build pipeline fallback from goals if RPC unavailable
+      let fallbackPipeline: PipelineStage[] = []
+      const teamGoalAgg: Record<string, { current: number; target: number }> = {
+        contacts: { current: 0, target: 0 },
+        discovery_calls: { current: 0, target: 0 },
+        proposals: { current: 0, target: 0 },
+        sales: { current: 0, target: 0 },
       }
-      if (b.approaches_target > 0) {
-        setApproachesPct(Math.round((b.approaches_actual / b.approaches_target) * 100))
+
+      members.forEach((m) => {
+        const repGoals = goalsData.filter(
+          (g: Goal) => g.rep_email === m.email || g.rep_email === null
+        )
+
+        const approaches = repGoals.filter((g: Goal) => g.goal_type === 'contacts')
+        const discovery = repGoals.filter((g: Goal) => g.goal_type === 'discovery_calls')
+        const proposals = repGoals.filter((g: Goal) => g.goal_type === 'proposals')
+        const sales = repGoals.filter((g: Goal) => g.goal_type === 'sales')
+
+        const aTarget = approaches.reduce((s: number, g: Goal) => s + g.target_value, 0)
+        const aCurrent = approaches.reduce((s: number, g: Goal) => s + g.current_value, 0)
+        const dTarget = discovery.reduce((s: number, g: Goal) => s + g.target_value, 0)
+        const dCurrent = discovery.reduce((s: number, g: Goal) => s + g.current_value, 0)
+        const pTarget = proposals.reduce((s: number, g: Goal) => s + g.target_value, 0)
+        const pCurrent = proposals.reduce((s: number, g: Goal) => s + g.current_value, 0)
+        const sTarget = sales.reduce((s: number, g: Goal) => s + g.target_value, 0)
+        const sCurrent = sales.reduce((s: number, g: Goal) => s + g.current_value, 0)
+
+        if (m.role === 'rep') {
+          teamGoalAgg.contacts.current += aCurrent
+          teamGoalAgg.contacts.target += aTarget
+          teamGoalAgg.discovery_calls.current += dCurrent
+          teamGoalAgg.discovery_calls.target += dTarget
+          teamGoalAgg.proposals.current += pCurrent
+          teamGoalAgg.proposals.target += pTarget
+          teamGoalAgg.sales.current += sCurrent
+          teamGoalAgg.sales.target += sTarget
+        }
+
+        // Per-rep Sandler score from calls
+        let repSandler: number | null = null
+        if (recentCalls) {
+          const repCalls = recentCalls.filter((c) => c.rep_email === m.email && c.methodology_scores)
+          if (repCalls.length > 0) {
+            const allAvgs = repCalls.map((c) => {
+              const vals = Object.values(c.methodology_scores!) as number[]
+              return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0
+            })
+            repSandler = Math.round(allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length * 10) / 10
+          }
+        }
+
+        goalMap[m.email] = {
+          approachesPercent: getProgressPercent(aCurrent, aTarget),
+          discoveryPercent: getProgressPercent(dCurrent, dTarget),
+          proposalsPercent: getProgressPercent(pCurrent, pTarget),
+          salesPercent: getProgressPercent(sCurrent, sTarget),
+          sandlerScore: repSandler,
+        }
+      })
+
+      setRepGoalMap(goalMap)
+
+      // Fallback pipeline if RPC didn't load
+      if (pipelineData.length === 0) {
+        fallbackPipeline = [
+          { stage: 'Calls', actual: teamGoalAgg.contacts.current, target: teamGoalAgg.contacts.target },
+          { stage: 'Discovery', actual: teamGoalAgg.discovery_calls.current, target: teamGoalAgg.discovery_calls.target },
+          { stage: 'Proposals', actual: teamGoalAgg.proposals.current, target: teamGoalAgg.proposals.target },
+          { stage: 'Sales', actual: teamGoalAgg.sales.current, target: teamGoalAgg.sales.target },
+        ]
+        setPipelineData(fallbackPipeline)
       }
+    }
+
+    if (members) {
+      setTeamMembersInfo(members)
     }
 
     if (recentCalls && recentCalls.length > 0) {
       setTotalCalls(recentCalls.length)
 
-      // Build rep aggregates
-      const repAgg: Record<string, { sum: number; count: number; recent: number; older: number }> = {}
+      const repAgg: Record<string, { sum: number; count: number }> = {}
       const attention: NeedsAttention[] = []
+      const componentAgg: Record<string, { sum: number; count: number }> = {}
 
       recentCalls.forEach((call) => {
         if (!call.methodology_scores) return
@@ -152,12 +361,16 @@ export default function DashboardPage() {
         const avg = vals.reduce((a, b) => a + b, 0) / vals.length
         const rep = call.rep_email || 'unknown'
 
-        if (!repAgg[rep]) repAgg[rep] = { sum: 0, count: 0, recent: 0, older: 0 }
+        if (!repAgg[rep]) repAgg[rep] = { sum: 0, count: 0 }
         repAgg[rep].sum += avg
         repAgg[rep].count += 1
 
-        // Weak components for "needs attention"
+        // Aggregate per component for team Sandler breakdown
         Object.entries(call.methodology_scores).forEach(([comp, score]) => {
+          if (!componentAgg[comp]) componentAgg[comp] = { sum: 0, count: 0 }
+          componentAgg[comp].sum += score as number
+          componentAgg[comp].count += 1
+
           if ((score as number) < 4) {
             const exists = attention.find((a) => a.repName === rep && a.component === comp)
             if (!exists) {
@@ -167,29 +380,18 @@ export default function DashboardPage() {
         })
       })
 
-      // Team avg
       const allAvgs = Object.values(repAgg).map((r) => r.sum / r.count)
       if (allAvgs.length > 0) {
         setTeamAvgScore(Math.round(allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length * 10) / 10)
       }
 
-      // Team members with scores
-      if (members) {
-        const memberRows: TeamMemberRow[] = members.map((m) => {
-          const agg = repAgg[m.email]
-          return {
-            full_name: m.full_name || m.email,
-            email: m.email,
-            role: m.role,
-            avgScore: agg ? Math.round(agg.sum / agg.count * 10) / 10 : 0,
-            callCount: agg ? agg.count : 0,
-            trend: 'flat' as const,
-          }
-        }).sort((a, b) => b.avgScore - a.avgScore)
-        setTeamMembers(memberRows)
-      }
+      // Team Sandler breakdown
+      const teamScores: Record<string, number> = {}
+      Object.entries(componentAgg).forEach(([comp, { sum, count }]) => {
+        teamScores[comp] = Math.round((sum / count) * 10) / 10
+      })
+      setTeamSandlerScores(teamScores)
 
-      // Needs attention (top 4 worst)
       setNeedsAttention(attention.sort((a, b) => a.score - b.score).slice(0, 4))
 
       // Trend data
@@ -222,25 +424,80 @@ export default function DashboardPage() {
       .order('call_date', { ascending: true })
       .limit(20)
 
-    // Benchmarks for this rep
-    const { data: benchmarks } = await supabase
-      .from('Benchmarks')
+    // Goals for current month
+    const now = new Date()
+    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
+    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]
+
+    const { data: goalsData } = await supabase
+      .from('Goals')
       .select('*')
       .eq('account_id', accountId)
-      .eq('user_id', userId)
-      .order('created_at', { ascending: false })
-      .limit(1)
+      .gte('period_end', monthStart)
+      .lte('period_start', monthEnd)
 
-    if (benchmarks && benchmarks.length > 0) {
-      const b = benchmarks[0]
-      setRepBenchmarks({
-        approaches: b.approaches_actual || 0,
-        approachesTarget: b.approaches_target || 0,
-        discovery: b.discovery_calls_actual || 0,
-        discoveryTarget: b.discovery_calls_target || 0,
-        conversions: b.conversions_actual || 0,
-        conversionsTarget: b.conversions_target || 0,
+    if (goalsData) {
+      const myGoals = goalsData.filter((g: Goal) => g.rep_email === email || g.rep_email === null)
+
+      const approaches = myGoals.filter((g: Goal) => g.goal_type === 'contacts')
+      const discovery = myGoals.filter((g: Goal) => g.goal_type === 'discovery_calls')
+      const proposals = myGoals.filter((g: Goal) => g.goal_type === 'proposals')
+      const sales = myGoals.filter((g: Goal) => g.goal_type === 'sales')
+
+      const aTarget = approaches.reduce((s: number, g: Goal) => s + g.target_value, 0)
+      const aCurrent = approaches.reduce((s: number, g: Goal) => s + g.current_value, 0)
+      const dTarget = discovery.reduce((s: number, g: Goal) => s + g.target_value, 0)
+      const dCurrent = discovery.reduce((s: number, g: Goal) => s + g.current_value, 0)
+      const pTarget = proposals.reduce((s: number, g: Goal) => s + g.target_value, 0)
+      const pCurrent = proposals.reduce((s: number, g: Goal) => s + g.current_value, 0)
+      const sTarget = sales.reduce((s: number, g: Goal) => s + g.target_value, 0)
+      const sCurrent = sales.reduce((s: number, g: Goal) => s + g.current_value, 0)
+
+      setRepPipeline({
+        callsPercent: getProgressPercent(aCurrent, aTarget),
+        discoveryPercent: getProgressPercent(dCurrent, dTarget),
+        proposalsPercent: getProgressPercent(pCurrent, pTarget),
+        salesPercent: getProgressPercent(sCurrent, sTarget),
       })
+    }
+
+    // Coaching messages sent to this rep
+    const { data: coachingData } = await supabase
+      .from('Coaching_Messages')
+      .select('id, rep_email, status, created_at, subject, coaching_content')
+      .eq('account_id', accountId)
+      .eq('rep_email', email)
+      .eq('status', 'sent')
+      .order('created_at', { ascending: false })
+      .limit(3)
+
+    if (coachingData) setRepCoachingMessages(coachingData)
+
+    // 1-on-1 notes preview
+    try {
+      const { data: unreadData } = await supabase
+        .from('Direct_Messages')
+        .select('id', { count: 'exact' })
+        .eq('account_id', accountId)
+        .eq('recipient_email', email)
+        .eq('is_read', false)
+
+      const { data: lastMsg } = await supabase
+        .from('Direct_Messages')
+        .select('message_text, sender_email')
+        .eq('account_id', accountId)
+        .or(`sender_email.eq.${email},recipient_email.eq.${email}`)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single()
+
+      setRepNotesPreview({
+        unreadCount: unreadData?.length ?? 0,
+        lastMessage: lastMsg?.message_text ?? null,
+        lastSender: lastMsg?.sender_email ?? null,
+      })
+    } catch {
+      // Direct_Messages table may not exist yet
     }
 
     if (scores && scores.length > 0) {
@@ -293,6 +550,17 @@ export default function DashboardPage() {
     }
   }
 
+  function getTimeAgo(dateStr: string): string {
+    const diff = Date.now() - new Date(dateStr).getTime()
+    const minutes = Math.floor(diff / 60000)
+    if (minutes < 60) return `${minutes}m ago`
+    const hours = Math.floor(minutes / 60)
+    if (hours < 24) return `${hours}h ago`
+    const days = Math.floor(hours / 24)
+    if (days < 7) return `${days}d ago`
+    return new Date(dateStr).toLocaleDateString()
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -309,6 +577,8 @@ export default function DashboardPage() {
 
   // ─── LEADER DASHBOARD ───
   if (isLeader) {
+    const repMembers = teamMembersInfo.filter((m) => m.role === 'rep')
+
     return (
       <div>
         {/* Header */}
@@ -329,8 +599,26 @@ export default function DashboardPage() {
           </button>
         </div>
 
+        {/* Pipeline Funnel */}
+        {pipelineData.length > 0 && (
+          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-8">
+            <h2 className="text-lg font-bold text-light mb-4">Pipeline Funnel</h2>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+              {pipelineData.map((stage) => (
+                <div key={stage.stage} className="text-center">
+                  <p className="text-xs text-light-muted uppercase tracking-wider mb-1">{stage.stage}</p>
+                  <p className="text-lg font-bold text-light">
+                    {stage.actual}<span className="text-light-muted font-normal">/{stage.target}</span>
+                  </p>
+                </div>
+              ))}
+            </div>
+            <ActivityFunnel data={pipelineData} />
+          </div>
+        )}
+
         {/* KPI Radials Row */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
           <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
             <ScoreRadial
               score={teamAvgScore ?? 0}
@@ -350,99 +638,98 @@ export default function DashboardPage() {
             />
           </div>
           <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
-            <ScoreRadial
-              score={quotaAttainment ?? 0}
-              maxScore={100}
-              size={120}
-              label="Quota Attainment"
-              showPercentage={true}
-            />
-          </div>
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
-            <ScoreRadial
-              score={discoveryCallsPct ?? 0}
-              maxScore={100}
-              size={120}
-              label="Discovery Calls"
-              showPercentage={true}
-            />
-          </div>
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
-            <ScoreRadial
-              score={approachesPct ?? 0}
-              maxScore={100}
-              size={120}
-              label="Approaches"
-              showPercentage={true}
-            />
+            {trendLabels.length > 1 ? (
+              <ScoreTrendChart labels={trendLabels} scores={trendScores} height={100} />
+            ) : (
+              <div className="flex flex-col items-center justify-center h-full">
+                <p className="text-light-muted text-xs text-center">Score trends appear after calls are analyzed.</p>
+              </div>
+            )}
+            <p className="text-xs font-medium text-light-muted mt-1">Score Trend</p>
           </div>
         </div>
 
-        {/* Team Members Table */}
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-6">
+        {/* Rep Cards Grid */}
+        <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-lg font-bold text-light">Team Members</h2>
             <Link href="/team" className="text-teal text-sm hover:text-aqua">Manage Team</Link>
           </div>
-          {teamMembers.length > 0 ? (
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="text-left text-xs text-light-muted uppercase tracking-wider border-b border-navy">
-                    <th className="pb-3 pr-4">Rep</th>
-                    <th className="pb-3 pr-4 text-center">Score</th>
-                    <th className="pb-3 pr-4 text-center">Calls</th>
-                    <th className="pb-3 text-right">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teamMembers.map((member) => (
-                    <tr key={member.email} className="border-b border-navy/50 last:border-0">
-                      <td className="py-3 pr-4">
-                        <p className="text-sm font-medium text-light">{member.full_name}</p>
-                        <p className="text-xs text-light-muted">{member.role}</p>
-                      </td>
-                      <td className="py-3 pr-4 text-center">
-                        <span className={`text-sm font-bold px-2 py-1 rounded-lg ${
-                          member.avgScore >= 7 ? 'text-teal bg-teal/10' :
-                          member.avgScore >= 5 ? 'text-gold bg-gold/10' :
-                          'text-pink bg-pink/10'
-                        }`}>
-                          {member.avgScore > 0 ? member.avgScore : '--'}
+          {repMembers.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {repMembers.map((member) => {
+                const progress = repGoalMap[member.email] || { approachesPercent: 0, discoveryPercent: 0, proposalsPercent: 0, salesPercent: 0, sandlerScore: null }
+                return (
+                  <Link
+                    key={member.id}
+                    href={`/team/${member.id}`}
+                    className="bg-navy-light rounded-2xl border border-teal/10 p-5 hover:border-teal/30 transition-colors cursor-pointer"
+                  >
+                    <div className="grid grid-cols-4 gap-2 mb-4">
+                      <ScoreRadial
+                        score={progress.approachesPercent}
+                        maxScore={100}
+                        size={65}
+                        label="Calls"
+                        showPercentage={true}
+                      />
+                      <ScoreRadial
+                        score={progress.discoveryPercent}
+                        maxScore={100}
+                        size={65}
+                        label="Discovery"
+                        showPercentage={true}
+                      />
+                      <ScoreRadial
+                        score={progress.proposalsPercent}
+                        maxScore={100}
+                        size={65}
+                        label="Proposals"
+                        showPercentage={true}
+                      />
+                      <ScoreRadial
+                        score={progress.salesPercent}
+                        maxScore={100}
+                        size={65}
+                        label="Sales"
+                        showPercentage={true}
+                      />
+                    </div>
+                    <div className="text-center">
+                      <p className="text-sm font-bold text-light">{member.full_name || member.email}</p>
+                      <div className="flex items-center justify-center gap-2 mt-1">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-teal/10 text-teal uppercase tracking-wider">
+                          {member.role}
                         </span>
-                      </td>
-                      <td className="py-3 pr-4 text-center text-sm text-light-muted">
-                        {member.callCount}
-                      </td>
-                      <td className="py-3 text-right">
-                        <Link
-                          href={`/calls?rep=${encodeURIComponent(member.email)}`}
-                          className="text-teal text-xs hover:text-aqua"
-                        >
-                          View Calls
-                        </Link>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                        {progress.sandlerScore !== null && (
+                          <span className="text-xs text-light-muted">
+                            Avg: {progress.sandlerScore}/10
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </Link>
+                )
+              })}
             </div>
           ) : (
-            <p className="text-light-muted text-sm">
-              No team members yet. <Link href="/team/invite" className="text-teal hover:text-aqua">Invite your first rep</Link>
-            </p>
+            <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+              <p className="text-light-muted text-sm">
+                No team members yet. <Link href="/team/invite" className="text-teal hover:text-aqua">Invite your first rep</Link>
+              </p>
+            </div>
           )}
         </div>
 
-        {/* Bottom Row: Trend + Coaching + Attention */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Score Trends */}
+        {/* Bottom Row: Sandler Breakdown + Coaching + Attention */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Team Sandler Breakdown */}
           <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-            <h2 className="text-lg font-bold text-light mb-4">Score Trends</h2>
-            {trendLabels.length > 1 ? (
-              <ScoreTrendChart labels={trendLabels} scores={trendScores} height={200} />
+            <h2 className="text-lg font-bold text-light mb-4">Team Sandler Breakdown</h2>
+            {teamSandlerScores && Object.keys(teamSandlerScores).length > 0 ? (
+              <SandlerBreakdown scores={teamSandlerScores} />
             ) : (
-              <p className="text-light-muted text-sm">Trends appear after calls are analyzed.</p>
+              <p className="text-light-muted text-sm">Breakdown appears after calls are analyzed.</p>
             )}
           </div>
 
@@ -497,6 +784,54 @@ export default function DashboardPage() {
             )}
           </div>
         </div>
+
+        {/* Open Commitments (Manager view) */}
+        {openCommitments.length > 0 && (
+          <div className="bg-navy-light rounded-2xl border border-gold/20 p-6 mb-6">
+            <div className="flex items-center gap-2 mb-4">
+              <HiClipboardCheck className="text-gold text-lg" />
+              <h2 className="text-lg font-bold text-light">Open Commitments</h2>
+              <span className="text-xs bg-gold/10 text-gold px-2 py-0.5 rounded-full border border-gold/20">
+                {openCommitments.length}
+              </span>
+            </div>
+            <div className="space-y-2">
+              {openCommitments.map((c) => (
+                <div key={c.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-navy/50">
+                  <span className="w-2 h-2 bg-gold rounded-full mt-1.5 flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-light">{c.commitment_text}</p>
+                    <p className="text-xs text-light-muted mt-0.5">{c.rep_email}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Celebrations Preview */}
+        {recentCelebrations.length > 0 && (
+          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-bold text-light">Recent Wins</h2>
+              <Link href="/celebrations" className="text-teal text-xs hover:text-aqua">View All</Link>
+            </div>
+            <div className="space-y-3">
+              {recentCelebrations.map((c) => (
+                <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-navy/50">
+                  <HiSparkles className="text-gold text-lg flex-shrink-0" />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-light truncate">{c.title}</p>
+                    <p className="text-xs text-light-muted">
+                      {c.rep_email && <span>{c.rep_email} &middot; </span>}
+                      {getTimeAgo(c.created_at)}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     )
   }
@@ -509,72 +844,77 @@ export default function DashboardPage() {
         Welcome back, {userInfo.full_name || 'there'}.
       </p>
 
-      {/* Rep KPI Radials */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
-          <ScoreRadial
-            score={repOverallScore ?? 0}
-            maxScore={10}
-            size={120}
-            label="Sandler Score"
-            sublabel="/10"
-          />
-        </div>
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
-          <ScoreRadial
-            score={repCallCount}
-            maxScore={Math.max(repCallCount, 20)}
-            size={120}
-            label="Calls Analyzed"
-          />
-        </div>
-        {repBenchmarks ? (
-          <>
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
-              <ScoreRadial
-                score={repBenchmarks.approachesTarget > 0 ? Math.round((repBenchmarks.approaches / repBenchmarks.approachesTarget) * 100) : 0}
-                maxScore={100}
-                size={120}
-                label="Approaches"
-                showPercentage={true}
-              />
-            </div>
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
-              <ScoreRadial
-                score={repBenchmarks.discoveryTarget > 0 ? Math.round((repBenchmarks.discovery / repBenchmarks.discoveryTarget) * 100) : 0}
-                maxScore={100}
-                size={120}
-                label="Discovery Calls"
-                showPercentage={true}
-              />
-            </div>
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
-              <ScoreRadial
-                score={repBenchmarks.conversionsTarget > 0 ? Math.round((repBenchmarks.conversions / repBenchmarks.conversionsTarget) * 100) : 0}
-                maxScore={100}
-                size={120}
-                label="Quota"
-                showPercentage={true}
-              />
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
-              <ScoreRadial score={0} maxScore={100} size={120} label="Approaches" showPercentage={true} />
-            </div>
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
-              <ScoreRadial score={0} maxScore={100} size={120} label="Discovery Calls" showPercentage={true} />
-            </div>
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
-              <ScoreRadial score={0} maxScore={100} size={120} label="Quota" showPercentage={true} />
-            </div>
-          </>
-        )}
+      {/* Hero: Sandler Score */}
+      <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-8 flex flex-col items-center">
+        <ScoreRadial
+          score={repOverallScore ?? 0}
+          maxScore={10}
+          size={160}
+          label="Sandler Score"
+          sublabel="/10"
+        />
       </div>
 
-      {/* Sandler Breakdown + Trend */}
+      {/* 4 Pipeline Radials */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+          <ScoreRadial
+            score={repPipeline?.callsPercent ?? 0}
+            maxScore={100}
+            size={110}
+            label="Calls"
+            showPercentage={true}
+          />
+        </div>
+        <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+          <ScoreRadial
+            score={repPipeline?.discoveryPercent ?? 0}
+            maxScore={100}
+            size={110}
+            label="Discovery"
+            showPercentage={true}
+          />
+        </div>
+        <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+          <ScoreRadial
+            score={repPipeline?.proposalsPercent ?? 0}
+            maxScore={100}
+            size={110}
+            label="Proposals"
+            showPercentage={true}
+          />
+        </div>
+        <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+          <ScoreRadial
+            score={repPipeline?.salesPercent ?? 0}
+            maxScore={100}
+            size={110}
+            label="Sales"
+            showPercentage={true}
+          />
+        </div>
+      </div>
+
+      {/* Coaching Feed + Sandler Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-light">Coaching Feed</h2>
+            <Link href="/coaching" className="text-teal text-xs hover:text-aqua">View All</Link>
+          </div>
+          {repCoachingMessages.length > 0 ? (
+            <CoachingFeed messages={repCoachingMessages.map((m) => ({
+              id: m.id,
+              subject: m.subject,
+              coaching_content: m.coaching_content,
+              sent_at: m.created_at,
+              status: m.status,
+            }))} />
+          ) : (
+            <p className="text-light-muted text-sm">Coaching messages will appear here after calls are analyzed.</p>
+          )}
+        </div>
+
         <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
           <h2 className="text-lg font-bold text-light mb-4">Sandler Breakdown</h2>
           {repScores ? (
@@ -583,7 +923,38 @@ export default function DashboardPage() {
             <p className="text-light-muted text-sm">Scores appear after your first call is analyzed.</p>
           )}
         </div>
+      </div>
 
+      {/* My Commitments (Rep view) */}
+      {openCommitments.length > 0 && (
+        <div className="bg-navy-light rounded-2xl border-2 border-gold/30 p-6 mb-6">
+          <div className="flex items-center gap-2 mb-4">
+            <HiClipboardCheck className="text-gold text-lg" />
+            <h2 className="text-lg font-bold text-light">My Commitments</h2>
+            <span className="text-xs bg-gold/10 text-gold px-2 py-0.5 rounded-full border border-gold/20">
+              {openCommitments.length}
+            </span>
+          </div>
+          <div className="space-y-2">
+            {openCommitments.map((c) => (
+              <label key={c.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-navy/50 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={false}
+                  onChange={() => handleCompleteCommitment(c.id)}
+                  className="mt-0.5 w-4 h-4 rounded border-gold/30 text-teal focus:ring-teal/50 bg-navy"
+                />
+                <span className="text-sm text-light group-hover:text-teal transition-colors">
+                  {c.commitment_text}
+                </span>
+              </label>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Score History + 1-on-1 Notes */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
           <h2 className="text-lg font-bold text-light mb-4">Score History</h2>
           {trendLabels.length > 1 ? (
@@ -592,29 +963,53 @@ export default function DashboardPage() {
             <p className="text-light-muted text-sm">Trend data appears after multiple calls.</p>
           )}
         </div>
+
+        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-light">1-on-1 Notes</h2>
+            {repNotesPreview.unreadCount > 0 && (
+              <span className="bg-pink text-white text-xs font-bold px-2 py-0.5 rounded-full">
+                {repNotesPreview.unreadCount} unread
+              </span>
+            )}
+          </div>
+          {repNotesPreview.lastMessage ? (
+            <div className="mb-4">
+              <p className="text-xs text-light-muted mb-1">Last message from {repNotesPreview.lastSender}:</p>
+              <p className="text-sm text-light line-clamp-3">{repNotesPreview.lastMessage}</p>
+            </div>
+          ) : (
+            <p className="text-light-muted text-sm mb-4">No messages yet. Your manager can send notes here.</p>
+          )}
+          <Link href="/notes" className="flex items-center gap-2 text-teal hover:text-aqua text-sm font-medium">
+            <HiChatAlt2 /> Open Notes
+          </Link>
+        </div>
       </div>
 
-      {/* Bottom Row */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      {/* Celebrations Preview */}
+      {recentCelebrations.length > 0 && (
         <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-          <h2 className="text-lg font-bold text-light mb-3">Latest Coaching</h2>
-          <p className="text-light-muted text-sm mb-4">
-            Coaching feedback from your manager will appear here.
-          </p>
-          <Link href="/coaching" className="text-teal hover:text-aqua text-sm font-medium">
-            View Coaching Inbox
-          </Link>
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-lg font-bold text-light">Recent Wins</h2>
+            <Link href="/celebrations" className="text-teal text-xs hover:text-aqua">View All</Link>
+          </div>
+          <div className="space-y-3">
+            {recentCelebrations.map((c) => (
+              <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-navy/50">
+                <HiSparkles className="text-gold text-lg flex-shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-light truncate">{c.title}</p>
+                  <p className="text-xs text-light-muted">
+                    {c.rep_email && <span>{c.rep_email} &middot; </span>}
+                    {getTimeAgo(c.created_at)}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-          <h2 className="text-lg font-bold text-light mb-3">My Calls</h2>
-          <p className="text-light-muted text-sm mb-4">
-            {repCallCount > 0 ? `${repCallCount} calls analyzed.` : 'Calls will appear once integrations are connected.'}
-          </p>
-          <Link href="/calls" className="text-teal hover:text-aqua text-sm font-medium">
-            View All Calls
-          </Link>
-        </div>
-      </div>
+      )}
     </div>
   )
 }

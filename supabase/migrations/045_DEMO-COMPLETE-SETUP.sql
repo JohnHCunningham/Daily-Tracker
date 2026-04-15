@@ -103,7 +103,7 @@ UPDATE auth.users
 SET
     email_confirmed_at = COALESCE(email_confirmed_at, NOW()),
     confirmed_at = COALESCE(confirmed_at, NOW())
-WHERE email = 'john@aiadvantagesolutions.ca';
+WHERE email = 'john@oneclickcoaching.com';
 
 -- ============================================
 -- SUCCESS MESSAGE
@@ -117,7 +117,7 @@ BEGIN
     RAISE NOTICE '✅ Your account confirmed';
     RAISE NOTICE '';
     RAISE NOTICE '🚀 NOW: Go to login.html and log in!';
-    RAISE NOTICE '   Email: john@aiadvantagesolutions.ca';
+    RAISE NOTICE '   Email: john@oneclickcoaching.com';
     RAISE NOTICE '   Password: (your password)';
     RAISE NOTICE '';
     RAISE NOTICE '🎯 Ready for your 6 PM demo!';

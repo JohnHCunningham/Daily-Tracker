@@ -299,7 +299,7 @@ MIT License - Free to use and modify!
 ## 🤝 Contributing
 
 Built for **AI Advantage Solutions**
-Contact: john@aiadvantagesolutions.ca
+Contact: john@oneclickcoaching.com
 
 ---
 
@@ -316,7 +316,7 @@ _"Finally, a sales tracker that's actually beautiful and insightful, not just a 
 Need help?
 1. Check [SETUP-GUIDE.md](SETUP-GUIDE.md) troubleshooting section
 2. Review browser console for errors (F12)
-3. Email: john@aiadvantagesolutions.ca
+3. Email: john@oneclickcoaching.com
 
 ---
 

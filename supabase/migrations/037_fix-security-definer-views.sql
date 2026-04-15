@@ -29,7 +29,7 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
     -- Verify admin access
-    IF admin_email NOT IN ('admin@aiadvantagesolutions.com', 'admin@aiadvantagesolutions.ca', 'john@aiadvantagesolutions.com') THEN
+    IF admin_email NOT IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com', 'john@oneclickcoaching.com') THEN
         RAISE EXCEPTION 'Unauthorized: Admin access required';
     END IF;
 
@@ -63,7 +63,7 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
     -- Verify admin access
-    IF admin_email NOT IN ('admin@aiadvantagesolutions.com', 'admin@aiadvantagesolutions.ca', 'john@aiadvantagesolutions.com') THEN
+    IF admin_email NOT IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com', 'john@oneclickcoaching.com') THEN
         RAISE EXCEPTION 'Unauthorized: Admin access required';
     END IF;
 
@@ -99,7 +99,7 @@ LANGUAGE plpgsql
 AS $$
 BEGIN
     -- Verify admin access
-    IF admin_email NOT IN ('admin@aiadvantagesolutions.com', 'admin@aiadvantagesolutions.ca', 'john@aiadvantagesolutions.com') THEN
+    IF admin_email NOT IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com', 'john@oneclickcoaching.com') THEN
         RAISE EXCEPTION 'Unauthorized: Admin access required';
     END IF;
 

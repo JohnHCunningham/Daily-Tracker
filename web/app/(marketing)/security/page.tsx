@@ -215,7 +215,7 @@ export default function SecurityPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="mailto:john@aiadvantagesolutions.ca?subject=Security%20Questions"
+                href="mailto:john@oneclickcoaching.com?subject=Security%20Questions"
                 className="btn-secondary"
               >
                 Email Our Security Team

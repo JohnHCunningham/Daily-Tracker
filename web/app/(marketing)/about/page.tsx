@@ -27,7 +27,7 @@ export default function AboutPage() {
           <div className="flex flex-col md:flex-row items-start gap-8 mb-12">
             <div className="flex-shrink-0">
               <Image
-                src="/images/john-founder.jpg"
+                src="/images/john-founder.png"
                 alt="John Cunningham - Founder of One Click Coaching"
                 width={200}
                 height={200}

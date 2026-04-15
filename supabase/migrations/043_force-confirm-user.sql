@@ -11,14 +11,14 @@ SELECT
     confirmed_at,
     created_at
 FROM auth.users
-WHERE email = 'john@aiadvantagesolutions.ca';
+WHERE email = 'john@oneclickcoaching.com';
 
 -- Step 2: Force confirm email (if NULL above)
 UPDATE auth.users
 SET
     email_confirmed_at = NOW(),
     confirmed_at = NOW()
-WHERE email = 'john@aiadvantagesolutions.ca';
+WHERE email = 'john@oneclickcoaching.com';
 
 -- Step 3: Verify it worked
 SELECT
@@ -26,7 +26,7 @@ SELECT
     email_confirmed_at,
     confirmed_at
 FROM auth.users
-WHERE email = 'john@aiadvantagesolutions.ca';
+WHERE email = 'john@oneclickcoaching.com';
 
 -- Now try logging in again!
 -- If still having issues, check Supabase Dashboard → Authentication → Users

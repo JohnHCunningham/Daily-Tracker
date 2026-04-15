@@ -15,7 +15,7 @@
 ### As Manager/Admin
 
 #### **Login**
-- Email: `admin@aiadvantagesolutions.com` or `admin@aiadvantagesolutions.ca`
+- Email: `john@oneclickcoaching.com` or `john@oneclickcoaching.com`
 - Password: (your password)
 
 #### **Add a New Team Member**
@@ -116,9 +116,9 @@ From any admin page, you'll see buttons to navigate between dashboards.
 
 ### Can't access admin pages
 - Verify your email is in the admin whitelist:
-  - `admin@aiadvantagesolutions.com`
-  - `admin@aiadvantagesolutions.ca`
-  - `john@aiadvantagesolutions.com`
+  - `john@oneclickcoaching.com`
+  - `john@oneclickcoaching.com`
+  - `john@oneclickcoaching.com`
 
 ### User can't login
 - Verify they're using the exact email/password you provided

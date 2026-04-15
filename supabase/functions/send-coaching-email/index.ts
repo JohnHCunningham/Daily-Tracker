@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { generateEmbedding } from "../_shared/rag-utils.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -9,6 +10,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
+const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
 
 interface CoachingEmailRequest {
   coaching_message_id: string;
@@ -124,22 +126,66 @@ serve(async (req) => {
     // Parse request body
     const body: CoachingEmailRequest = await req.json();
 
-    // Validate required fields
-    if (!body.coaching_message_id || !body.to_email || !body.coaching_content) {
+    // Only coaching_message_id is required — everything else is resolved from the DB
+    if (!body.coaching_message_id) {
       return new Response(
-        JSON.stringify({ error: "Missing required fields: coaching_message_id, to_email, coaching_content" }),
+        JSON.stringify({ error: "Missing required field: coaching_message_id" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Look up coaching message to get account_id
-    const { data: coachingMsg } = await supabase
+    // Look up coaching message — this is the source of truth for all fields
+    const { data: coachingMsg, error: msgError } = await supabase
       .from("Coaching_Messages")
-      .select("account_id")
+      .select("account_id, manager_edited, coaching_content, rep_email, manager_email, methodology, subject, call_id, coaching_lens, from_user_id")
       .eq("id", body.coaching_message_id)
       .single();
 
-    const accountId = coachingMsg?.account_id;
+    if (msgError || !coachingMsg) {
+      return new Response(
+        JSON.stringify({ error: "Coaching message not found" }),
+        { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Resolve fields: prefer DB values, fall back to request body
+    const toEmail = body.to_email || coachingMsg.rep_email;
+    const coachingContent = body.coaching_content || coachingMsg.coaching_content;
+    const subject = body.subject || coachingMsg.subject || "Coaching Feedback from Your Manager";
+    const methodology = body.methodology || coachingMsg.methodology;
+    const managerEmail = body.manager_email || coachingMsg.manager_email;
+    const accountId = coachingMsg.account_id;
+
+    // Look up manager name from from_user_id if not provided in request
+    let managerName = body.manager_name || "";
+    let repName = body.rep_name || "";
+    if (!managerName && coachingMsg.from_user_id) {
+      const { data: managerUser } = await supabase
+        .from("Users")
+        .select("full_name, first_name, email")
+        .eq("id", coachingMsg.from_user_id)
+        .single();
+      managerName = managerUser?.full_name || managerUser?.first_name || managerUser?.email?.split("@")[0] || "Your Manager";
+    }
+    if (!repName && toEmail) {
+      repName = toEmail.split("@")[0].replace(/[._]/g, " ");
+    }
+
+    if (!toEmail || !coachingContent) {
+      return new Response(
+        JSON.stringify({ error: "Cannot resolve to_email or coaching_content from message or request" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // Rebuild body with resolved values for downstream use (email template)
+    body.to_email = toEmail;
+    body.coaching_content = coachingContent;
+    body.subject = subject;
+    body.methodology = methodology;
+    body.manager_email = managerEmail;
+    body.manager_name = managerName;
+    body.rep_name = repName;
 
     // Generate reply token
     const replyToken = generateReplyToken();
@@ -234,6 +280,71 @@ serve(async (req) => {
       activities_synced: 1,
       sync_completed_at: new Date().toISOString(),
     });
+
+    // Store all sent coaching in RAG knowledge base.
+    // Every sent message is manager-approved (they clicked "Approve & Send"),
+    // so it's a quality signal worth indexing — whether or not they edited it.
+    if (coachingMsg?.coaching_content) {
+      try {
+        // Extract weak components from the call's methodology scores
+        let weakComponents: string[] = [];
+        if (coachingMsg.call_id) {
+          const { data: callData } = await supabase
+            .from("Synced_Conversations")
+            .select("methodology_scores")
+            .eq("id", coachingMsg.call_id)
+            .single();
+
+          if (callData?.methodology_scores) {
+            weakComponents = Object.entries(callData.methodology_scores)
+              .filter(([_, score]) => (score as number) < 7)
+              .map(([name]) => name.toUpperCase().replace(/[\s&]+/g, "_"));
+          }
+        }
+
+        const chunkText = coachingMsg.coaching_content.substring(0, 5000);
+        const wasEdited = coachingMsg.manager_edited === true;
+        const lens = coachingMsg.coaching_lens || null;
+
+        // Generate embedding so this entry is findable via RAG semantic search
+        let embedding = null;
+        if (OPENAI_API_KEY) {
+          try {
+            const embeddingResult = await generateEmbedding(chunkText, supabase, OPENAI_API_KEY);
+            embedding = embeddingResult.embedding;
+          } catch (embErr) {
+            console.warn("Failed to generate embedding for sent coaching:", embErr);
+          }
+        }
+
+        // Skip RAG insert if we couldn't generate an embedding — an entry
+        // without an embedding is unsearchable and just noise.
+        if (embedding) {
+          // Build situation tags: always include coaching + manager_approved,
+          // plus manager_edited if edited, plus the lens style if known.
+          const situationTags = ["coaching", "manager_approved"];
+          if (wasEdited) situationTags.push("manager_edited");
+          if (lens) situationTags.push(`lens:${lens}`);
+
+          await supabase.from("Sandler_Knowledge_Base").insert({
+            content_type: "manager_approved",
+            component_name: weakComponents[0] || "GENERAL",
+            chunk_title: `${wasEdited ? "Manager-edited" : "Manager-approved"} coaching for ${coachingMsg.rep_email || "rep"}`,
+            chunk_text: chunkText,
+            situation_tags: situationTags,
+            weakness_tags: weakComponents.slice(0, 5),
+            source_coaching_message_id: body.coaching_message_id,
+            embedding,
+            is_active: true,
+          });
+        } else {
+          console.warn("Skipping RAG insert — no embedding generated");
+        }
+      } catch (ragError) {
+        // Non-critical — log but don't fail the send
+        console.warn("Failed to store coaching in RAG:", ragError);
+      }
+    }
 
     return new Response(
       JSON.stringify({

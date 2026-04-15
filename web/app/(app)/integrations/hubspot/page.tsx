@@ -183,6 +183,22 @@ export default function HubSpotPage() {
         {!isConnected ? (
           <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-6">
             <h2 className="text-xl font-bold text-light mb-4">Connect HubSpot</h2>
+
+            <details className="mb-5 group">
+              <summary className="text-sm font-medium text-teal cursor-pointer hover:text-aqua transition-colors">
+                How to get your API key
+              </summary>
+              <ol className="mt-3 ml-4 space-y-2 text-sm text-light-muted list-decimal list-outside">
+                <li>Log in to your HubSpot account at <span className="text-light">app.hubspot.com</span></li>
+                <li>Click the <span className="text-light">Settings gear</span> icon in the top navigation</li>
+                <li>Navigate to <span className="text-light">Integrations &rarr; Private Apps</span></li>
+                <li>Click <span className="text-light">Create a private app</span> and name it <span className="text-light">&ldquo;One Click Coaching&rdquo;</span></li>
+                <li>Go to the <span className="text-light">Scopes</span> tab and select: <span className="text-light">crm.objects.contacts.read</span>, <span className="text-light">crm.objects.deals.read</span>, <span className="text-light">sales-email-read</span></li>
+                <li>Click <span className="text-light">Create app</span>, then copy the <span className="text-light">Access Token</span></li>
+                <li>Paste the token below</li>
+              </ol>
+            </details>
+
             <p className="text-sm text-light-muted mb-4">
               Enter your HubSpot Private App access token to connect.
             </p>

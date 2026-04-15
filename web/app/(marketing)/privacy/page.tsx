@@ -136,7 +136,7 @@ export default function PrivacyPage() {
               <li><strong>Complaint:</strong> File a complaint with the Office of the Privacy Commissioner of Canada</li>
             </ul>
             <p className="text-light-muted leading-relaxed">
-              To exercise these rights, contact us at: <a href="mailto:john@aiadvantagesolutions.ca" className="text-teal hover:text-aqua transition-colors">john@aiadvantagesolutions.ca</a>
+              To exercise these rights, contact us at: <a href="mailto:john@oneclickcoaching.com" className="text-teal hover:text-aqua transition-colors">john@oneclickcoaching.com</a>
             </p>
           </section>
 
@@ -220,7 +220,7 @@ export default function PrivacyPage() {
               <p className="text-light-muted mb-1">Hamilton, ON L8S 4P8</p>
               <p className="text-light-muted mb-1">Canada</p>
               <p className="text-light-muted mb-1">
-                Email: <a href="mailto:john@aiadvantagesolutions.ca" className="text-teal hover:text-aqua transition-colors">john@aiadvantagesolutions.ca</a>
+                Email: <a href="mailto:john@oneclickcoaching.com" className="text-teal hover:text-aqua transition-colors">john@oneclickcoaching.com</a>
               </p>
               <p className="text-light-muted">
                 Phone: <a href="tel:+19055198983" className="text-teal hover:text-aqua transition-colors">(905) 519-8983</a>

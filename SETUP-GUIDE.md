@@ -334,7 +334,7 @@ If you run into issues:
 1. Check the Troubleshooting section above
 2. Review Supabase project logs
 3. Open browser Console (F12) for error messages
-4. Contact: john@aiadvantagesolutions.ca
+4. Contact: john@oneclickcoaching.com
 
 ---
 

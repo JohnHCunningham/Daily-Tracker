@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { HiArrowLeft, HiPlay, HiClock, HiRefresh } from 'react-icons/hi'
+import { HiArrowLeft, HiPlay, HiClock, HiRefresh, HiPhone, HiMail, HiCalendar, HiClipboardList, HiExternalLink } from 'react-icons/hi'
 
 interface CallDetail {
   id: string
@@ -19,6 +19,21 @@ interface CallDetail {
   methodology_scores: Record<string, number> | null
   analyzed_at: string | null
   coaching_generated: boolean
+}
+
+interface HubSpotActivity {
+  id: string
+  activity_type: string
+  activity_date: string
+  source_url: string | null
+  metadata: Record<string, any> | null
+}
+
+const hubspotTypeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
+  call: HiPhone,
+  email: HiMail,
+  meeting: HiCalendar,
+  task: HiClipboardList,
 }
 
 const sandlerComponents = [
@@ -37,6 +52,7 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+  const [hubspotActivities, setHubspotActivities] = useState<HubSpotActivity[]>([])
   const supabase = createClient()
 
   useEffect(() => {
@@ -50,8 +66,26 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
       .eq('id', params.callId)
       .single()
 
-    if (data) setCall(data)
+    if (data) {
+      setCall(data)
+      if (data.rep_email && data.call_date) {
+        loadHubspotActivities(data.rep_email, data.call_date)
+      }
+    }
     setLoading(false)
+  }
+
+  async function loadHubspotActivities(repEmail: string, callDate: string) {
+    const dateStr = new Date(callDate).toISOString().split('T')[0]
+    const { data } = await supabase
+      .from('Synced_Activities')
+      .select('id, activity_type, activity_date, source_url, metadata')
+      .eq('rep_email', repEmail)
+      .eq('source_provider', 'hubspot')
+      .gte('activity_date', `${dateStr}T00:00:00`)
+      .lt('activity_date', `${dateStr}T23:59:59`)
+
+    if (data) setHubspotActivities(data)
   }
 
   async function handleAnalyze() {
@@ -228,6 +262,45 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
               </p>
             )}
           </div>
+
+          {/* CRM Activity (HubSpot) */}
+          {hubspotActivities.length > 0 && (
+            <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+              <h2 className="text-lg font-bold text-light mb-4">CRM Activity</h2>
+              <div className="space-y-3">
+                {hubspotActivities.map((activity) => {
+                  const IconComponent = hubspotTypeIcons[activity.activity_type] || HiClipboardList
+                  const title = activity.metadata?.title || activity.metadata?.subject || activity.activity_type
+                  const duration = activity.metadata?.duration_minutes
+
+                  return (
+                    <div key={activity.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-navy/50">
+                      <div className="w-8 h-8 bg-gold/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <IconComponent className="text-gold text-sm" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm text-light font-medium truncate capitalize">{title}</p>
+                        <div className="flex items-center gap-2 text-xs text-light-muted mt-0.5">
+                          <span className="capitalize">{activity.activity_type}</span>
+                          {duration && <span>{duration} min</span>}
+                        </div>
+                      </div>
+                      {activity.source_url && (
+                        <a
+                          href={activity.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-teal hover:text-aqua flex-shrink-0"
+                        >
+                          <HiExternalLink className="text-sm" />
+                        </a>
+                      )}
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

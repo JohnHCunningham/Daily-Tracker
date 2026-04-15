@@ -117,7 +117,7 @@ CREATE POLICY "Managers can create notes"
 ON Manager_Notes FOR INSERT TO authenticated
 WITH CHECK (
   auth.uid() = manager_id AND
-  auth.jwt()->>'email' IN ('admin@aiadvantagesolutions.com', 'john@aiadvantagesolutions.com')
+  auth.jwt()->>'email' IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com')
 );
 
 -- Managers can view their own notes
@@ -135,7 +135,7 @@ CREATE POLICY "Managers can update their notes"
 ON Manager_Notes FOR UPDATE TO authenticated
 USING (
   manager_id = auth.uid() AND
-  auth.jwt()->>'email' IN ('admin@aiadvantagesolutions.com', 'john@aiadvantagesolutions.com')
+  auth.jwt()->>'email' IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com')
 );
 
 -- Managers can delete their notes
@@ -143,7 +143,7 @@ CREATE POLICY "Managers can delete their notes"
 ON Manager_Notes FOR DELETE TO authenticated
 USING (
   manager_id = auth.uid() AND
-  auth.jwt()->>'email' IN ('admin@aiadvantagesolutions.com', 'john@aiadvantagesolutions.com')
+  auth.jwt()->>'email' IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com')
 );
 
 -- User_Goals RLS
@@ -154,7 +154,7 @@ CREATE POLICY "Managers can create goals"
 ON User_Goals FOR INSERT TO authenticated
 WITH CHECK (
   auth.uid() = set_by_manager_id AND
-  auth.jwt()->>'email' IN ('admin@aiadvantagesolutions.com', 'john@aiadvantagesolutions.com')
+  auth.jwt()->>'email' IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com')
 );
 
 -- Managers can view goals they set
@@ -172,7 +172,7 @@ CREATE POLICY "Managers can update goals"
 ON User_Goals FOR UPDATE TO authenticated
 USING (
   set_by_manager_id = auth.uid() AND
-  auth.jwt()->>'email' IN ('admin@aiadvantagesolutions.com', 'john@aiadvantagesolutions.com')
+  auth.jwt()->>'email' IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com')
 );
 
 -- Managers can delete goals they set
@@ -180,7 +180,7 @@ CREATE POLICY "Managers can delete goals"
 ON User_Goals FOR DELETE TO authenticated
 USING (
   set_by_manager_id = auth.uid() AND
-  auth.jwt()->>'email' IN ('admin@aiadvantagesolutions.com', 'john@aiadvantagesolutions.com')
+  auth.jwt()->>'email' IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com')
 );
 
 -- ============================================
@@ -199,7 +199,7 @@ BEGIN
     RAISE NOTICE '  - Managers can create/view/edit/delete their own notes and goals';
     RAISE NOTICE '  - Users can view notes and goals about themselves (transparency)';
     RAISE NOTICE '';
-    RAISE NOTICE '🔒 Security: Only admins (admin@aiadvantagesolutions.com, john@aiadvantagesolutions.com) can create notes/goals';
+    RAISE NOTICE '🔒 Security: Only admins (john@oneclickcoaching.com, john@oneclickcoaching.com) can create notes/goals';
     RAISE NOTICE '';
     RAISE NOTICE '⏭️  NEXT STEP: Run admin-team-functions.sql to create SECURITY DEFINER functions';
     RAISE NOTICE '';

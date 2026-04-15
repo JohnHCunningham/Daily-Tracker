@@ -319,7 +319,7 @@ Your dashboard is now:
 Need help?
 - Supabase Docs: https://supabase.com/docs
 - Vercel Docs: https://vercel.com/docs
-- Email: john@aiadvantagesolutions.ca
+- Email: john@oneclickcoaching.com
 
 ---
 

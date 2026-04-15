@@ -283,7 +283,7 @@ export default function TermsPage() {
 
             <h3 className="text-xl font-semibold text-light mb-3">13.3 Informal Resolution</h3>
             <p className="text-light-muted leading-relaxed mb-4">
-              Before initiating formal legal proceedings, you agree to attempt to resolve disputes informally by contacting us at <a href="mailto:john@aiadvantagesolutions.ca" className="text-teal hover:text-aqua transition-colors">john@aiadvantagesolutions.ca</a>.
+              Before initiating formal legal proceedings, you agree to attempt to resolve disputes informally by contacting us at <a href="mailto:john@oneclickcoaching.com" className="text-teal hover:text-aqua transition-colors">john@oneclickcoaching.com</a>.
             </p>
           </section>
 
@@ -342,7 +342,7 @@ export default function TermsPage() {
               <p className="text-light-muted mb-1">Hamilton, ON L8S 4P8</p>
               <p className="text-light-muted mb-1">Canada</p>
               <p className="text-light-muted mb-1">
-                Email: <a href="mailto:john@aiadvantagesolutions.ca" className="text-teal hover:text-aqua transition-colors">john@aiadvantagesolutions.ca</a>
+                Email: <a href="mailto:john@oneclickcoaching.com" className="text-teal hover:text-aqua transition-colors">john@oneclickcoaching.com</a>
               </p>
               <p className="text-light-muted">
                 Phone: <a href="tel:+19055198983" className="text-teal hover:text-aqua transition-colors">(905) 519-8983</a>

@@ -61,8 +61,8 @@ const Footer = () => {
             <ul className="space-y-3">
               <li className="flex items-start gap-2">
                 <HiMail className="text-teal text-xl flex-shrink-0 mt-0.5" />
-                <a href="mailto:john@aiadvantagesolutions.ca" className="text-light-muted hover:text-teal transition-colors">
-                  john@aiadvantagesolutions.ca
+                <a href="mailto:john@oneclickcoaching.com" className="text-light-muted hover:text-teal transition-colors">
+                  john@oneclickcoaching.com
                 </a>
               </li>
               <li className="flex items-start gap-2">

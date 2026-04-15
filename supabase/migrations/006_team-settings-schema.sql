@@ -51,7 +51,7 @@ CREATE POLICY "Managers can create team settings"
 ON "Team_Settings" FOR INSERT TO authenticated
 WITH CHECK (
     auth.uid() = manager_id AND
-    auth.jwt()->>'email' IN ('admin@aiadvantagesolutions.com', 'admin@aiadvantagesolutions.ca', 'john@aiadvantagesolutions.com')
+    auth.jwt()->>'email' IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com', 'john@oneclickcoaching.com')
 );
 
 -- Managers can view their team settings
@@ -75,7 +75,7 @@ CREATE POLICY "Managers can update team settings"
 ON "Team_Settings" FOR UPDATE TO authenticated
 USING (
     manager_id = auth.uid() AND
-    auth.jwt()->>'email' IN ('admin@aiadvantagesolutions.com', 'admin@aiadvantagesolutions.ca', 'john@aiadvantagesolutions.com')
+    auth.jwt()->>'email' IN ('john@oneclickcoaching.com', 'john@oneclickcoaching.com', 'john@oneclickcoaching.com')
 );
 
 -- Success message

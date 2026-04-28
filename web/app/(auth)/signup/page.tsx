@@ -1,11 +1,11 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 
-export default function SignupPage() {
+function SignupForm() {
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -13,6 +13,11 @@ export default function SignupPage() {
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const searchParams = useSearchParams()
+
+  // Get optional plan parameters from URL
+  const repCount = parseInt(searchParams.get('reps') || '1', 10)
+  const billingCycle = searchParams.get('billing') || 'monthly'
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,6 +60,28 @@ export default function SignupPage() {
         setLoading(false)
         return
       }
+    }
+
+    // Redirect to Stripe Checkout for subscription
+    try {
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          repCount: repCount,
+          billingCycle: billingCycle as 'monthly' | 'annual',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (data.url) {
+        window.location.href = data.url
+        return
+      }
+    } catch (checkoutError) {
+      console.error('Checkout redirect error:', checkoutError)
+      // If checkout fails, still redirect to dashboard (they can subscribe later)
     }
 
     router.push('/dashboard')
@@ -156,5 +183,17 @@ export default function SignupPage() {
         </p>
       </div>
     </div>
+  )
+}
+
+export default function SignupPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-navy flex items-center justify-center">
+        <div className="text-light">Loading...</div>
+      </div>
+    }>
+      <SignupForm />
+    </Suspense>
   )
 }

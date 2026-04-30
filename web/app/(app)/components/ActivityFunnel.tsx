@@ -30,7 +30,7 @@ export default function ActivityFunnel({ data }: ActivityFunnelProps) {
       {
         label: 'Actual',
         data: data.map((d) => d.actual),
-        backgroundColor: '#10C3B0',
+        backgroundColor: '#B5583E',
         borderRadius: 4,
         barPercentage: 0.6,
         categoryPercentage: 0.7,
@@ -39,7 +39,7 @@ export default function ActivityFunnel({ data }: ActivityFunnelProps) {
         label: 'Target',
         data: data.map((d) => d.target),
         backgroundColor: '#131a40',
-        borderColor: '#10C3B0',
+        borderColor: '#B5583E',
         borderWidth: 1,
         borderRadius: 4,
         barPercentage: 0.6,
@@ -55,10 +55,10 @@ export default function ActivityFunnel({ data }: ActivityFunnelProps) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#0C1030',
+        backgroundColor: '#2A221C',
         titleColor: '#F2F4F8',
         bodyColor: '#F2F4F8',
-        borderColor: '#10C3B0',
+        borderColor: '#B5583E',
         borderWidth: 1,
         callbacks: {
           label: (ctx: unknown) => {

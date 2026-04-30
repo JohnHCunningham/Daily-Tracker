@@ -4,6 +4,8 @@ import { useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
+import { useSubscription } from '@/lib/hooks/useSubscription'
+import { PRICE_PER_REP } from '@/lib/stripe'
 
 interface AccountInfo {
   id: string
@@ -22,13 +24,17 @@ export default function SettingsPage() {
     name: '',
     company_name: '',
     logo_url: '',
-    primary_color: '#0C1030',
-    accent_color: '#10C3B0',
+    primary_color: '#2A221C', // Espresso
+    accent_color: '#B5583E', // Terracotta
     email_from_name: 'One Click Coaching',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
+  const [billingLoading, setBillingLoading] = useState(false)
+  const [newRepCount, setNewRepCount] = useState<number | null>(null)
+  const [updatingPlan, setUpdatingPlan] = useState(false)
   const supabase = createClient()
+  const { subscription, loading: subscriptionLoading, isActive, isTrialing, isPastDue, daysLeftInTrial, refetch } = useSubscription()
 
   useEffect(() => {
     loadSettings()
@@ -88,6 +94,41 @@ export default function SettingsPage() {
       toast.error('Failed to save settings')
     }
     setSaving(false)
+  }
+
+  // Initialize newRepCount when subscription loads
+  useEffect(() => {
+    if (subscription && newRepCount === null) {
+      setNewRepCount(subscription.repCount)
+    }
+  }, [subscription, newRepCount])
+
+  async function handleUpdatePlan() {
+    if (!newRepCount || newRepCount === subscription?.repCount) return
+
+    setUpdatingPlan(true)
+    try {
+      const response = await fetch('/api/stripe/update-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ newRepCount }),
+      })
+      const data = await response.json()
+
+      if (data.url) {
+        // Redirect to checkout for new subscription
+        window.location.href = data.url
+      } else if (data.success) {
+        toast.success(`Plan updated to ${newRepCount} reps`)
+        refetch()
+      } else {
+        toast.error(data.error || 'Failed to update plan')
+      }
+    } catch {
+      toast.error('Failed to update plan')
+    } finally {
+      setUpdatingPlan(false)
+    }
   }
 
   if (loading) {
@@ -200,6 +241,182 @@ export default function SettingsPage() {
             />
             <p className="text-xs text-light-muted mt-1">This name appears in coaching emails sent to reps.</p>
           </div>
+        </div>
+
+        {/* Billing Section */}
+        <div id="billing" className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+          <h2 className="text-lg font-bold text-light mb-4">Billing & Subscription</h2>
+
+          {subscriptionLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <div className="w-6 h-6 border-2 border-teal border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : subscription ? (
+            <div className="space-y-4">
+              {/* Subscription Status */}
+              <div className="flex items-center justify-between p-4 bg-navy rounded-lg border border-navy-light">
+                <div>
+                  <p className="text-sm text-light-muted">Status</p>
+                  <div className="flex items-center gap-2 mt-1">
+                    <span className={`w-2 h-2 rounded-full ${
+                      isActive ? 'bg-green-500' :
+                      isTrialing ? 'bg-yellow-500' :
+                      isPastDue ? 'bg-red-500' :
+                      'bg-gray-500'
+                    }`} />
+                    <span className="font-semibold text-light capitalize">
+                      {subscription.subscriptionStatus}
+                    </span>
+                    {isTrialing && daysLeftInTrial !== null && (
+                      <span className="text-xs text-light-muted">
+                        ({daysLeftInTrial} days left)
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm text-light-muted">Plan</p>
+                  <p className="font-semibold text-light">
+                    {subscription.repCount} rep{subscription.repCount !== 1 ? 's' : ''} • ${subscription.billingCycle === 'annual' ? PRICE_PER_REP.annual : PRICE_PER_REP.monthly}/{subscription.billingCycle === 'annual' ? 'year' : 'month'} per rep
+                  </p>
+                </div>
+              </div>
+
+              {/* Rep Count Adjuster */}
+              <div className="p-4 bg-navy rounded-lg border border-navy-light">
+                <p className="text-sm text-light-muted mb-3">Adjust Rep Slots</p>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => setNewRepCount(Math.max(1, (newRepCount || 1) - 1))}
+                      disabled={!newRepCount || newRepCount <= 1}
+                      className="w-10 h-10 bg-navy-light border border-teal/20 rounded-lg text-light font-bold hover:border-teal/40 disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      -
+                    </button>
+                    <input
+                      type="number"
+                      min="1"
+                      max="100"
+                      value={newRepCount || subscription.repCount}
+                      onChange={(e) => setNewRepCount(Math.max(1, parseInt(e.target.value) || 1))}
+                      className="w-20 h-10 bg-navy-light border border-teal/20 rounded-lg text-light text-center font-bold focus:outline-none focus:border-teal"
+                    />
+                    <button
+                      onClick={() => setNewRepCount((newRepCount || 1) + 1)}
+                      className="w-10 h-10 bg-navy-light border border-teal/20 rounded-lg text-light font-bold hover:border-teal/40"
+                    >
+                      +
+                    </button>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-sm text-light">
+                      {newRepCount || subscription.repCount} reps × ${subscription.billingCycle === 'annual' ? PRICE_PER_REP.annual : PRICE_PER_REP.monthly}/{subscription.billingCycle === 'annual' ? 'yr' : 'mo'}
+                    </p>
+                    <p className="text-lg font-bold text-teal">
+                      ${((newRepCount || subscription.repCount) * (subscription.billingCycle === 'annual' ? PRICE_PER_REP.annual : PRICE_PER_REP.monthly)).toLocaleString()}/{subscription.billingCycle === 'annual' ? 'year' : 'month'}
+                    </p>
+                  </div>
+                </div>
+                {newRepCount && newRepCount !== subscription.repCount && (
+                  <button
+                    onClick={handleUpdatePlan}
+                    disabled={updatingPlan}
+                    className="mt-4 w-full bg-gradient-to-r from-teal to-aqua text-navy font-bold py-2.5 px-4 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
+                  >
+                    {updatingPlan ? 'Updating...' : newRepCount > subscription.repCount ? `Upgrade to ${newRepCount} Reps` : `Downgrade to ${newRepCount} Reps`}
+                  </button>
+                )}
+              </div>
+
+              {/* Billing Period */}
+              {subscription.currentPeriodEnd && (
+                <div className="p-4 bg-navy rounded-lg border border-navy-light">
+                  <p className="text-sm text-light-muted">
+                    {subscription.cancelAtPeriodEnd ? 'Access until' : 'Next billing date'}
+                  </p>
+                  <p className="font-semibold text-light">
+                    {new Date(subscription.currentPeriodEnd).toLocaleDateString('en-US', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric',
+                    })}
+                  </p>
+                  {subscription.cancelAtPeriodEnd && (
+                    <p className="text-xs text-pink mt-1">Your subscription will not renew</p>
+                  )}
+                </div>
+              )}
+
+              {/* Past Due Warning */}
+              {isPastDue && (
+                <div className="p-4 bg-pink/10 border border-pink/30 rounded-lg">
+                  <p className="text-pink font-semibold">Payment Failed</p>
+                  <p className="text-sm text-pink/80 mt-1">
+                    Please update your payment method to continue using all features.
+                  </p>
+                </div>
+              )}
+
+              {/* Manage Subscription Button */}
+              {subscription.stripeCustomerId && (
+                <button
+                  onClick={async () => {
+                    setBillingLoading(true)
+                    try {
+                      const response = await fetch('/api/stripe/create-portal-session', {
+                        method: 'POST',
+                      })
+                      const data = await response.json()
+                      if (data.url) {
+                        window.location.href = data.url
+                      } else {
+                        toast.error(data.error || 'Failed to open billing portal')
+                      }
+                    } catch {
+                      toast.error('Failed to open billing portal')
+                    } finally {
+                      setBillingLoading(false)
+                    }
+                  }}
+                  disabled={billingLoading}
+                  className="w-full bg-teal/10 border border-teal/30 text-teal font-semibold py-3 px-4 rounded-lg hover:bg-teal/20 transition-colors disabled:opacity-50"
+                >
+                  {billingLoading ? 'Opening...' : 'Manage Subscription'}
+                </button>
+              )}
+            </div>
+          ) : (
+            <div className="text-center py-4">
+              <p className="text-light-muted mb-4">No active subscription</p>
+              <button
+                onClick={async () => {
+                  setBillingLoading(true)
+                  try {
+                    const response = await fetch('/api/stripe/create-checkout-session', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({ repCount: 1, billingCycle: 'monthly' }),
+                    })
+                    const data = await response.json()
+                    if (data.url) {
+                      window.location.href = data.url
+                    } else {
+                      toast.error(data.error || 'Failed to start checkout')
+                    }
+                  } catch {
+                    toast.error('Failed to start checkout')
+                  } finally {
+                    setBillingLoading(false)
+                  }
+                }}
+                disabled={billingLoading}
+                className="bg-gradient-to-r from-teal to-aqua text-navy font-bold py-3 px-6 rounded-lg hover:shadow-glow-teal transition-all disabled:opacity-50"
+              >
+                {billingLoading ? 'Loading...' : 'Subscribe Now'}
+              </button>
+            </div>
+          )}
         </div>
 
         {/* Quick Links */}

@@ -12,8 +12,8 @@ interface BrandConfig {
 
 const defaultBrand: BrandConfig = {
   logoUrl: null,
-  primaryColor: '#0C1030',
-  accentColor: '#10C3B0',
+  primaryColor: '#2A221C', // Espresso
+  accentColor: '#B5583E', // Terracotta
   companyName: 'One Click Coaching',
 }
 

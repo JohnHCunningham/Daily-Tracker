@@ -16,9 +16,9 @@ interface ScoreRadialProps {
 
 function getColor(score: number, max: number): string {
   const pct = (score / max) * 100
-  if (pct >= 70) return '#10C3B0' // teal — strong
-  if (pct >= 40) return '#F4B03A' // gold — needs work
-  return '#E64563'                // pink — weak
+  if (pct >= 70) return '#B5583E' // terracotta — strong
+  if (pct >= 40) return '#C9A687' // clay — needs work
+  return '#9A4A35'                // terracotta-dark — weak
 }
 
 export default function ScoreRadial({

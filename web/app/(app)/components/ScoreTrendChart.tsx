@@ -25,12 +25,12 @@ export default function ScoreTrendChart({ labels, scores, height = 200 }: ScoreT
     datasets: [
       {
         data: scores,
-        borderColor: '#10C3B0',
+        borderColor: '#B5583E',
         backgroundColor: 'rgba(16, 195, 176, 0.1)',
         fill: true,
         tension: 0.3,
-        pointBackgroundColor: '#10C3B0',
-        pointBorderColor: '#10C3B0',
+        pointBackgroundColor: '#B5583E',
+        pointBorderColor: '#B5583E',
         pointRadius: 4,
         pointHoverRadius: 6,
       },
@@ -54,9 +54,9 @@ export default function ScoreTrendChart({ labels, scores, height = 200 }: ScoreT
     },
     plugins: {
       tooltip: {
-        backgroundColor: '#0C1030',
+        backgroundColor: '#2A221C',
         titleColor: '#E8EAF0',
-        bodyColor: '#10C3B0',
+        bodyColor: '#B5583E',
         borderColor: 'rgba(16,195,176,0.3)',
         borderWidth: 1,
       },

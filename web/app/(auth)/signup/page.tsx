@@ -88,25 +88,25 @@ function SignupForm() {
   }
 
   return (
-    <div className="min-h-screen bg-navy flex items-center justify-center px-4">
+    <div className="min-h-screen bg-espresso flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="font-bold text-2xl text-light">
-            One Click<span className="text-teal"> Coaching</span>
+          <Link href="/" className="font-bold text-2xl text-bone">
+            One Click<span className="text-terracotta"> Coaching</span>
           </Link>
-          <h1 className="text-3xl font-bold text-light mt-6 mb-2">Create your account</h1>
-          <p className="text-light-muted">Start coaching your team with AI</p>
+          <h1 className="text-3xl font-bold text-bone mt-6 mb-2">Create your account</h1>
+          <p className="text-stone-light">Start coaching your team with AI</p>
         </div>
 
         <form onSubmit={handleSignup} className="space-y-5">
           {error && (
-            <div className="bg-pink/10 border border-pink/30 text-pink rounded-lg p-3 text-sm">
+            <div className="bg-terracotta-dark/10 border border-terracotta/30 text-terracotta rounded-lg p-3 text-sm">
               {error}
             </div>
           )}
 
           <div>
-            <label htmlFor="name" className="block text-sm font-medium text-light mb-2">
+            <label htmlFor="name" className="block text-sm font-medium text-bone mb-2">
               Full Name
             </label>
             <input
@@ -115,13 +115,13 @@ function SignupForm() {
               value={name}
               onChange={(e) => setName(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-navy-light border border-teal/20 rounded-lg text-light placeholder-light-muted/50 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+              className="w-full px-4 py-3 bg-espresso-light border border-terracotta/20 rounded-lg text-bone placeholder-stone/50 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20"
               placeholder="John Smith"
             />
           </div>
 
           <div>
-            <label htmlFor="company" className="block text-sm font-medium text-light mb-2">
+            <label htmlFor="company" className="block text-sm font-medium text-bone mb-2">
               Company Name
             </label>
             <input
@@ -130,13 +130,13 @@ function SignupForm() {
               value={company}
               onChange={(e) => setCompany(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-navy-light border border-teal/20 rounded-lg text-light placeholder-light-muted/50 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+              className="w-full px-4 py-3 bg-espresso-light border border-terracotta/20 rounded-lg text-bone placeholder-stone/50 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20"
               placeholder="Acme Corp"
             />
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-light mb-2">
+            <label htmlFor="email" className="block text-sm font-medium text-bone mb-2">
               Work Email
             </label>
             <input
@@ -145,13 +145,13 @@ function SignupForm() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               required
-              className="w-full px-4 py-3 bg-navy-light border border-teal/20 rounded-lg text-light placeholder-light-muted/50 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+              className="w-full px-4 py-3 bg-espresso-light border border-terracotta/20 rounded-lg text-bone placeholder-stone/50 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20"
               placeholder="you@company.com"
             />
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-light mb-2">
+            <label htmlFor="password" className="block text-sm font-medium text-bone mb-2">
               Password
             </label>
             <input
@@ -161,7 +161,7 @@ function SignupForm() {
               onChange={(e) => setPassword(e.target.value)}
               required
               minLength={8}
-              className="w-full px-4 py-3 bg-navy-light border border-teal/20 rounded-lg text-light placeholder-light-muted/50 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+              className="w-full px-4 py-3 bg-espresso-light border border-terracotta/20 rounded-lg text-bone placeholder-stone/50 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20"
               placeholder="Min 8 characters"
             />
           </div>
@@ -169,15 +169,15 @@ function SignupForm() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-gradient-to-r from-teal to-aqua text-navy font-bold py-3 px-6 rounded-lg hover:shadow-xl transition-all disabled:opacity-50"
+            className="w-full bg-gradient-to-r bg-gradient-clay text-espresso font-bold py-3 px-6 rounded-lg hover:shadow-xl transition-all disabled:opacity-50"
           >
             {loading ? 'Creating account...' : 'Create Account'}
           </button>
         </form>
 
-        <p className="text-center text-light-muted mt-6">
+        <p className="text-center text-stone-light mt-6">
           Already have an account?{' '}
-          <Link href="/login" className="text-teal hover:text-aqua font-semibold">
+          <Link href="/login" className="text-terracotta hover:text-terracotta-bright font-semibold">
             Sign in
           </Link>
         </p>
@@ -189,8 +189,8 @@ function SignupForm() {
 export default function SignupPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-navy flex items-center justify-center">
-        <div className="text-light">Loading...</div>
+      <div className="min-h-screen bg-espresso flex items-center justify-center">
+        <div className="text-bone">Loading...</div>
       </div>
     }>
       <SignupForm />

@@ -134,16 +134,16 @@ function AcceptInviteForm() {
   }
 
   if (verifying) {
-    return <div className="text-light-muted text-center">Verifying invitation...</div>
+    return <div className="text-stone-light text-center">Verifying invitation...</div>
   }
 
   if (error && !inviteInfo) {
     return (
       <div className="text-center">
-        <div className="bg-pink/10 border border-pink/30 text-pink rounded-lg p-4 text-sm mb-4">
+        <div className="bg-terracotta-dark/10 border border-terracotta/30 text-terracotta rounded-lg p-4 text-sm mb-4">
           {error}
         </div>
-        <Link href="/login" className="text-teal hover:text-aqua font-semibold text-sm">
+        <Link href="/login" className="text-terracotta hover:text-terracotta-bright font-semibold text-sm">
           Go to Login
         </Link>
       </div>
@@ -154,8 +154,8 @@ function AcceptInviteForm() {
     return (
       <div className="text-center">
         <div className="text-5xl mb-4">🎉</div>
-        <h2 className="text-2xl font-bold text-light mb-2">Welcome to the team!</h2>
-        <p className="text-light-muted">Redirecting to your dashboard...</p>
+        <h2 className="text-2xl font-bold text-bone mb-2">Welcome to the team!</h2>
+        <p className="text-stone-light">Redirecting to your dashboard...</p>
       </div>
     )
   }
@@ -163,23 +163,23 @@ function AcceptInviteForm() {
   return (
     <>
       {inviteInfo && (
-        <div className="bg-teal/10 border border-teal/20 rounded-lg p-4 mb-6 text-center">
-          <p className="text-light text-sm">
-            You&apos;ve been invited as a <span className="font-bold text-teal">{inviteInfo.role.toUpperCase()}</span>
+        <div className="bg-teal/10 border border-terracotta/20 rounded-lg p-4 mb-6 text-center">
+          <p className="text-bone text-sm">
+            You&apos;ve been invited as a <span className="font-bold text-terracotta">{inviteInfo.role.toUpperCase()}</span>
           </p>
-          <p className="text-light-muted text-xs mt-1">{inviteInfo.email}</p>
+          <p className="text-stone-light text-xs mt-1">{inviteInfo.email}</p>
         </div>
       )}
 
       <form onSubmit={handleAccept} className="space-y-5">
         {error && (
-          <div className="bg-pink/10 border border-pink/30 text-pink rounded-lg p-3 text-sm">
+          <div className="bg-terracotta-dark/10 border border-terracotta/30 text-terracotta rounded-lg p-3 text-sm">
             {error}
           </div>
         )}
 
         <div>
-          <label htmlFor="name" className="block text-sm font-medium text-light mb-2">
+          <label htmlFor="name" className="block text-sm font-medium text-bone mb-2">
             Full Name
           </label>
           <input
@@ -188,13 +188,13 @@ function AcceptInviteForm() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
-            className="w-full px-4 py-3 bg-navy-light border border-teal/20 rounded-lg text-light placeholder-light-muted/50 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+            className="w-full px-4 py-3 bg-espresso-light border border-terracotta/20 rounded-lg text-bone placeholder-stone/50 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20"
             placeholder="Your name"
           />
         </div>
 
         <div>
-          <label htmlFor="password" className="block text-sm font-medium text-light mb-2">
+          <label htmlFor="password" className="block text-sm font-medium text-bone mb-2">
             Create Password
           </label>
           <input
@@ -204,7 +204,7 @@ function AcceptInviteForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
-            className="w-full px-4 py-3 bg-navy-light border border-teal/20 rounded-lg text-light placeholder-light-muted/50 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+            className="w-full px-4 py-3 bg-espresso-light border border-terracotta/20 rounded-lg text-bone placeholder-stone/50 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20"
             placeholder="Min 8 characters"
           />
         </div>
@@ -212,7 +212,7 @@ function AcceptInviteForm() {
         <button
           type="submit"
           disabled={loading}
-          className="w-full bg-gradient-to-r from-teal to-aqua text-navy font-bold py-3 px-6 rounded-lg hover:shadow-xl transition-all disabled:opacity-50"
+          className="w-full bg-gradient-to-r bg-gradient-clay text-espresso font-bold py-3 px-6 rounded-lg hover:shadow-xl transition-all disabled:opacity-50"
         >
           {loading ? 'Joining...' : 'Join Team'}
         </button>
@@ -223,17 +223,17 @@ function AcceptInviteForm() {
 
 export default function AcceptInvitePage() {
   return (
-    <div className="min-h-screen bg-navy flex items-center justify-center px-4">
+    <div className="min-h-screen bg-espresso flex items-center justify-center px-4">
       <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <Link href="/" className="font-bold text-2xl text-light">
-            One Click<span className="text-teal"> Coaching</span>
+          <Link href="/" className="font-bold text-2xl text-bone">
+            One Click<span className="text-terracotta"> Coaching</span>
           </Link>
-          <h1 className="text-3xl font-bold text-light mt-6 mb-2">Accept Invitation</h1>
-          <p className="text-light-muted">Join your team on One Click Coaching</p>
+          <h1 className="text-3xl font-bold text-bone mt-6 mb-2">Accept Invitation</h1>
+          <p className="text-stone-light">Join your team on One Click Coaching</p>
         </div>
 
-        <Suspense fallback={<div className="text-light-muted text-center">Loading...</div>}>
+        <Suspense fallback={<div className="text-stone-light text-center">Loading...</div>}>
           <AcceptInviteForm />
         </Suspense>
       </div>

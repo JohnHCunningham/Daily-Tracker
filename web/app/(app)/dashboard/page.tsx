@@ -582,7 +582,7 @@ export default function DashboardPage() {
     return (
       <div>
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+        <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-terracotta/10">
           <div>
             <h1 className="text-2xl font-bold text-espresso">
               Good morning, {userInfo.full_name || 'Coach'}
@@ -592,7 +592,7 @@ export default function DashboardPage() {
           <button
             onClick={handleSyncNow}
             disabled={syncing}
-            className="flex items-center gap-2 bg-terracotta/10 text-terracotta border border-terracotta/20 px-4 py-2 rounded-lg hover:bg-terracotta/20 transition-colors text-sm font-medium disabled:opacity-50"
+            className="flex items-center gap-2 bg-gradient-to-r from-terracotta/10 to-terracotta/5 text-terracotta border border-terracotta/30 px-4 py-2 rounded-lg hover:bg-terracotta/20 hover:border-terracotta/50 transition-all text-sm font-medium disabled:opacity-50 shadow-sm"
           >
             <HiRefresh className={syncing ? 'animate-spin' : ''} />
             {syncing ? 'Syncing...' : 'Sync Now'}
@@ -601,8 +601,8 @@ export default function DashboardPage() {
 
         {/* Pipeline Funnel */}
         {pipelineData.length > 0 && (
-          <div className="bg-white rounded-2xl border border-bone-dark p-6 mb-8 shadow-sm">
-            <h2 className="text-lg font-bold text-espresso mb-4">Pipeline Funnel</h2>
+          <div className="bg-white rounded-2xl border-t-4 border-t-terracotta border-l border-r border-b border-bone-dark/50 p-6 mb-8 shadow-sm">
+            <h2 className="text-lg font-bold text-espresso mb-4 pb-2 border-b-2 border-terracotta/20">Pipeline Funnel</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               {pipelineData.map((stage) => (
                 <div key={stage.stage} className="text-center">
@@ -619,7 +619,7 @@ export default function DashboardPage() {
 
         {/* KPI Radials Row */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
+          <div className="bg-gradient-to-br from-white to-bone-light/30 rounded-2xl border-l-4 border-l-terracotta border-t border-r border-b border-bone-dark/50 p-5 flex flex-col items-center shadow-sm">
             <ScoreRadial
               score={teamAvgScore ?? 0}
               maxScore={10}
@@ -628,7 +628,7 @@ export default function DashboardPage() {
               sublabel="/10"
             />
           </div>
-          <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
+          <div className="bg-gradient-to-br from-white to-bone-light/30 rounded-2xl border-l-4 border-l-clay border-t border-r border-b border-bone-dark/50 p-5 flex flex-col items-center shadow-sm">
             <ScoreRadial
               score={totalCalls}
               maxScore={Math.max(totalCalls, 50)}
@@ -637,7 +637,7 @@ export default function DashboardPage() {
               showPercentage={false}
             />
           </div>
-          <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
+          <div className="bg-gradient-to-br from-white to-bone-light/30 rounded-2xl border-l-4 border-l-terracotta/60 border-t border-r border-b border-bone-dark/50 p-5 flex flex-col items-center shadow-sm">
             {trendLabels.length > 1 ? (
               <ScoreTrendChart labels={trendLabels} scores={trendScores} height={100} />
             ) : (
@@ -663,7 +663,7 @@ export default function DashboardPage() {
                   <Link
                     key={member.id}
                     href={`/team/${member.id}`}
-                    className="bg-white rounded-2xl border border-bone-dark p-5 hover:border-terracotta/30 transition-colors cursor-pointer shadow-sm"
+                    className="bg-gradient-to-br from-white to-bone-light/40 rounded-2xl border-t-2 border-t-clay/40 border-l border-r border-b border-bone-dark/50 p-5 hover:border-terracotta/50 hover:shadow-md transition-all cursor-pointer shadow-sm"
                   >
                     <div className="grid grid-cols-4 gap-2 mb-4">
                       <ScoreRadial
@@ -713,7 +713,7 @@ export default function DashboardPage() {
               })}
             </div>
           ) : (
-            <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
+            <div className="bg-bone-light/50 rounded-2xl border border-bone-dark p-6 shadow-sm">
               <p className="text-stone text-sm">
                 No team members yet. <Link href="/team/invite" className="text-terracotta hover:text-terracotta-bright">Invite your first rep</Link>
               </p>
@@ -724,8 +724,8 @@ export default function DashboardPage() {
         {/* Bottom Row: Sandler Breakdown + Coaching + Attention */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Team Sandler Breakdown */}
-          <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-espresso mb-4">Team Sandler Breakdown</h2>
+          <div className="bg-white rounded-2xl border-l-4 border-l-clay border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-espresso mb-4 pb-2 border-b-2 border-clay/20">Team Sandler Breakdown</h2>
             {teamSandlerScores && Object.keys(teamSandlerScores).length > 0 ? (
               <SandlerBreakdown scores={teamSandlerScores} />
             ) : (
@@ -734,8 +734,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Recent Coaching */}
-          <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-white rounded-2xl border-l-4 border-l-terracotta/60 border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-terracotta/10">
               <h2 className="text-lg font-bold text-espresso">Recent Coaching</h2>
               <Link href="/coaching" className="text-terracotta text-xs hover:text-terracotta-bright">View All</Link>
             </div>
@@ -763,8 +763,8 @@ export default function DashboardPage() {
           </div>
 
           {/* Needs Attention */}
-          <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-espresso mb-4">Needs Attention</h2>
+          <div className="bg-white rounded-2xl border-l-4 border-l-terracotta border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-espresso mb-4 pb-2 border-b-2 border-terracotta/20">Needs Attention</h2>
             {needsAttention.length > 0 ? (
               <div className="space-y-3">
                 {needsAttention.map((item, i) => (
@@ -787,8 +787,8 @@ export default function DashboardPage() {
 
         {/* Open Commitments (Manager view) */}
         {openCommitments.length > 0 && (
-          <div className="bg-white rounded-2xl border border-clay/30 p-6 mb-6 shadow-sm">
-            <div className="flex items-center gap-2 mb-4">
+          <div className="bg-gradient-to-br from-clay/5 to-white rounded-2xl border-t-4 border-t-clay border-l border-r border-b border-clay/30 p-6 mb-6 shadow-sm">
+            <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-clay/20">
               <HiClipboardCheck className="text-clay text-lg" />
               <h2 className="text-lg font-bold text-espresso">Open Commitments</h2>
               <span className="text-xs bg-clay/10 text-clay-dark px-2 py-0.5 rounded-full border border-clay/30">
@@ -811,8 +811,8 @@ export default function DashboardPage() {
 
         {/* Celebrations Preview */}
         {recentCelebrations.length > 0 && (
-          <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
+          <div className="bg-gradient-to-br from-white to-clay/5 rounded-2xl border-t-2 border-t-clay border-l border-r border-b border-bone-dark/50 p-6 shadow-sm">
+            <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-clay/20">
               <h2 className="text-lg font-bold text-espresso">Recent Wins</h2>
               <Link href="/celebrations" className="text-terracotta text-xs hover:text-terracotta-bright">View All</Link>
             </div>
@@ -839,13 +839,15 @@ export default function DashboardPage() {
   // ─── REP DASHBOARD ───
   return (
     <div>
-      <h1 className="text-2xl font-bold text-espresso mb-1">Your Performance</h1>
-      <p className="text-stone text-sm mb-8">
-        Welcome back, {userInfo.full_name || 'there'}.
-      </p>
+      <div className="mb-8 pb-4 border-b-2 border-terracotta/10">
+        <h1 className="text-2xl font-bold text-espresso mb-1">Your Performance</h1>
+        <p className="text-stone text-sm">
+          Welcome back, {userInfo.full_name || 'there'}.
+        </p>
+      </div>
 
       {/* Hero: Sandler Score */}
-      <div className="bg-white rounded-2xl border border-bone-dark p-6 mb-8 flex flex-col items-center shadow-sm">
+      <div className="bg-gradient-to-br from-white via-bone-light/20 to-terracotta/5 rounded-2xl border-t-4 border-t-terracotta border-l border-r border-b border-bone-dark/50 p-6 mb-8 flex flex-col items-center shadow-md">
         <ScoreRadial
           score={repOverallScore ?? 0}
           maxScore={10}
@@ -857,7 +859,7 @@ export default function DashboardPage() {
 
       {/* 4 Pipeline Radials */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
+        <div className="bg-gradient-to-br from-white to-bone-light/30 rounded-2xl border-l-4 border-l-terracotta border-t border-r border-b border-bone-dark/50 p-5 flex flex-col items-center shadow-sm">
           <ScoreRadial
             score={repPipeline?.callsPercent ?? 0}
             maxScore={100}
@@ -866,7 +868,7 @@ export default function DashboardPage() {
             showPercentage={true}
           />
         </div>
-        <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
+        <div className="bg-gradient-to-br from-white to-bone-light/30 rounded-2xl border-l-4 border-l-clay border-t border-r border-b border-bone-dark/50 p-5 flex flex-col items-center shadow-sm">
           <ScoreRadial
             score={repPipeline?.discoveryPercent ?? 0}
             maxScore={100}
@@ -875,7 +877,7 @@ export default function DashboardPage() {
             showPercentage={true}
           />
         </div>
-        <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
+        <div className="bg-gradient-to-br from-white to-bone-light/30 rounded-2xl border-l-4 border-l-terracotta/60 border-t border-r border-b border-bone-dark/50 p-5 flex flex-col items-center shadow-sm">
           <ScoreRadial
             score={repPipeline?.proposalsPercent ?? 0}
             maxScore={100}
@@ -884,7 +886,7 @@ export default function DashboardPage() {
             showPercentage={true}
           />
         </div>
-        <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
+        <div className="bg-gradient-to-br from-white to-bone-light/30 rounded-2xl border-l-4 border-l-clay/70 border-t border-r border-b border-bone-dark/50 p-5 flex flex-col items-center shadow-sm">
           <ScoreRadial
             score={repPipeline?.salesPercent ?? 0}
             maxScore={100}
@@ -897,8 +899,8 @@ export default function DashboardPage() {
 
       {/* Coaching Feed + Sandler Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white rounded-2xl border-l-4 border-l-terracotta/60 border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-terracotta/10">
             <h2 className="text-lg font-bold text-espresso">Coaching Feed</h2>
             <Link href="/coaching" className="text-terracotta text-xs hover:text-terracotta-bright">View All</Link>
           </div>
@@ -915,8 +917,8 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-espresso mb-4">Sandler Breakdown</h2>
+        <div className="bg-white rounded-2xl border-l-4 border-l-clay border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-espresso mb-4 pb-2 border-b-2 border-clay/20">Sandler Breakdown</h2>
           {repScores ? (
             <SandlerBreakdown scores={repScores} />
           ) : (
@@ -927,8 +929,8 @@ export default function DashboardPage() {
 
       {/* My Commitments (Rep view) */}
       {openCommitments.length > 0 && (
-        <div className="bg-white rounded-2xl border-2 border-clay/30 p-6 mb-6 shadow-sm">
-          <div className="flex items-center gap-2 mb-4">
+        <div className="bg-gradient-to-br from-clay/5 to-white rounded-2xl border-t-4 border-t-clay border-l border-r border-b border-clay/30 p-6 mb-6 shadow-sm">
+          <div className="flex items-center gap-2 mb-4 pb-2 border-b-2 border-clay/20">
             <HiClipboardCheck className="text-clay text-lg" />
             <h2 className="text-lg font-bold text-espresso">My Commitments</h2>
             <span className="text-xs bg-clay/10 text-clay-dark px-2 py-0.5 rounded-full border border-clay/30">
@@ -955,8 +957,8 @@ export default function DashboardPage() {
 
       {/* Score History + 1-on-1 Notes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-espresso mb-4">Score History</h2>
+        <div className="bg-white rounded-2xl border-l-4 border-l-terracotta/60 border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-espresso mb-4 pb-2 border-b-2 border-terracotta/20">Score History</h2>
           {trendLabels.length > 1 ? (
             <ScoreTrendChart labels={trendLabels} scores={trendScores} height={200} />
           ) : (
@@ -964,8 +966,8 @@ export default function DashboardPage() {
           )}
         </div>
 
-        <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-white rounded-2xl border-l-4 border-l-clay border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-clay/20">
             <h2 className="text-lg font-bold text-espresso">1-on-1 Notes</h2>
             {repNotesPreview.unreadCount > 0 && (
               <span className="bg-terracotta text-white text-xs font-bold px-2 py-0.5 rounded-full">
@@ -989,8 +991,8 @@ export default function DashboardPage() {
 
       {/* Celebrations Preview */}
       {recentCelebrations.length > 0 && (
-        <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
-          <div className="flex items-center justify-between mb-4">
+        <div className="bg-gradient-to-br from-white to-clay/5 rounded-2xl border-t-2 border-t-clay border-l border-r border-b border-bone-dark/50 p-6 shadow-sm">
+          <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-clay/20">
             <h2 className="text-lg font-bold text-espresso">Recent Wins</h2>
             <Link href="/celebrations" className="text-terracotta text-xs hover:text-terracotta-bright">View All</Link>
           </div>

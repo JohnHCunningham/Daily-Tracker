@@ -73,13 +73,15 @@ export default function CallsPage() {
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-espresso mb-2">Calls</h1>
-      <p className="text-stone-light mb-8">
-        {calls.length} synced conversations
-      </p>
+      <div className="mb-8 pb-4 border-b-2 border-terracotta/10">
+        <h1 className="text-3xl font-bold text-espresso mb-2">Calls</h1>
+        <p className="text-stone-light">
+          {calls.length} synced conversations
+        </p>
+      </div>
 
       {calls.length === 0 ? (
-        <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-8 text-center">
+        <div className="bg-gradient-to-br from-white to-bone-light/30 rounded-2xl border-t-4 border-t-terracotta border-l border-r border-b border-bone-dark/50 shadow-sm p-8 text-center">
           <HiPhone className="text-terracotta text-4xl mx-auto mb-4" />
           <h2 className="text-xl font-bold text-espresso mb-2">No calls yet</h2>
           <p className="text-stone-light text-sm mb-4">
@@ -100,9 +102,9 @@ export default function CallsPage() {
               <Link
                 key={call.id}
                 href={`/calls/${call.id}`}
-                className="flex items-center gap-4 p-4 bg-white rounded-xl border border-bone-dark hover:border-terracotta/30 transition-colors"
+                className="flex items-center gap-4 p-4 bg-gradient-to-r from-white to-bone-light/20 rounded-xl border-l-4 border-l-terracotta/30 border-t border-r border-b border-bone-dark/50 hover:border-terracotta/50 hover:shadow-md transition-all"
               >
-                <div className="w-12 h-12 bg-terracotta/20 rounded-lg flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-terracotta/20 to-terracotta/10 rounded-lg flex items-center justify-center">
                   <HiPhone className="text-terracotta text-xl" />
                 </div>
                 <div className="flex-1 min-w-0">

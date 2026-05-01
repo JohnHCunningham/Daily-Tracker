@@ -195,7 +195,7 @@ export default function TeamPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-terracotta/10">
         <div>
           <h1 className="text-3xl font-bold text-espresso">Team</h1>
           <p className="text-stone-light mt-1">
@@ -231,9 +231,9 @@ export default function TeamPage() {
             <Link
               key={rep.id}
               href={`/team/${rep.id}`}
-              className="flex flex-col items-center p-4 bg-white rounded-xl border border-terracotta/20 hover:border-teal/40 transition-colors"
+              className="flex flex-col items-center p-4 bg-gradient-to-br from-white to-bone-light/30 rounded-xl border-t-2 border-t-terracotta/30 border-l border-r border-b border-bone-dark/50 hover:border-terracotta/50 hover:shadow-md transition-all"
             >
-              <div className="w-16 h-16 bg-terracotta/20 rounded-full flex items-center justify-center mb-3">
+              <div className="w-16 h-16 bg-gradient-to-br from-terracotta/20 to-terracotta/10 rounded-full flex items-center justify-center mb-3">
                 <HiUserCircle className="text-terracotta text-4xl" />
               </div>
               <p className="font-semibold text-espresso text-sm text-center truncate w-full">
@@ -281,7 +281,7 @@ export default function TeamPage() {
 
         {/* Upgrade prompt if no slots available */}
         {availableSlots === 0 && (
-          <div className="mt-4 p-4 bg-teal/5 border border-terracotta/20 rounded-xl">
+          <div className="mt-4 p-4 bg-gradient-to-r from-terracotta/5 to-clay/5 border-l-4 border-l-terracotta border-t border-r border-b border-terracotta/20 rounded-xl shadow-sm">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-espresso font-medium">Need more rep slots?</p>
@@ -309,9 +309,9 @@ export default function TeamPage() {
               <Link
                 key={member.id}
                 href={`/team/${member.id}`}
-                className="flex items-center gap-4 p-4 bg-white rounded-xl border border-bone-dark hover:border-terracotta/30 transition-colors"
+                className="flex items-center gap-4 p-4 bg-gradient-to-r from-white to-bone-light/20 rounded-xl border-l-4 border-l-clay border-t border-r border-b border-bone-dark/50 hover:border-clay/50 hover:shadow-md transition-all"
               >
-                <div className="w-12 h-12 bg-clay/20 rounded-full flex items-center justify-center">
+                <div className="w-12 h-12 bg-gradient-to-br from-clay/20 to-clay/10 rounded-full flex items-center justify-center">
                   <HiUserCircle className="text-clay text-3xl" />
                 </div>
                 <div className="flex-1">

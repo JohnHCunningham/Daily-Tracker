@@ -43,8 +43,8 @@ export default function Sidebar({ userRole }: { userRole: string }) {
   )
 
   return (
-    <aside className="w-60 bg-white border-r border-bone-dark flex flex-col">
-      <div className="p-5 border-b border-bone-dark">
+    <aside className="w-60 bg-gradient-to-b from-bone-light to-bone border-r border-bone-dark flex flex-col">
+      <div className="p-5 border-b border-clay/20">
         {brand.logoUrl ? (
           <img src={brand.logoUrl} alt={brand.companyName} className="h-8 object-contain" />
         ) : (
@@ -68,8 +68,8 @@ export default function Sidebar({ userRole }: { userRole: string }) {
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? 'bg-terracotta/10 text-terracotta'
-                  : 'text-stone hover:text-espresso hover:bg-bone'
+                  ? 'bg-terracotta/10 text-terracotta border-l-4 border-terracotta ml-[-12px] pl-[8px]'
+                  : 'text-stone hover:text-espresso hover:bg-terracotta/5'
               }`}
             >
               <Icon className="text-lg flex-shrink-0" />
@@ -79,7 +79,7 @@ export default function Sidebar({ userRole }: { userRole: string }) {
         })}
       </nav>
 
-      <div className="p-4 border-t border-bone-dark">
+      <div className="p-4 border-t border-clay/20">
         <p className="text-xs text-stone-light text-center">{brand.companyName}</p>
       </div>
     </aside>

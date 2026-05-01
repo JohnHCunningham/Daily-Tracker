@@ -23,7 +23,7 @@ export default function TopBar({ user, userRole }: { user: User; userRole: strin
   const displayName = user.user_metadata?.full_name || user.email
 
   return (
-    <header className="h-16 bg-white border-b border-bone-dark flex items-center justify-between px-6">
+    <header className="h-16 bg-white/80 backdrop-blur-sm border-b border-clay/20 flex items-center justify-between px-6 shadow-sm">
       <div />
       <div className="flex items-center gap-4">
         <span className={`text-xs font-bold px-3 py-1 rounded-full border ${roleBadgeColor[userRole] || roleBadgeColor.rep}`}>

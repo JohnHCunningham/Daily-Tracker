@@ -564,13 +564,13 @@ export default function DashboardPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-teal border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   if (!userInfo) {
-    return <div className="text-light-muted">Unable to load user data.</div>
+    return <div className="text-stone-light">Unable to load user data.</div>
   }
 
   const isLeader = ['admin', 'manager', 'coach'].includes(userInfo.role)
@@ -584,15 +584,15 @@ export default function DashboardPage() {
         {/* Header */}
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-2xl font-bold text-light">
+            <h1 className="text-2xl font-bold text-espresso">
               Good morning, {userInfo.full_name || 'Coach'}
             </h1>
-            <p className="text-light-muted text-sm mt-1">Here is your team at a glance.</p>
+            <p className="text-stone text-sm mt-1">Here is your team at a glance.</p>
           </div>
           <button
             onClick={handleSyncNow}
             disabled={syncing}
-            className="flex items-center gap-2 bg-teal/10 text-teal border border-teal/20 px-4 py-2 rounded-lg hover:bg-teal/20 transition-colors text-sm font-medium disabled:opacity-50"
+            className="flex items-center gap-2 bg-terracotta/10 text-terracotta border border-terracotta/20 px-4 py-2 rounded-lg hover:bg-terracotta/20 transition-colors text-sm font-medium disabled:opacity-50"
           >
             <HiRefresh className={syncing ? 'animate-spin' : ''} />
             {syncing ? 'Syncing...' : 'Sync Now'}
@@ -601,14 +601,14 @@ export default function DashboardPage() {
 
         {/* Pipeline Funnel */}
         {pipelineData.length > 0 && (
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-8">
-            <h2 className="text-lg font-bold text-light mb-4">Pipeline Funnel</h2>
+          <div className="bg-white rounded-2xl border border-bone-dark p-6 mb-8 shadow-sm">
+            <h2 className="text-lg font-bold text-espresso mb-4">Pipeline Funnel</h2>
             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
               {pipelineData.map((stage) => (
                 <div key={stage.stage} className="text-center">
-                  <p className="text-xs text-light-muted uppercase tracking-wider mb-1">{stage.stage}</p>
-                  <p className="text-lg font-bold text-light">
-                    {stage.actual}<span className="text-light-muted font-normal">/{stage.target}</span>
+                  <p className="text-xs text-stone-light uppercase tracking-wider mb-1">{stage.stage}</p>
+                  <p className="text-lg font-bold text-espresso">
+                    {stage.actual}<span className="text-stone font-normal">/{stage.target}</span>
                   </p>
                 </div>
               ))}
@@ -619,7 +619,7 @@ export default function DashboardPage() {
 
         {/* KPI Radials Row */}
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-8">
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+          <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
             <ScoreRadial
               score={teamAvgScore ?? 0}
               maxScore={10}
@@ -628,7 +628,7 @@ export default function DashboardPage() {
               sublabel="/10"
             />
           </div>
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+          <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
             <ScoreRadial
               score={totalCalls}
               maxScore={Math.max(totalCalls, 50)}
@@ -637,23 +637,23 @@ export default function DashboardPage() {
               showPercentage={false}
             />
           </div>
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+          <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
             {trendLabels.length > 1 ? (
               <ScoreTrendChart labels={trendLabels} scores={trendScores} height={100} />
             ) : (
               <div className="flex flex-col items-center justify-center h-full">
-                <p className="text-light-muted text-xs text-center">Score trends appear after calls are analyzed.</p>
+                <p className="text-stone-light text-xs text-center">Score trends appear after calls are analyzed.</p>
               </div>
             )}
-            <p className="text-xs font-medium text-light-muted mt-1">Score Trend</p>
+            <p className="text-xs font-medium text-stone-light mt-1">Score Trend</p>
           </div>
         </div>
 
         {/* Rep Cards Grid */}
         <div className="mb-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-light">Team Members</h2>
-            <Link href="/team" className="text-teal text-sm hover:text-aqua">Manage Team</Link>
+            <h2 className="text-lg font-bold text-espresso">Team Members</h2>
+            <Link href="/team" className="text-terracotta text-sm hover:text-terracotta-bright">Manage Team</Link>
           </div>
           {repMembers.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -663,7 +663,7 @@ export default function DashboardPage() {
                   <Link
                     key={member.id}
                     href={`/team/${member.id}`}
-                    className="bg-navy-light rounded-2xl border border-teal/10 p-5 hover:border-teal/30 transition-colors cursor-pointer"
+                    className="bg-white rounded-2xl border border-bone-dark p-5 hover:border-terracotta/30 transition-colors cursor-pointer shadow-sm"
                   >
                     <div className="grid grid-cols-4 gap-2 mb-4">
                       <ScoreRadial
@@ -696,13 +696,13 @@ export default function DashboardPage() {
                       />
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-bold text-light">{member.full_name || member.email}</p>
+                      <p className="text-sm font-bold text-espresso">{member.full_name || member.email}</p>
                       <div className="flex items-center justify-center gap-2 mt-1">
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-teal/10 text-teal uppercase tracking-wider">
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-terracotta/10 text-terracotta uppercase tracking-wider">
                           {member.role}
                         </span>
                         {progress.sandlerScore !== null && (
-                          <span className="text-xs text-light-muted">
+                          <span className="text-xs text-stone-light">
                             Avg: {progress.sandlerScore}/10
                           </span>
                         )}
@@ -713,9 +713,9 @@ export default function DashboardPage() {
               })}
             </div>
           ) : (
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-              <p className="text-light-muted text-sm">
-                No team members yet. <Link href="/team/invite" className="text-teal hover:text-aqua">Invite your first rep</Link>
+            <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
+              <p className="text-stone text-sm">
+                No team members yet. <Link href="/team/invite" className="text-terracotta hover:text-terracotta-bright">Invite your first rep</Link>
               </p>
             </div>
           )}
@@ -724,33 +724,33 @@ export default function DashboardPage() {
         {/* Bottom Row: Sandler Breakdown + Coaching + Attention */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
           {/* Team Sandler Breakdown */}
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-            <h2 className="text-lg font-bold text-light mb-4">Team Sandler Breakdown</h2>
+          <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-espresso mb-4">Team Sandler Breakdown</h2>
             {teamSandlerScores && Object.keys(teamSandlerScores).length > 0 ? (
               <SandlerBreakdown scores={teamSandlerScores} />
             ) : (
-              <p className="text-light-muted text-sm">Breakdown appears after calls are analyzed.</p>
+              <p className="text-stone-light text-sm">Breakdown appears after calls are analyzed.</p>
             )}
           </div>
 
           {/* Recent Coaching */}
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+          <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-light">Recent Coaching</h2>
-              <Link href="/coaching" className="text-teal text-xs hover:text-aqua">View All</Link>
+              <h2 className="text-lg font-bold text-espresso">Recent Coaching</h2>
+              <Link href="/coaching" className="text-terracotta text-xs hover:text-terracotta-bright">View All</Link>
             </div>
             {recentCoaching.length > 0 ? (
               <div className="space-y-3">
                 {recentCoaching.map((c) => (
-                  <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-navy/50">
+                  <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-bone/50">
                     {c.status === 'sent' ? (
-                      <HiCheckCircle className="text-teal text-lg flex-shrink-0" />
+                      <HiCheckCircle className="text-terracotta text-lg flex-shrink-0" />
                     ) : (
-                      <HiAcademicCap className="text-gold text-lg flex-shrink-0" />
+                      <HiAcademicCap className="text-clay text-lg flex-shrink-0" />
                     )}
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-light truncate">{c.rep_email}</p>
-                      <p className="text-xs text-light-muted">
+                      <p className="text-sm text-espresso truncate">{c.rep_email}</p>
+                      <p className="text-xs text-stone-light">
                         {c.status === 'sent' ? 'Sent' : 'Pending'} &middot; {new Date(c.created_at).toLocaleDateString()}
                       </p>
                     </div>
@@ -758,21 +758,21 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-light-muted text-sm">Coaching messages will appear here.</p>
+              <p className="text-stone-light text-sm">Coaching messages will appear here.</p>
             )}
           </div>
 
           {/* Needs Attention */}
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-            <h2 className="text-lg font-bold text-light mb-4">Needs Attention</h2>
+          <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
+            <h2 className="text-lg font-bold text-espresso mb-4">Needs Attention</h2>
             {needsAttention.length > 0 ? (
               <div className="space-y-3">
                 {needsAttention.map((item, i) => (
-                  <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-pink/5 border border-pink/10">
-                    <HiExclamationCircle className="text-pink text-lg flex-shrink-0" />
+                  <div key={i} className="flex items-center gap-3 p-2 rounded-lg bg-terracotta/5 border border-terracotta/20">
+                    <HiExclamationCircle className="text-terracotta text-lg flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-light truncate">{item.repName}</p>
-                      <p className="text-xs text-pink">
+                      <p className="text-sm text-espresso truncate">{item.repName}</p>
+                      <p className="text-xs text-terracotta-dark">
                         {item.component}: {item.score}/10
                       </p>
                     </div>
@@ -780,28 +780,28 @@ export default function DashboardPage() {
                 ))}
               </div>
             ) : (
-              <p className="text-light-muted text-sm">No critical issues detected.</p>
+              <p className="text-stone-light text-sm">No critical issues detected.</p>
             )}
           </div>
         </div>
 
         {/* Open Commitments (Manager view) */}
         {openCommitments.length > 0 && (
-          <div className="bg-navy-light rounded-2xl border border-gold/20 p-6 mb-6">
+          <div className="bg-white rounded-2xl border border-clay/30 p-6 mb-6 shadow-sm">
             <div className="flex items-center gap-2 mb-4">
-              <HiClipboardCheck className="text-gold text-lg" />
-              <h2 className="text-lg font-bold text-light">Open Commitments</h2>
-              <span className="text-xs bg-gold/10 text-gold px-2 py-0.5 rounded-full border border-gold/20">
+              <HiClipboardCheck className="text-clay text-lg" />
+              <h2 className="text-lg font-bold text-espresso">Open Commitments</h2>
+              <span className="text-xs bg-clay/10 text-clay-dark px-2 py-0.5 rounded-full border border-clay/30">
                 {openCommitments.length}
               </span>
             </div>
             <div className="space-y-2">
               {openCommitments.map((c) => (
-                <div key={c.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-navy/50">
-                  <span className="w-2 h-2 bg-gold rounded-full mt-1.5 flex-shrink-0" />
+                <div key={c.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-bone/50">
+                  <span className="w-2 h-2 bg-clay rounded-full mt-1.5 flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-light">{c.commitment_text}</p>
-                    <p className="text-xs text-light-muted mt-0.5">{c.rep_email}</p>
+                    <p className="text-sm text-espresso">{c.commitment_text}</p>
+                    <p className="text-xs text-stone-light mt-0.5">{c.rep_email}</p>
                   </div>
                 </div>
               ))}
@@ -811,18 +811,18 @@ export default function DashboardPage() {
 
         {/* Celebrations Preview */}
         {recentCelebrations.length > 0 && (
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+          <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-lg font-bold text-light">Recent Wins</h2>
-              <Link href="/celebrations" className="text-teal text-xs hover:text-aqua">View All</Link>
+              <h2 className="text-lg font-bold text-espresso">Recent Wins</h2>
+              <Link href="/celebrations" className="text-terracotta text-xs hover:text-terracotta-bright">View All</Link>
             </div>
             <div className="space-y-3">
               {recentCelebrations.map((c) => (
-                <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-navy/50">
-                  <HiSparkles className="text-gold text-lg flex-shrink-0" />
+                <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-bone/50">
+                  <HiSparkles className="text-clay text-lg flex-shrink-0" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-light truncate">{c.title}</p>
-                    <p className="text-xs text-light-muted">
+                    <p className="text-sm text-espresso truncate">{c.title}</p>
+                    <p className="text-xs text-stone-light">
                       {c.rep_email && <span>{c.rep_email} &middot; </span>}
                       {getTimeAgo(c.created_at)}
                     </p>
@@ -839,13 +839,13 @@ export default function DashboardPage() {
   // ─── REP DASHBOARD ───
   return (
     <div>
-      <h1 className="text-2xl font-bold text-light mb-1">Your Performance</h1>
-      <p className="text-light-muted text-sm mb-8">
+      <h1 className="text-2xl font-bold text-espresso mb-1">Your Performance</h1>
+      <p className="text-stone text-sm mb-8">
         Welcome back, {userInfo.full_name || 'there'}.
       </p>
 
       {/* Hero: Sandler Score */}
-      <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-8 flex flex-col items-center">
+      <div className="bg-white rounded-2xl border border-bone-dark p-6 mb-8 flex flex-col items-center shadow-sm">
         <ScoreRadial
           score={repOverallScore ?? 0}
           maxScore={10}
@@ -857,7 +857,7 @@ export default function DashboardPage() {
 
       {/* 4 Pipeline Radials */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+        <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
           <ScoreRadial
             score={repPipeline?.callsPercent ?? 0}
             maxScore={100}
@@ -866,7 +866,7 @@ export default function DashboardPage() {
             showPercentage={true}
           />
         </div>
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+        <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
           <ScoreRadial
             score={repPipeline?.discoveryPercent ?? 0}
             maxScore={100}
@@ -875,7 +875,7 @@ export default function DashboardPage() {
             showPercentage={true}
           />
         </div>
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+        <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
           <ScoreRadial
             score={repPipeline?.proposalsPercent ?? 0}
             maxScore={100}
@@ -884,7 +884,7 @@ export default function DashboardPage() {
             showPercentage={true}
           />
         </div>
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+        <div className="bg-white rounded-2xl border border-bone-dark p-5 flex flex-col items-center shadow-sm">
           <ScoreRadial
             score={repPipeline?.salesPercent ?? 0}
             maxScore={100}
@@ -897,10 +897,10 @@ export default function DashboardPage() {
 
       {/* Coaching Feed + Sandler Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+        <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-light">Coaching Feed</h2>
-            <Link href="/coaching" className="text-teal text-xs hover:text-aqua">View All</Link>
+            <h2 className="text-lg font-bold text-espresso">Coaching Feed</h2>
+            <Link href="/coaching" className="text-terracotta text-xs hover:text-terracotta-bright">View All</Link>
           </div>
           {repCoachingMessages.length > 0 ? (
             <CoachingFeed messages={repCoachingMessages.map((m) => ({
@@ -911,40 +911,40 @@ export default function DashboardPage() {
               status: m.status,
             }))} />
           ) : (
-            <p className="text-light-muted text-sm">Coaching messages will appear here after calls are analyzed.</p>
+            <p className="text-stone-light text-sm">Coaching messages will appear here after calls are analyzed.</p>
           )}
         </div>
 
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-          <h2 className="text-lg font-bold text-light mb-4">Sandler Breakdown</h2>
+        <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-espresso mb-4">Sandler Breakdown</h2>
           {repScores ? (
             <SandlerBreakdown scores={repScores} />
           ) : (
-            <p className="text-light-muted text-sm">Scores appear after your first call is analyzed.</p>
+            <p className="text-stone-light text-sm">Scores appear after your first call is analyzed.</p>
           )}
         </div>
       </div>
 
       {/* My Commitments (Rep view) */}
       {openCommitments.length > 0 && (
-        <div className="bg-navy-light rounded-2xl border-2 border-gold/30 p-6 mb-6">
+        <div className="bg-white rounded-2xl border-2 border-clay/30 p-6 mb-6 shadow-sm">
           <div className="flex items-center gap-2 mb-4">
-            <HiClipboardCheck className="text-gold text-lg" />
-            <h2 className="text-lg font-bold text-light">My Commitments</h2>
-            <span className="text-xs bg-gold/10 text-gold px-2 py-0.5 rounded-full border border-gold/20">
+            <HiClipboardCheck className="text-clay text-lg" />
+            <h2 className="text-lg font-bold text-espresso">My Commitments</h2>
+            <span className="text-xs bg-clay/10 text-clay-dark px-2 py-0.5 rounded-full border border-clay/30">
               {openCommitments.length}
             </span>
           </div>
           <div className="space-y-2">
             {openCommitments.map((c) => (
-              <label key={c.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-navy/50 cursor-pointer group">
+              <label key={c.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-bone/50 cursor-pointer group">
                 <input
                   type="checkbox"
                   checked={false}
                   onChange={() => handleCompleteCommitment(c.id)}
-                  className="mt-0.5 w-4 h-4 rounded border-gold/30 text-teal focus:ring-teal/50 bg-navy"
+                  className="mt-0.5 w-4 h-4 rounded border-clay/30 text-terracotta focus:ring-terracotta/50 bg-white"
                 />
-                <span className="text-sm text-light group-hover:text-teal transition-colors">
+                <span className="text-sm text-espresso group-hover:text-terracotta transition-colors">
                   {c.commitment_text}
                 </span>
               </label>
@@ -955,33 +955,33 @@ export default function DashboardPage() {
 
       {/* Score History + 1-on-1 Notes */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-          <h2 className="text-lg font-bold text-light mb-4">Score History</h2>
+        <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
+          <h2 className="text-lg font-bold text-espresso mb-4">Score History</h2>
           {trendLabels.length > 1 ? (
             <ScoreTrendChart labels={trendLabels} scores={trendScores} height={200} />
           ) : (
-            <p className="text-light-muted text-sm">Trend data appears after multiple calls.</p>
+            <p className="text-stone-light text-sm">Trend data appears after multiple calls.</p>
           )}
         </div>
 
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+        <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-light">1-on-1 Notes</h2>
+            <h2 className="text-lg font-bold text-espresso">1-on-1 Notes</h2>
             {repNotesPreview.unreadCount > 0 && (
-              <span className="bg-pink text-white text-xs font-bold px-2 py-0.5 rounded-full">
+              <span className="bg-terracotta text-white text-xs font-bold px-2 py-0.5 rounded-full">
                 {repNotesPreview.unreadCount} unread
               </span>
             )}
           </div>
           {repNotesPreview.lastMessage ? (
             <div className="mb-4">
-              <p className="text-xs text-light-muted mb-1">Last message from {repNotesPreview.lastSender}:</p>
-              <p className="text-sm text-light line-clamp-3">{repNotesPreview.lastMessage}</p>
+              <p className="text-xs text-stone-light mb-1">Last message from {repNotesPreview.lastSender}:</p>
+              <p className="text-sm text-espresso line-clamp-3">{repNotesPreview.lastMessage}</p>
             </div>
           ) : (
-            <p className="text-light-muted text-sm mb-4">No messages yet. Your manager can send notes here.</p>
+            <p className="text-stone-light text-sm mb-4">No messages yet. Your manager can send notes here.</p>
           )}
-          <Link href="/notes" className="flex items-center gap-2 text-teal hover:text-aqua text-sm font-medium">
+          <Link href="/notes" className="flex items-center gap-2 text-terracotta hover:text-terracotta-bright text-sm font-medium">
             <HiChatAlt2 /> Open Notes
           </Link>
         </div>
@@ -989,18 +989,18 @@ export default function DashboardPage() {
 
       {/* Celebrations Preview */}
       {recentCelebrations.length > 0 && (
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+        <div className="bg-white rounded-2xl border border-bone-dark p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-bold text-light">Recent Wins</h2>
-            <Link href="/celebrations" className="text-teal text-xs hover:text-aqua">View All</Link>
+            <h2 className="text-lg font-bold text-espresso">Recent Wins</h2>
+            <Link href="/celebrations" className="text-terracotta text-xs hover:text-terracotta-bright">View All</Link>
           </div>
           <div className="space-y-3">
             {recentCelebrations.map((c) => (
-              <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-navy/50">
-                <HiSparkles className="text-gold text-lg flex-shrink-0" />
+              <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-bone/50">
+                <HiSparkles className="text-clay text-lg flex-shrink-0" />
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-light truncate">{c.title}</p>
-                  <p className="text-xs text-light-muted">
+                  <p className="text-sm text-espresso truncate">{c.title}</p>
+                  <p className="text-xs text-stone-light">
                     {c.rep_email && <span>{c.rep_email} &middot; </span>}
                     {getTimeAgo(c.created_at)}
                   </p>

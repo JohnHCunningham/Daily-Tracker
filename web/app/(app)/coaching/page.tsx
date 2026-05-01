@@ -212,9 +212,9 @@ export default function CoachingPage() {
   const unreadCount = messages.filter((m) => m.status === 'sent' && !m.read_at).length
 
   const statusConfig: Record<string, { label: string; color: string; icon: React.ComponentType<{ className?: string }> }> = {
-    generated: { label: 'Pending Review', color: 'text-gold bg-gold/10 border-gold/20', icon: HiClock },
-    approved: { label: 'Approved', color: 'text-teal bg-teal/10 border-teal/20', icon: HiCheck },
-    sent: { label: 'Sent', color: 'text-aqua bg-aqua/10 border-aqua/20', icon: HiMail },
+    generated: { label: 'Pending Review', color: 'text-clay bg-clay/10 border-clay/30', icon: HiClock },
+    approved: { label: 'Approved', color: 'text-terracotta bg-terracotta/10 border-terracotta/20', icon: HiCheck },
+    sent: { label: 'Sent', color: 'text-terracotta-bright bg-terracotta-bright/10 border-aqua/20', icon: HiMail },
     read: { label: 'Read', color: 'text-green-400 bg-green-400/10 border-green-400/20', icon: HiEye },
     replied: { label: 'Replied', color: 'text-green-400 bg-green-400/10 border-green-400/20', icon: HiReply },
   }
@@ -222,21 +222,21 @@ export default function CoachingPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-teal border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-light mb-1">Coaching</h1>
-      <p className="text-light-muted text-sm mb-6">
+      <h1 className="text-2xl font-bold text-espresso mb-1">Coaching</h1>
+      <p className="text-stone-light text-sm mb-6">
         {isLeader ? 'Review, edit, and approve coaching before sending to reps.' : 'Your coaching feedback.'}
       </p>
 
       {/* Tabs */}
       {isLeader && (
-        <div className="flex gap-1 mb-6 bg-navy-light rounded-lg p-1 w-fit">
+        <div className="flex gap-1 mb-6 bg-white rounded-lg p-1 w-fit">
           {([
             { key: 'pending' as TabKey, label: 'Pending', count: pendingCount },
             { key: 'sent' as TabKey, label: 'Sent', count: sentCount },
@@ -247,19 +247,19 @@ export default function CoachingPage() {
               onClick={() => setActiveTab(tab.key)}
               className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
                 activeTab === tab.key
-                  ? 'bg-teal/10 text-teal'
-                  : 'text-light-muted hover:text-light'
+                  ? 'bg-terracotta/10 text-teal'
+                  : 'text-stone-light hover:text-espresso'
               }`}
             >
               {tab.label}
               {tab.count > 0 && (
-                <span className="ml-1.5 text-xs bg-navy rounded-full px-1.5 py-0.5">
+                <span className="ml-1.5 text-xs bg-bone rounded-full px-1.5 py-0.5">
                   {tab.count}
                 </span>
               )}
               {/* 4A: Unread badge on Sent tab */}
               {tab.key === 'sent' && unreadCount > 0 && (
-                <span className="ml-1 inline-block w-2 h-2 bg-aqua rounded-full animate-pulse" />
+                <span className="ml-1 inline-block w-2 h-2 bg-terracotta-bright rounded-full animate-pulse" />
               )}
             </button>
           ))}
@@ -267,10 +267,10 @@ export default function CoachingPage() {
       )}
 
       {filtered.length === 0 ? (
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-8 text-center">
-          <HiMail className="text-teal text-4xl mx-auto mb-4" />
-          <h2 className="text-lg font-bold text-light mb-2">No {activeTab} messages</h2>
-          <p className="text-light-muted text-sm">
+        <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-8 text-center">
+          <HiMail className="text-terracotta text-4xl mx-auto mb-4" />
+          <h2 className="text-lg font-bold text-espresso mb-2">No {activeTab} messages</h2>
+          <p className="text-stone-light text-sm">
             {activeTab === 'pending'
               ? 'Coaching messages will be generated after calls are analyzed.'
               : activeTab === 'replies'
@@ -290,28 +290,28 @@ export default function CoachingPage() {
             const showUnreadDot = isLeader && msg.status === 'sent' && !msg.read_at
 
             return (
-              <div key={msg.id} className="bg-navy-light rounded-2xl border border-teal/10 overflow-hidden">
+              <div key={msg.id} className="bg-white rounded-2xl border border-bone-dark overflow-hidden">
                 <button
                   onClick={() => handleExpand(msg.id, msg)}
-                  className="w-full flex items-center gap-4 p-4 text-left hover:bg-navy/50 transition-colors"
+                  className="w-full flex items-center gap-4 p-4 text-left hover:bg-bone/50 transition-colors"
                 >
-                  <div className="relative w-10 h-10 bg-teal/20 rounded-lg flex items-center justify-center flex-shrink-0">
-                    <HiMail className="text-teal text-xl" />
+                  <div className="relative w-10 h-10 bg-terracotta/20 rounded-lg flex items-center justify-center flex-shrink-0">
+                    <HiMail className="text-terracotta text-xl" />
                     {/* 4A: Pulsing unread dot */}
                     {showUnreadDot && (
-                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-aqua rounded-full animate-pulse" />
+                      <span className="absolute -top-1 -right-1 w-3 h-3 bg-terracotta-bright rounded-full animate-pulse" />
                     )}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="font-semibold text-light text-sm">
+                    <p className="font-semibold text-espresso text-sm">
                       {isLeader ? `To: ${msg.rep_email}` : `From: ${msg.manager_email}`}
                     </p>
-                    <p className="text-xs text-light-muted mt-0.5">
+                    <p className="text-xs text-stone-light mt-0.5">
                       {new Date(msg.generated_at).toLocaleString()}
                     </p>
                   </div>
                   {msg.rep_response && (
-                    <span className="text-xs bg-aqua/10 text-aqua px-2 py-0.5 rounded-full border border-aqua/20">
+                    <span className="text-xs bg-terracotta-bright/10 text-terracotta-bright px-2 py-0.5 rounded-full border border-aqua/20">
                       Replied
                     </span>
                   )}
@@ -322,7 +322,7 @@ export default function CoachingPage() {
                 </button>
 
                 {isExpanded && (
-                  <div className="border-t border-navy px-4 pb-4 pt-4">
+                  <div className="border-t border-bone px-4 pb-4 pt-4">
                     {/* Coaching Content */}
                     {isEditing ? (
                       <div>
@@ -330,33 +330,33 @@ export default function CoachingPage() {
                           value={editContent}
                           onChange={(e) => setEditContent(e.target.value)}
                           rows={12}
-                          className="w-full bg-navy border border-teal/20 rounded-lg p-3 text-sm text-light focus:outline-none focus:border-teal resize-y"
+                          className="w-full bg-bone border border-terracotta/20 rounded-lg p-3 text-sm text-espresso focus:outline-none focus:border-terracotta resize-y"
                         />
                         <div className="flex gap-2 mt-3">
                           <button
                             onClick={() => handleSaveEdit(msg.id)}
-                            className="flex items-center gap-1 bg-teal text-navy font-bold py-2 px-4 rounded-lg text-sm hover:bg-aqua transition-colors"
+                            className="flex items-center gap-1 bg-terracotta text-white font-bold py-2 px-4 rounded-lg text-sm hover:bg-terracotta-bright transition-colors"
                           >
                             <HiCheck /> Save Changes
                           </button>
                           <button
                             onClick={() => setEditingId(null)}
-                            className="flex items-center gap-1 text-light-muted hover:text-light py-2 px-4 rounded-lg text-sm transition-colors"
+                            className="flex items-center gap-1 text-stone-light hover:text-espresso py-2 px-4 rounded-lg text-sm transition-colors"
                           >
                             <HiX /> Cancel
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="bg-navy rounded-lg p-4 text-sm text-light-muted whitespace-pre-wrap">
+                      <div className="bg-bone rounded-lg p-4 text-sm text-stone-light whitespace-pre-wrap">
                         {msg.coaching_content}
                       </div>
                     )}
 
                     {/* 4D: Commitments Display */}
                     {msgCommitments.length > 0 && (
-                      <div className="mt-4 bg-gold/5 border border-gold/20 rounded-lg p-4">
-                        <p className="text-xs font-bold text-gold mb-3">Commitments</p>
+                      <div className="mt-4 bg-gold/5 border border-clay/30 rounded-lg p-4">
+                        <p className="text-xs font-bold text-clay mb-3">Commitments</p>
                         <div className="space-y-2">
                           {msgCommitments.map((c) => (
                             <label
@@ -367,9 +367,9 @@ export default function CoachingPage() {
                                 type="checkbox"
                                 checked={c.status === 'completed'}
                                 onChange={() => handleToggleCommitment(c.id, msg.id, c.status)}
-                                className="mt-0.5 w-4 h-4 rounded border-gold/30 text-teal focus:ring-teal/50 bg-navy"
+                                className="mt-0.5 w-4 h-4 rounded border-clay/30 text-terracotta focus:ring-teal/50 bg-bone"
                               />
-                              <span className={`text-sm ${c.status === 'completed' ? 'text-light-muted line-through' : 'text-light'}`}>
+                              <span className={`text-sm ${c.status === 'completed' ? 'text-stone-light line-through' : 'text-espresso'}`}>
                                 {c.commitment_text}
                               </span>
                             </label>
@@ -381,11 +381,11 @@ export default function CoachingPage() {
                     {/* Rep Response */}
                     {msg.rep_response && (
                       <div className="mt-4">
-                        <p className="text-xs font-bold text-light mb-2">Rep Reply:</p>
-                        <div className="bg-teal/5 border border-teal/10 rounded-lg p-3 text-sm text-light-muted">
+                        <p className="text-xs font-bold text-espresso mb-2">Rep Reply:</p>
+                        <div className="bg-teal/5 border border-bone-dark rounded-lg p-3 text-sm text-stone-light">
                           {msg.rep_response}
                         </div>
-                        <p className="text-xs text-light-muted mt-1">
+                        <p className="text-xs text-stone-light mt-1">
                           {msg.responded_at && `Replied ${new Date(msg.responded_at).toLocaleString()}`}
                         </p>
                       </div>
@@ -394,19 +394,19 @@ export default function CoachingPage() {
                     {/* 4C: In-app reply for rep (only on sent/read messages without a response) */}
                     {!isLeader && (msg.status === 'sent' || msg.status === 'read') && !msg.rep_response && (
                       <div className="mt-4">
-                        <p className="text-xs font-bold text-light mb-2">Reply to your coach:</p>
+                        <p className="text-xs font-bold text-espresso mb-2">Reply to your coach:</p>
                         <textarea
                           value={replyingTo === msg.id ? replyText : ''}
                           onChange={(e) => { setReplyingTo(msg.id); setReplyText(e.target.value) }}
                           onFocus={() => setReplyingTo(msg.id)}
                           placeholder="Type your response..."
                           rows={3}
-                          className="w-full bg-navy border border-teal/20 rounded-lg p-3 text-sm text-light focus:outline-none focus:border-teal resize-y"
+                          className="w-full bg-bone border border-terracotta/20 rounded-lg p-3 text-sm text-espresso focus:outline-none focus:border-terracotta resize-y"
                         />
                         <button
                           onClick={() => handleSendReply(msg.id)}
                           disabled={!replyText.trim() || replyingTo !== msg.id}
-                          className="mt-2 flex items-center gap-2 bg-teal text-navy font-bold py-2 px-4 rounded-lg text-sm hover:bg-aqua transition-colors disabled:opacity-50"
+                          className="mt-2 flex items-center gap-2 bg-terracotta text-white font-bold py-2 px-4 rounded-lg text-sm hover:bg-terracotta-bright transition-colors disabled:opacity-50"
                         >
                           <HiReply /> Send Reply
                         </button>
@@ -418,13 +418,13 @@ export default function CoachingPage() {
                       <div className="mt-4 flex gap-3">
                         <button
                           onClick={() => handleApproveAndSend(msg.id)}
-                          className="flex items-center gap-2 bg-teal text-navy font-bold py-2 px-4 rounded-lg hover:bg-aqua transition-colors text-sm"
+                          className="flex items-center gap-2 bg-terracotta text-white font-bold py-2 px-4 rounded-lg hover:bg-terracotta-bright transition-colors text-sm"
                         >
                           <HiCheck /> Approve & Send
                         </button>
                         <button
                           onClick={() => { setEditingId(msg.id); setEditContent(msg.coaching_content) }}
-                          className="flex items-center gap-2 bg-navy text-light-muted border border-teal/20 py-2 px-4 rounded-lg hover:text-light hover:border-teal/40 transition-colors text-sm"
+                          className="flex items-center gap-2 bg-bone text-stone-light border border-terracotta/20 py-2 px-4 rounded-lg hover:text-espresso hover:border-teal/40 transition-colors text-sm"
                         >
                           <HiPencil /> Edit First
                         </button>

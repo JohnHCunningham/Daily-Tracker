@@ -38,7 +38,7 @@ export default function ActivityFunnel({ data }: ActivityFunnelProps) {
       {
         label: 'Target',
         data: data.map((d) => d.target),
-        backgroundColor: '#131a40',
+        backgroundColor: '#EAE3D8',
         borderColor: '#B5583E',
         borderWidth: 1,
         borderRadius: 4,
@@ -55,9 +55,9 @@ export default function ActivityFunnel({ data }: ActivityFunnelProps) {
     plugins: {
       legend: { display: false },
       tooltip: {
-        backgroundColor: '#2A221C',
-        titleColor: '#F2F4F8',
-        bodyColor: '#F2F4F8',
+        backgroundColor: '#F4EFE8',
+        titleColor: '#2A221C',
+        bodyColor: '#2A221C',
         borderColor: '#B5583E',
         borderWidth: 1,
         callbacks: {
@@ -70,12 +70,12 @@ export default function ActivityFunnel({ data }: ActivityFunnelProps) {
     },
     scales: {
       x: {
-        grid: { color: 'rgba(16, 195, 176, 0.05)' },
-        ticks: { color: '#cbd5e1', font: { size: 11 } },
+        grid: { color: 'rgba(42, 34, 28, 0.08)' },
+        ticks: { color: '#6E6358', font: { size: 11 } },
       },
       y: {
         grid: { display: false },
-        ticks: { color: '#F2F4F8', font: { size: 12, weight: 'bold' as const } },
+        ticks: { color: '#2A221C', font: { size: 12, weight: 'bold' as const } },
       },
     },
   }

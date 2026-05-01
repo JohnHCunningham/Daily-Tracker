@@ -44,20 +44,20 @@ export default function ScoreTrendChart({ labels, scores, height = 200 }: ScoreT
       y: {
         min: 0,
         max: 10,
-        ticks: { color: 'rgba(255,255,255,0.4)', stepSize: 2 },
-        grid: { color: 'rgba(255,255,255,0.05)' },
+        ticks: { color: '#6E6358', stepSize: 2 },
+        grid: { color: 'rgba(42, 34, 28, 0.08)' },
       },
       x: {
-        ticks: { color: 'rgba(255,255,255,0.4)' },
+        ticks: { color: '#6E6358' },
         grid: { display: false },
       },
     },
     plugins: {
       tooltip: {
-        backgroundColor: '#2A221C',
-        titleColor: '#E8EAF0',
+        backgroundColor: '#F4EFE8',
+        titleColor: '#2A221C',
         bodyColor: '#B5583E',
-        borderColor: 'rgba(16,195,176,0.3)',
+        borderColor: 'rgba(212, 99, 62, 0.3)',
         borderWidth: 1,
       },
     },

@@ -68,26 +68,26 @@ export default function CallsPage() {
   }
 
   if (loading) {
-    return <div className="text-light-muted">Loading calls...</div>
+    return <div className="text-stone-light">Loading calls...</div>
   }
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-light mb-2">Calls</h1>
-      <p className="text-light-muted mb-8">
+      <h1 className="text-3xl font-bold text-espresso mb-2">Calls</h1>
+      <p className="text-stone-light mb-8">
         {calls.length} synced conversations
       </p>
 
       {calls.length === 0 ? (
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-8 text-center">
-          <HiPhone className="text-teal text-4xl mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-light mb-2">No calls yet</h2>
-          <p className="text-light-muted text-sm mb-4">
+        <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-8 text-center">
+          <HiPhone className="text-terracotta text-4xl mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-espresso mb-2">No calls yet</h2>
+          <p className="text-stone-light text-sm mb-4">
             Connect an integration to start syncing your sales calls.
           </p>
           <Link
             href="/integrations"
-            className="inline-block bg-teal text-navy font-bold py-2.5 px-6 rounded-lg hover:bg-aqua transition-colors"
+            className="inline-block bg-terracotta text-white font-bold py-2.5 px-6 rounded-lg hover:bg-terracotta-bright transition-colors"
           >
             Set Up Integrations
           </Link>
@@ -100,21 +100,21 @@ export default function CallsPage() {
               <Link
                 key={call.id}
                 href={`/calls/${call.id}`}
-                className="flex items-center gap-4 p-4 bg-navy-light rounded-xl border border-teal/10 hover:border-teal/30 transition-colors"
+                className="flex items-center gap-4 p-4 bg-white rounded-xl border border-bone-dark hover:border-terracotta/30 transition-colors"
               >
-                <div className="w-12 h-12 bg-teal/20 rounded-lg flex items-center justify-center">
-                  <HiPhone className="text-teal text-xl" />
+                <div className="w-12 h-12 bg-terracotta/20 rounded-lg flex items-center justify-center">
+                  <HiPhone className="text-terracotta text-xl" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <p className="font-semibold text-light truncate">
+                    <p className="font-semibold text-espresso truncate">
                       {call.participants?.join(', ') || call.rep_email || 'Unknown'}
                     </p>
-                    <span className="text-xs text-light-muted bg-navy px-2 py-0.5 rounded-full shrink-0">
+                    <span className="text-xs text-stone-light bg-bone px-2 py-0.5 rounded-full shrink-0">
                       {call.source_provider}
                     </span>
                   </div>
-                  <div className="flex items-center gap-3 text-xs text-light-muted mt-1">
+                  <div className="flex items-center gap-3 text-xs text-stone-light mt-1">
                     <span className="flex items-center gap-1">
                       <HiClock />
                       {new Date(call.call_date).toLocaleDateString()}
@@ -127,7 +127,7 @@ export default function CallsPage() {
                     )}
                   </div>
                   {call.ai_summary && (
-                    <p className="text-xs text-light-muted mt-1 truncate">{call.ai_summary}</p>
+                    <p className="text-xs text-stone-light mt-1 truncate">{call.ai_summary}</p>
                   )}
                 </div>
                 <div className="text-right shrink-0">
@@ -136,9 +136,9 @@ export default function CallsPage() {
                       {score}
                     </div>
                   ) : call.analyzed_at ? (
-                    <span className="text-xs text-light-muted">Analyzed</span>
+                    <span className="text-xs text-stone-light">Analyzed</span>
                   ) : (
-                    <span className="text-xs text-gold bg-gold/10 px-2 py-1 rounded-full">Pending</span>
+                    <span className="text-xs text-clay bg-clay/10 px-2 py-1 rounded-full">Pending</span>
                   )}
                 </div>
               </Link>

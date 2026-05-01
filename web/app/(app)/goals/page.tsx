@@ -222,7 +222,7 @@ export default function GoalsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
-        <div className="w-8 h-8 border-2 border-teal border-t-transparent rounded-full animate-spin" />
+        <div className="w-8 h-8 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
@@ -243,12 +243,12 @@ export default function GoalsPage() {
       <div>
         <div className="flex items-center justify-between mb-8">
           <div>
-            <h1 className="text-3xl font-bold text-light">Goals & Targets</h1>
-            <p className="text-light-muted mt-1">Set and track goals for your team.</p>
+            <h1 className="text-3xl font-bold text-espresso">Goals & Targets</h1>
+            <p className="text-stone-light mt-1">Set and track goals for your team.</p>
           </div>
           <button
             onClick={() => setShowForm(!showForm)}
-            className="flex items-center gap-2 bg-gradient-to-r from-teal to-aqua text-navy font-bold py-2.5 px-5 rounded-lg hover:shadow-lg transition-all"
+            className="flex items-center gap-2 bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-2.5 px-5 rounded-lg hover:shadow-lg transition-all"
           >
             <HiPlus className="text-lg" />
             Set Goal
@@ -257,9 +257,9 @@ export default function GoalsPage() {
 
         {/* Team Monthly Summary */}
         <div className="mb-6">
-          <h2 className="text-sm font-medium text-light-muted uppercase tracking-wider mb-3">Monthly Progress</h2>
+          <h2 className="text-sm font-medium text-stone-light uppercase tracking-wider mb-3">Monthly Progress</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-5 flex flex-col items-center">
               <ScoreRadial
                 score={teamApproaches.percent}
                 maxScore={100}
@@ -267,11 +267,11 @@ export default function GoalsPage() {
                 label="Sales Approaches"
                 showPercentage={true}
               />
-              <p className="text-sm text-light-muted mt-2">
+              <p className="text-sm text-stone-light mt-2">
                 {teamApproaches.current} / {teamApproaches.target}
               </p>
             </div>
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-5 flex flex-col items-center">
               <ScoreRadial
                 score={teamDiscovery.percent}
                 maxScore={100}
@@ -279,11 +279,11 @@ export default function GoalsPage() {
                 label="Discovery Calls"
                 showPercentage={true}
               />
-              <p className="text-sm text-light-muted mt-2">
+              <p className="text-sm text-stone-light mt-2">
                 {teamDiscovery.current} / {teamDiscovery.target}
               </p>
             </div>
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-5 flex flex-col items-center">
               <ScoreRadial
                 score={teamQuota.percent}
                 maxScore={100}
@@ -291,7 +291,7 @@ export default function GoalsPage() {
                 label="Sales Quota"
                 showPercentage={true}
               />
-              <p className="text-sm text-light-muted mt-2">
+              <p className="text-sm text-stone-light mt-2">
                 ${teamQuota.current} / ${teamQuota.target}
               </p>
             </div>
@@ -300,9 +300,9 @@ export default function GoalsPage() {
 
         {/* Annual Rollup */}
         <div className="mb-8">
-          <h2 className="text-sm font-medium text-light-muted uppercase tracking-wider mb-3">Year-to-Date</h2>
+          <h2 className="text-sm font-medium text-stone-light uppercase tracking-wider mb-3">Year-to-Date</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-4 flex items-center gap-4">
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-4 flex items-center gap-4">
               <ScoreRadial
                 score={ytdApproaches.percent}
                 maxScore={100}
@@ -310,11 +310,11 @@ export default function GoalsPage() {
                 showPercentage={true}
               />
               <div>
-                <p className="text-sm font-medium text-light">Sales Approaches</p>
-                <p className="text-xs text-light-muted">{ytdApproaches.current} / {ytdApproaches.target} YTD</p>
+                <p className="text-sm font-medium text-espresso">Sales Approaches</p>
+                <p className="text-xs text-stone-light">{ytdApproaches.current} / {ytdApproaches.target} YTD</p>
               </div>
             </div>
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-4 flex items-center gap-4">
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-4 flex items-center gap-4">
               <ScoreRadial
                 score={ytdDiscovery.percent}
                 maxScore={100}
@@ -322,11 +322,11 @@ export default function GoalsPage() {
                 showPercentage={true}
               />
               <div>
-                <p className="text-sm font-medium text-light">Discovery Calls</p>
-                <p className="text-xs text-light-muted">{ytdDiscovery.current} / {ytdDiscovery.target} YTD</p>
+                <p className="text-sm font-medium text-espresso">Discovery Calls</p>
+                <p className="text-xs text-stone-light">{ytdDiscovery.current} / {ytdDiscovery.target} YTD</p>
               </div>
             </div>
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-4 flex items-center gap-4">
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-4 flex items-center gap-4">
               <ScoreRadial
                 score={ytdQuota.percent}
                 maxScore={100}
@@ -334,8 +334,8 @@ export default function GoalsPage() {
                 showPercentage={true}
               />
               <div>
-                <p className="text-sm font-medium text-light">Sales Quota</p>
-                <p className="text-xs text-light-muted">${ytdQuota.current} / ${ytdQuota.target} YTD</p>
+                <p className="text-sm font-medium text-espresso">Sales Quota</p>
+                <p className="text-xs text-stone-light">${ytdQuota.current} / ${ytdQuota.target} YTD</p>
               </div>
             </div>
           </div>
@@ -343,15 +343,15 @@ export default function GoalsPage() {
 
         {/* Create Goal Form */}
         {showForm && (
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-8">
-            <h2 className="text-xl font-bold text-light mb-4">New Monthly Goal</h2>
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 mb-8">
+            <h2 className="text-xl font-bold text-espresso mb-4">New Monthly Goal</h2>
             <form onSubmit={handleCreateGoal} className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label className="block text-sm font-medium text-light mb-2">Assign To</label>
+                <label className="block text-sm font-medium text-espresso mb-2">Assign To</label>
                 <select
                   value={formRepEmail}
                   onChange={(e) => setFormRepEmail(e.target.value)}
-                  className="w-full px-4 py-3 bg-navy border border-teal/20 rounded-lg text-light focus:outline-none focus:border-teal"
+                  className="w-full px-4 py-3 bg-bone border border-terracotta/20 rounded-lg text-espresso focus:outline-none focus:border-terracotta"
                 >
                   <option value="">All Reps (Team Goal)</option>
                   {members.map((m) => (
@@ -362,11 +362,11 @@ export default function GoalsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-light mb-2">Goal Type</label>
+                <label className="block text-sm font-medium text-espresso mb-2">Goal Type</label>
                 <select
                   value={formType}
                   onChange={(e) => setFormType(e.target.value)}
-                  className="w-full px-4 py-3 bg-navy border border-teal/20 rounded-lg text-light focus:outline-none focus:border-teal"
+                  className="w-full px-4 py-3 bg-bone border border-terracotta/20 rounded-lg text-espresso focus:outline-none focus:border-terracotta"
                 >
                   {Object.entries(goalTypeLabels).map(([key, label]) => (
                     <option key={key} value={key}>{label}</option>
@@ -374,34 +374,34 @@ export default function GoalsPage() {
                 </select>
               </div>
               <div>
-                <label className="block text-sm font-medium text-light mb-2">Target</label>
+                <label className="block text-sm font-medium text-espresso mb-2">Target</label>
                 <input
                   type="number"
                   value={formTarget}
                   onChange={(e) => setFormTarget(e.target.value)}
                   required
                   min="1"
-                  className="w-full px-4 py-3 bg-navy border border-teal/20 rounded-lg text-light placeholder-light-muted/50 focus:outline-none focus:border-teal"
+                  className="w-full px-4 py-3 bg-bone border border-terracotta/20 rounded-lg text-espresso placeholder-light-muted/50 focus:outline-none focus:border-terracotta"
                   placeholder="e.g. 50"
                 />
               </div>
               <div className="flex items-end">
-                <p className="text-sm text-light-muted">
-                  Period: <span className="text-light font-medium">Monthly</span> (current month)
+                <p className="text-sm text-stone-light">
+                  Period: <span className="text-espresso font-medium">Monthly</span> (current month)
                 </p>
               </div>
               <div className="md:col-span-2 flex gap-3">
                 <button
                   type="button"
                   onClick={() => setShowForm(false)}
-                  className="px-4 py-2.5 bg-navy-light text-light-muted border border-teal/20 rounded-lg hover:border-teal/40 transition-colors"
+                  className="px-4 py-2.5 bg-white text-stone-light border border-terracotta/20 rounded-lg hover:border-teal/40 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={saving}
-                  className="bg-teal text-navy font-bold py-2.5 px-6 rounded-lg hover:bg-aqua transition-colors disabled:opacity-50"
+                  className="bg-terracotta text-white font-bold py-2.5 px-6 rounded-lg hover:bg-terracotta-bright transition-colors disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : 'Create Goal'}
                 </button>
@@ -412,18 +412,18 @@ export default function GoalsPage() {
 
         {/* Goals List Grouped by Rep */}
         {goals.length === 0 ? (
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-8 text-center">
-            <HiChartBar className="text-teal text-4xl mx-auto mb-4" />
-            <h2 className="text-xl font-bold text-light mb-2">No goals set</h2>
-            <p className="text-light-muted text-sm">
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-8 text-center">
+            <HiChartBar className="text-terracotta text-4xl mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-espresso mb-2">No goals set</h2>
+            <p className="text-stone-light text-sm">
               Set goals for your team to track performance.
             </p>
           </div>
         ) : (
           <div className="space-y-6">
             {Object.entries(goalsByRep).map(([repKey, repGoals]) => (
-              <div key={repKey} className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-                <h3 className="text-lg font-bold text-light mb-4">{repKey}</h3>
+              <div key={repKey} className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+                <h3 className="text-lg font-bold text-espresso mb-4">{repKey}</h3>
                 <div className="grid gap-3">
                   {repGoals.map((goal) => {
                     const percent = getProgressPercent(goal.current_value, goal.target_value)
@@ -431,18 +431,18 @@ export default function GoalsPage() {
                     const unit = goalTypeUnits[goal.goal_type] || ''
 
                     return (
-                      <div key={goal.id} className="bg-navy/50 rounded-xl p-4">
+                      <div key={goal.id} className="bg-bone/50 rounded-xl p-4">
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <p className="font-medium text-light text-sm">{goalTypeLabels[goal.goal_type]}</p>
-                            <p className="text-xs text-light-muted mt-0.5">
+                            <p className="font-medium text-espresso text-sm">{goalTypeLabels[goal.goal_type]}</p>
+                            <p className="text-xs text-stone-light mt-0.5">
                               {goal.period} &middot;{' '}
                               {new Date(goal.period_start).toLocaleDateString()} - {new Date(goal.period_end).toLocaleDateString()}
                             </p>
                           </div>
                           <button
                             onClick={() => handleDeleteGoal(goal.id)}
-                            className="text-light-muted hover:text-pink transition-colors"
+                            className="text-stone-light hover:text-terracotta transition-colors"
                           >
                             <HiTrash />
                           </button>
@@ -450,21 +450,21 @@ export default function GoalsPage() {
 
                         <div className="flex items-center gap-4 mb-1">
                           <div className="flex-1">
-                            <div className="w-full bg-navy rounded-full h-2.5">
+                            <div className="w-full bg-bone rounded-full h-2.5">
                               <div
                                 className={`h-2.5 rounded-full ${getProgressColor(percent)} transition-all`}
                                 style={{ width: `${percent}%` }}
                               />
                             </div>
                           </div>
-                          <span className="text-xs font-bold text-light whitespace-nowrap">
+                          <span className="text-xs font-bold text-espresso whitespace-nowrap">
                             {unit === '$' ? `$${goal.current_value}` : goal.current_value}{goal.goal_type === 'sandler_score' ? '/10' : ''} / {unit === '$' ? `$${goal.target_value}` : goal.target_value}{goal.goal_type === 'sandler_score' ? '/10' : ''}
                           </span>
                         </div>
-                        <p className="text-xs text-light-muted">{percent}%</p>
+                        <p className="text-xs text-stone-light">{percent}%</p>
 
                         {indicator && (
-                          <div className="mt-2 bg-gold/10 border border-gold/20 rounded-lg p-2 text-xs text-gold">
+                          <div className="mt-2 bg-clay/10 border border-clay/30 rounded-lg p-2 text-xs text-clay">
                             {indicator}
                           </div>
                         )}
@@ -492,15 +492,15 @@ export default function GoalsPage() {
   return (
     <div>
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-light">My Goals</h1>
-        <p className="text-light-muted mt-1">Your performance goals set by your manager.</p>
+        <h1 className="text-3xl font-bold text-espresso">My Goals</h1>
+        <p className="text-stone-light mt-1">Your performance goals set by your manager.</p>
       </div>
 
       {/* Monthly Progress */}
       <div className="mb-6">
-        <h2 className="text-sm font-medium text-light-muted uppercase tracking-wider mb-3">Monthly Progress</h2>
+        <h2 className="text-sm font-medium text-stone-light uppercase tracking-wider mb-3">Monthly Progress</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-5 flex flex-col items-center">
             <ScoreRadial
               score={repApproaches.percent}
               maxScore={100}
@@ -508,11 +508,11 @@ export default function GoalsPage() {
               label="Sales Approaches"
               showPercentage={true}
             />
-            <p className="text-sm text-light-muted mt-2">
+            <p className="text-sm text-stone-light mt-2">
               {repApproaches.current} / {repApproaches.target}
             </p>
           </div>
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-5 flex flex-col items-center">
             <ScoreRadial
               score={repDiscovery.percent}
               maxScore={100}
@@ -520,11 +520,11 @@ export default function GoalsPage() {
               label="Discovery Calls"
               showPercentage={true}
             />
-            <p className="text-sm text-light-muted mt-2">
+            <p className="text-sm text-stone-light mt-2">
               {repDiscovery.current} / {repDiscovery.target}
             </p>
           </div>
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-5 flex flex-col items-center">
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-5 flex flex-col items-center">
             <ScoreRadial
               score={repQuota.percent}
               maxScore={100}
@@ -532,7 +532,7 @@ export default function GoalsPage() {
               label="Sales Quota"
               showPercentage={true}
             />
-            <p className="text-sm text-light-muted mt-2">
+            <p className="text-sm text-stone-light mt-2">
               ${repQuota.current} / ${repQuota.target}
             </p>
           </div>
@@ -541,9 +541,9 @@ export default function GoalsPage() {
 
       {/* Annual Rollup */}
       <div className="mb-8">
-        <h2 className="text-sm font-medium text-light-muted uppercase tracking-wider mb-3">Year-to-Date</h2>
+        <h2 className="text-sm font-medium text-stone-light uppercase tracking-wider mb-3">Year-to-Date</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-4 flex items-center gap-4">
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-4 flex items-center gap-4">
             <ScoreRadial
               score={repYtdApproaches.percent}
               maxScore={100}
@@ -551,11 +551,11 @@ export default function GoalsPage() {
               showPercentage={true}
             />
             <div>
-              <p className="text-sm font-medium text-light">Sales Approaches</p>
-              <p className="text-xs text-light-muted">{repYtdApproaches.current} / {repYtdApproaches.target} YTD</p>
+              <p className="text-sm font-medium text-espresso">Sales Approaches</p>
+              <p className="text-xs text-stone-light">{repYtdApproaches.current} / {repYtdApproaches.target} YTD</p>
             </div>
           </div>
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-4 flex items-center gap-4">
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-4 flex items-center gap-4">
             <ScoreRadial
               score={repYtdDiscovery.percent}
               maxScore={100}
@@ -563,11 +563,11 @@ export default function GoalsPage() {
               showPercentage={true}
             />
             <div>
-              <p className="text-sm font-medium text-light">Discovery Calls</p>
-              <p className="text-xs text-light-muted">{repYtdDiscovery.current} / {repYtdDiscovery.target} YTD</p>
+              <p className="text-sm font-medium text-espresso">Discovery Calls</p>
+              <p className="text-xs text-stone-light">{repYtdDiscovery.current} / {repYtdDiscovery.target} YTD</p>
             </div>
           </div>
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-4 flex items-center gap-4">
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-4 flex items-center gap-4">
             <ScoreRadial
               score={repYtdQuota.percent}
               maxScore={100}
@@ -575,8 +575,8 @@ export default function GoalsPage() {
               showPercentage={true}
             />
             <div>
-              <p className="text-sm font-medium text-light">Sales Quota</p>
-              <p className="text-xs text-light-muted">${repYtdQuota.current} / ${repYtdQuota.target} YTD</p>
+              <p className="text-sm font-medium text-espresso">Sales Quota</p>
+              <p className="text-xs text-stone-light">${repYtdQuota.current} / ${repYtdQuota.target} YTD</p>
             </div>
           </div>
         </div>
@@ -584,10 +584,10 @@ export default function GoalsPage() {
 
       {/* Goals List (read-only) */}
       {goals.length === 0 ? (
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-8 text-center">
-          <HiChartBar className="text-teal text-4xl mx-auto mb-4" />
-          <h2 className="text-xl font-bold text-light mb-2">No goals set</h2>
-          <p className="text-light-muted text-sm">
+        <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-8 text-center">
+          <HiChartBar className="text-terracotta text-4xl mx-auto mb-4" />
+          <h2 className="text-xl font-bold text-espresso mb-2">No goals set</h2>
+          <p className="text-stone-light text-sm">
             Your manager hasn&apos;t set any goals yet.
           </p>
         </div>
@@ -599,10 +599,10 @@ export default function GoalsPage() {
             const unit = goalTypeUnits[goal.goal_type] || ''
 
             return (
-              <div key={goal.id} className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+              <div key={goal.id} className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
                 <div className="mb-3">
-                  <h3 className="font-bold text-light">{goalTypeLabels[goal.goal_type]}</h3>
-                  <p className="text-xs text-light-muted mt-1">
+                  <h3 className="font-bold text-espresso">{goalTypeLabels[goal.goal_type]}</h3>
+                  <p className="text-xs text-stone-light mt-1">
                     {goal.period} &middot;{' '}
                     {new Date(goal.period_start).toLocaleDateString()} - {new Date(goal.period_end).toLocaleDateString()}
                   </p>
@@ -610,21 +610,21 @@ export default function GoalsPage() {
 
                 <div className="flex items-center gap-4 mb-2">
                   <div className="flex-1">
-                    <div className="w-full bg-navy rounded-full h-3">
+                    <div className="w-full bg-bone rounded-full h-3">
                       <div
                         className={`h-3 rounded-full ${getProgressColor(percent)} transition-all`}
                         style={{ width: `${percent}%` }}
                       />
                     </div>
                   </div>
-                  <span className="text-sm font-bold text-light whitespace-nowrap">
+                  <span className="text-sm font-bold text-espresso whitespace-nowrap">
                     {unit === '$' ? `$${goal.current_value}` : goal.current_value}{goal.goal_type === 'sandler_score' ? '/10' : ''} / {unit === '$' ? `$${goal.target_value}` : goal.target_value}{goal.goal_type === 'sandler_score' ? '/10' : ''}
                   </span>
                 </div>
-                <p className="text-xs text-light-muted">{percent}% complete</p>
+                <p className="text-xs text-stone-light">{percent}% complete</p>
 
                 {indicator && (
-                  <div className="mt-3 bg-gold/10 border border-gold/20 rounded-lg p-3 text-xs text-gold">
+                  <div className="mt-3 bg-clay/10 border border-clay/30 rounded-lg p-3 text-xs text-clay">
                     {indicator}
                   </div>
                 )}

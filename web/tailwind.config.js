@@ -8,16 +8,16 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // One Click Coaching Brand Colors (Dark Mode)
+        // One Click Coaching Brand Colors (Light Mode)
         espresso: {
-          DEFAULT: '#2A221C',
+          DEFAULT: '#2A221C',  // Now used for text/dark elements
           light: '#3A332C',
           dark: '#1A1511',
         },
         terracotta: {
-          DEFAULT: '#B5583E',
-          bright: '#CC6B4F',
-          dark: '#9A4A35',
+          DEFAULT: '#D4633E',  // Brightened slightly for light backgrounds
+          bright: '#E87456',
+          dark: '#B5583E',
         },
         clay: {
           DEFAULT: '#C9A687',
@@ -25,14 +25,14 @@ module.exports = {
           dark: '#B08A66',
         },
         bone: {
-          DEFAULT: '#F4EFE8',
-          light: '#FBF8F3',
-          dark: '#EAE3D8',
+          DEFAULT: '#F4EFE8',  // Now used for backgrounds
+          light: '#FBF8F3',    // Lightest background
+          dark: '#EAE3D8',     // Secondary background
         },
         stone: {
-          DEFAULT: '#6E6358',
-          light: '#8F847A',
-          dark: '#544A41',
+          DEFAULT: '#6E6358',  // Medium text
+          light: '#8F847A',    // Muted text
+          dark: '#544A41',     // Darker text
         },
         // Legacy color mappings for backwards compatibility
         navy: {
@@ -41,9 +41,9 @@ module.exports = {
           dark: '#1A1511',
         },
         teal: {
-          DEFAULT: '#B5583E', // Maps to terracotta
-          bright: '#CC6B4F',
-          dark: '#9A4A35',
+          DEFAULT: '#D4633E', // Maps to terracotta (brightened)
+          bright: '#E87456',
+          dark: '#B5583E',
         },
         gold: {
           DEFAULT: '#C9A687', // Maps to clay
@@ -57,21 +57,21 @@ module.exports = {
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
         'gradient-conic': 'conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))',
-        'gradient-espresso': 'linear-gradient(135deg, #2A221C 0%, #1A1511 100%)',
-        'gradient-terracotta': 'linear-gradient(135deg, #B5583E, #CC6B4F)',
+        'gradient-espresso': 'linear-gradient(135deg, #F4EFE8 0%, #FBF8F3 100%)',
+        'gradient-terracotta': 'linear-gradient(135deg, #D4633E, #E87456)',
         'gradient-clay': 'linear-gradient(135deg, #C9A687, #D4B89A)',
         // Legacy gradient mappings
-        'gradient-navy': 'linear-gradient(135deg, #2A221C 0%, #1A1511 100%)',
-        'gradient-teal': 'linear-gradient(135deg, #B5583E, #CC6B4F)',
+        'gradient-navy': 'linear-gradient(135deg, #F4EFE8 0%, #FBF8F3 100%)',
+        'gradient-teal': 'linear-gradient(135deg, #D4633E, #E87456)',
         'gradient-gold': 'linear-gradient(135deg, #C9A687, #D4B89A)',
       },
       boxShadow: {
-        'glow-terracotta': '0 0 20px rgba(181, 88, 62, 0.3)',
-        'glow-clay': '0 0 20px rgba(201, 166, 135, 0.3)',
-        'card': '0 10px 30px rgba(26, 21, 17, 0.4)',
+        'glow-terracotta': '0 0 20px rgba(212, 99, 62, 0.2)',
+        'glow-clay': '0 0 20px rgba(201, 166, 135, 0.2)',
+        'card': '0 2px 8px rgba(42, 34, 28, 0.08), 0 4px 16px rgba(42, 34, 28, 0.06)',
         // Legacy shadow mappings
-        'glow-teal': '0 0 20px rgba(181, 88, 62, 0.3)',
-        'glow-gold': '0 0 20px rgba(201, 166, 135, 0.3)',
+        'glow-teal': '0 0 20px rgba(212, 99, 62, 0.2)',
+        'glow-gold': '0 0 20px rgba(201, 166, 135, 0.2)',
       },
       animation: {
         'fade-in': 'fadeIn 0.5s ease-in',

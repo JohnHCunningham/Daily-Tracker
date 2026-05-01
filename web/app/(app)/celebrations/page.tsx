@@ -22,13 +22,13 @@ interface LeaderboardEntry {
 }
 
 const badgeConfig: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  first_call: { icon: HiSparkles, color: 'bg-teal/20 text-teal border-teal/30' },
-  pain_funnel_pro: { icon: HiFire, color: 'bg-pink/20 text-pink border-pink/30' },
-  consistent_closer: { icon: HiTrendingUp, color: 'bg-gold/20 text-gold border-gold/30' },
-  perfect_score: { icon: HiStar, color: 'bg-gold/20 text-gold border-gold/30' },
-  streak_builder: { icon: HiLightningBolt, color: 'bg-aqua/20 text-aqua border-aqua/30' },
-  score_champion: { icon: HiStar, color: 'bg-teal/20 text-teal border-teal/30' },
-  quota_hit: { icon: HiTrendingUp, color: 'bg-gold/20 text-gold border-gold/30' },
+  first_call: { icon: HiSparkles, color: 'bg-terracotta/20 text-terracotta border-terracotta/30' },
+  pain_funnel_pro: { icon: HiFire, color: 'bg-pink/20 text-terracotta border-pink/30' },
+  consistent_closer: { icon: HiTrendingUp, color: 'bg-clay/20 text-clay border-clay/30' },
+  perfect_score: { icon: HiStar, color: 'bg-clay/20 text-clay border-clay/30' },
+  streak_builder: { icon: HiLightningBolt, color: 'bg-terracotta-bright/20 text-terracotta-bright border-aqua/30' },
+  score_champion: { icon: HiStar, color: 'bg-terracotta/20 text-terracotta border-terracotta/30' },
+  quota_hit: { icon: HiTrendingUp, color: 'bg-clay/20 text-clay border-clay/30' },
 }
 
 const TABS = [
@@ -161,37 +161,37 @@ export default function CelebrationsPage() {
     : celebrations.filter((c) => c.type === activeTab)
 
   if (loading) {
-    return <div className="text-light-muted">Loading celebrations...</div>
+    return <div className="text-stone-light">Loading celebrations...</div>
   }
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-light mb-2">Celebrations</h1>
-      <p className="text-light-muted mb-8">Team victories, badges, and milestones.</p>
+      <h1 className="text-3xl font-bold text-espresso mb-2">Celebrations</h1>
+      <p className="text-stone-light mb-8">Team victories, badges, and milestones.</p>
 
       <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
         {/* Leaderboard Sidebar */}
         <div className="lg:col-span-1">
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-6">
-            <h2 className="text-lg font-bold text-light mb-4">Leaderboard</h2>
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 mb-6">
+            <h2 className="text-lg font-bold text-espresso mb-4">Leaderboard</h2>
             {leaderboard.length > 0 ? (
               <div className="space-y-3">
                 {leaderboard.map((entry, i) => (
                   <div key={entry.rep_email} className="flex items-center gap-3">
                     <span className={`w-6 h-6 flex items-center justify-center rounded-full text-xs font-bold ${
-                      i === 0 ? 'bg-gold/20 text-gold' : i === 1 ? 'bg-light/10 text-light-muted' : i === 2 ? 'bg-pink/10 text-pink' : 'bg-navy text-light-muted'
+                      i === 0 ? 'bg-clay/20 text-gold' : i === 1 ? 'bg-light/10 text-stone-light' : i === 2 ? 'bg-pink/10 text-pink' : 'bg-bone text-stone-light'
                     }`}>
                       {i + 1}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-light truncate">{entry.rep_name}</p>
+                      <p className="text-sm font-medium text-espresso truncate">{entry.rep_name}</p>
                     </div>
-                    <span className="text-sm font-bold text-teal">{entry.count}</span>
+                    <span className="text-sm font-bold text-terracotta">{entry.count}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-light-muted text-sm">Leaderboard appears after achievements are earned.</p>
+              <p className="text-stone-light text-sm">Leaderboard appears after achievements are earned.</p>
             )}
           </div>
         </div>
@@ -206,8 +206,8 @@ export default function CelebrationsPage() {
                 onClick={() => setActiveTab(tab.key)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
                   activeTab === tab.key
-                    ? 'bg-teal/10 text-teal border border-teal/20'
-                    : 'text-light-muted hover:text-light hover:bg-navy-light border border-transparent'
+                    ? 'bg-terracotta/10 text-terracotta border border-terracotta/20'
+                    : 'text-stone-light hover:text-espresso hover:bg-white border border-transparent'
                 }`}
               >
                 {tab.label}
@@ -216,18 +216,18 @@ export default function CelebrationsPage() {
           </div>
 
           {filteredCelebrations.length === 0 ? (
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-8 text-center">
-              <HiSparkles className="text-gold text-4xl mx-auto mb-4" />
-              <h2 className="text-xl font-bold text-light mb-2">
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-8 text-center">
+              <HiSparkles className="text-clay text-4xl mx-auto mb-4" />
+              <h2 className="text-xl font-bold text-espresso mb-2">
                 {activeTab === 'all' ? 'No celebrations yet' : `No ${activeTab}s yet`}
               </h2>
-              <p className="text-light-muted text-sm">
+              <p className="text-stone-light text-sm">
                 Badges and achievements will appear here as your team analyzes calls and improves.
               </p>
 
               {activeTab === 'all' && (
                 <div className="mt-8">
-                  <h3 className="text-lg font-bold text-light mb-4">Available Badges</h3>
+                  <h3 className="text-lg font-bold text-espresso mb-4">Available Badges</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto text-left">
                     {[
                       { key: 'first_call', title: 'First Call Analyzed', desc: 'Have your first call analyzed by the system' },
@@ -238,19 +238,19 @@ export default function CelebrationsPage() {
                       { key: 'score_champion', title: 'Score Champion', desc: 'Achieve an average Sandler score of 8+' },
                       { key: 'quota_hit', title: 'Quota Crusher', desc: 'Hit or exceed a target goal' },
                     ].map((badge) => {
-                      const config = badgeConfig[badge.key] || { icon: HiSparkles, color: 'bg-teal/20 text-teal border-teal/30' }
+                      const config = badgeConfig[badge.key] || { icon: HiSparkles, color: 'bg-terracotta/20 text-terracotta border-terracotta/30' }
                       const Icon = config.icon
                       return (
                         <div
                           key={badge.key}
-                          className="flex items-center gap-3 p-3 bg-navy rounded-lg border border-navy-light/50"
+                          className="flex items-center gap-3 p-3 bg-bone rounded-lg border border-bone-dark/50"
                         >
                           <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${config.color}`}>
                             <Icon className="text-lg" />
                           </div>
                           <div>
-                            <p className="text-sm font-medium text-light">{badge.title}</p>
-                            <p className="text-xs text-light-muted">{badge.desc}</p>
+                            <p className="text-sm font-medium text-espresso">{badge.title}</p>
+                            <p className="text-xs text-stone-light">{badge.desc}</p>
                           </div>
                         </div>
                       )
@@ -263,25 +263,25 @@ export default function CelebrationsPage() {
             <div className="space-y-4">
               {filteredCelebrations.map((celebration) => {
                 const config = celebration.badge_key
-                  ? badgeConfig[celebration.badge_key] || { icon: HiSparkles, color: 'bg-teal/20 text-teal border-teal/30' }
-                  : { icon: HiSparkles, color: 'bg-teal/20 text-teal border-teal/30' }
+                  ? badgeConfig[celebration.badge_key] || { icon: HiSparkles, color: 'bg-terracotta/20 text-terracotta border-terracotta/30' }
+                  : { icon: HiSparkles, color: 'bg-terracotta/20 text-terracotta border-terracotta/30' }
                 const Icon = config.icon
                 const isCelebrated = celebratedIds.has(celebration.id)
 
                 return (
                   <div
                     key={celebration.id}
-                    className="flex items-center gap-4 p-4 bg-navy-light rounded-2xl border border-teal/10"
+                    className="flex items-center gap-4 p-4 bg-white rounded-2xl border border-bone-dark"
                   >
                     <div className={`w-12 h-12 rounded-xl flex items-center justify-center border ${config.color}`}>
                       <Icon className="text-2xl" />
                     </div>
                     <div className="flex-1">
-                      <p className="font-bold text-light">{celebration.title}</p>
+                      <p className="font-bold text-espresso">{celebration.title}</p>
                       {celebration.description && (
-                        <p className="text-sm text-light-muted mt-0.5">{celebration.description}</p>
+                        <p className="text-sm text-stone-light mt-0.5">{celebration.description}</p>
                       )}
-                      <p className="text-xs text-light-muted mt-1">
+                      <p className="text-xs text-stone-light mt-1">
                         {celebration.rep_email && <span>{celebration.rep_email} · </span>}
                         {getTimeAgo(celebration.created_at)}
                       </p>
@@ -291,14 +291,14 @@ export default function CelebrationsPage() {
                         onClick={() => handleCelebrate(celebration.id)}
                         className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${
                           isCelebrated
-                            ? 'bg-pink/20 text-pink border border-pink/30'
-                            : 'bg-navy text-light-muted hover:text-pink hover:bg-pink/10 border border-navy-light/50'
+                            ? 'bg-pink/20 text-terracotta border border-pink/30'
+                            : 'bg-bone text-stone-light hover:text-terracotta hover:bg-pink/10 border border-bone-dark/50'
                         }`}
                       >
                         <HiHeart className={isCelebrated ? 'text-pink' : ''} />
                         {isCelebrated ? 'Celebrated' : 'Celebrate'}
                       </button>
-                      <span className="text-xs font-bold px-2.5 py-1 rounded-full border bg-gold/10 text-gold border-gold/20 capitalize">
+                      <span className="text-xs font-bold px-2.5 py-1 rounded-full border bg-clay/10 text-clay border-clay/30 capitalize">
                         {celebration.type}
                       </span>
                     </div>

@@ -119,7 +119,7 @@ export default function HubSpotPage() {
   }
 
   if (loading) {
-    return <div className="text-light-muted">Loading...</div>
+    return <div className="text-stone-light">Loading...</div>
   }
 
   const isConnected = connection?.connection_status === 'active'
@@ -128,7 +128,7 @@ export default function HubSpotPage() {
     <div>
       <Link
         href="/integrations"
-        className="flex items-center gap-2 text-teal hover:text-aqua mb-6 text-sm"
+        className="flex items-center gap-2 text-terracotta hover:text-terracotta-bright mb-6 text-sm"
       >
         <HiArrowLeft /> Back to Integrations
       </Link>
@@ -139,8 +139,8 @@ export default function HubSpotPage() {
             H
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-light">HubSpot</h1>
-            <p className="text-light-muted">Sync calls, emails, meetings, and tasks</p>
+            <h1 className="text-3xl font-bold text-espresso">HubSpot</h1>
+            <p className="text-stone-light">Sync calls, emails, meetings, and tasks</p>
           </div>
         </div>
 
@@ -151,29 +151,29 @@ export default function HubSpotPage() {
         )}
 
         {/* Connection Status */}
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-6">
-          <h2 className="text-xl font-bold text-light mb-4">Connection Status</h2>
+        <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 mb-6">
+          <h2 className="text-xl font-bold text-espresso mb-4">Connection Status</h2>
           <div className="flex items-center gap-3">
             {isConnected ? (
               <>
                 <HiCheckCircle className="text-green-400 text-2xl" />
                 <div>
-                  <p className="font-semibold text-light">Connected</p>
-                  <p className="text-xs text-light-muted">
+                  <p className="font-semibold text-espresso">Connected</p>
+                  <p className="text-xs text-stone-light">
                     Since {new Date(connection.connected_at).toLocaleDateString()}
                   </p>
                 </div>
               </>
             ) : (
               <>
-                <HiExclamationCircle className="text-light-muted text-2xl" />
-                <p className="text-light-muted">Not connected</p>
+                <HiExclamationCircle className="text-stone-light text-2xl" />
+                <p className="text-stone-light">Not connected</p>
               </>
             )}
           </div>
 
           {connection?.last_error && (
-            <div className="mt-3 bg-pink/10 border border-pink/20 rounded-lg p-3 text-xs text-pink">
+            <div className="mt-3 bg-pink/10 border border-pink/20 rounded-lg p-3 text-xs text-terracotta">
               Last error: {connection.last_error}
             </div>
           )}
@@ -181,43 +181,43 @@ export default function HubSpotPage() {
 
         {/* Connect / Configure */}
         {!isConnected ? (
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-6">
-            <h2 className="text-xl font-bold text-light mb-4">Connect HubSpot</h2>
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 mb-6">
+            <h2 className="text-xl font-bold text-espresso mb-4">Connect HubSpot</h2>
 
             <details className="mb-5 group">
-              <summary className="text-sm font-medium text-teal cursor-pointer hover:text-aqua transition-colors">
+              <summary className="text-sm font-medium text-terracotta cursor-pointer hover:text-terracotta-bright transition-colors">
                 How to get your API key
               </summary>
-              <ol className="mt-3 ml-4 space-y-2 text-sm text-light-muted list-decimal list-outside">
-                <li>Log in to your HubSpot account at <span className="text-light">app.hubspot.com</span></li>
-                <li>Click the <span className="text-light">Settings gear</span> icon in the top navigation</li>
-                <li>Navigate to <span className="text-light">Integrations &rarr; Private Apps</span></li>
-                <li>Click <span className="text-light">Create a private app</span> and name it <span className="text-light">&ldquo;One Click Coaching&rdquo;</span></li>
-                <li>Go to the <span className="text-light">Scopes</span> tab and select: <span className="text-light">crm.objects.contacts.read</span>, <span className="text-light">crm.objects.deals.read</span>, <span className="text-light">sales-email-read</span></li>
-                <li>Click <span className="text-light">Create app</span>, then copy the <span className="text-light">Access Token</span></li>
+              <ol className="mt-3 ml-4 space-y-2 text-sm text-stone-light list-decimal list-outside">
+                <li>Log in to your HubSpot account at <span className="text-espresso">app.hubspot.com</span></li>
+                <li>Click the <span className="text-espresso">Settings gear</span> icon in the top navigation</li>
+                <li>Navigate to <span className="text-espresso">Integrations &rarr; Private Apps</span></li>
+                <li>Click <span className="text-espresso">Create a private app</span> and name it <span className="text-espresso">&ldquo;One Click Coaching&rdquo;</span></li>
+                <li>Go to the <span className="text-espresso">Scopes</span> tab and select: <span className="text-espresso">crm.objects.contacts.read</span>, <span className="text-espresso">crm.objects.deals.read</span>, <span className="text-espresso">sales-email-read</span></li>
+                <li>Click <span className="text-espresso">Create app</span>, then copy the <span className="text-espresso">Access Token</span></li>
                 <li>Paste the token below</li>
               </ol>
             </details>
 
-            <p className="text-sm text-light-muted mb-4">
+            <p className="text-sm text-stone-light mb-4">
               Enter your HubSpot Private App access token to connect.
             </p>
             <form onSubmit={handleConnect} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-light mb-2">Access Token</label>
+                <label className="block text-sm font-medium text-espresso mb-2">Access Token</label>
                 <input
                   type="password"
                   value={apiKey}
                   onChange={(e) => setApiKey(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-navy border border-teal/20 rounded-lg text-light placeholder-light-muted/50 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+                  className="w-full px-4 py-3 bg-bone border border-terracotta/20 rounded-lg text-espresso placeholder-light-muted/50 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-teal/20"
                   placeholder="pat-na1-..."
                 />
               </div>
               <button
                 type="submit"
                 disabled={saving}
-                className="bg-gradient-to-r from-teal to-aqua text-navy font-bold py-2.5 px-6 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
+                className="bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-2.5 px-6 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
               >
                 {saving ? 'Connecting...' : 'Connect HubSpot'}
               </button>
@@ -226,17 +226,17 @@ export default function HubSpotPage() {
         ) : (
           <div className="space-y-4">
             {/* Sync Controls */}
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-              <h2 className="text-xl font-bold text-light mb-4">Sync</h2>
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+              <h2 className="text-xl font-bold text-espresso mb-4">Sync</h2>
               {connection.last_successful_sync && (
-                <p className="text-sm text-light-muted mb-4">
+                <p className="text-sm text-stone-light mb-4">
                   Last synced: {new Date(connection.last_successful_sync).toLocaleString()}
                 </p>
               )}
               <button
                 onClick={handleSync}
                 disabled={syncing}
-                className="flex items-center gap-2 bg-teal text-navy font-bold py-2.5 px-6 rounded-lg hover:bg-aqua transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 bg-terracotta text-white font-bold py-2.5 px-6 rounded-lg hover:bg-terracotta-bright transition-colors disabled:opacity-50"
               >
                 <HiRefresh className={syncing ? 'animate-spin' : ''} />
                 {syncing ? 'Syncing...' : 'Sync Now'}
@@ -244,14 +244,14 @@ export default function HubSpotPage() {
             </div>
 
             {/* Disconnect */}
-            <div className="bg-navy-light rounded-2xl border border-pink/20 p-6">
-              <h2 className="text-lg font-bold text-pink mb-2">Disconnect</h2>
-              <p className="text-sm text-light-muted mb-4">
+            <div className="bg-white rounded-2xl border border-pink/20 p-6">
+              <h2 className="text-lg font-bold text-terracotta mb-2">Disconnect</h2>
+              <p className="text-sm text-stone-light mb-4">
                 This will stop syncing data from HubSpot. Existing data will be preserved.
               </p>
               <button
                 onClick={handleDisconnect}
-                className="text-sm text-pink border border-pink/30 bg-pink/5 px-4 py-2 rounded-lg hover:bg-pink/10 transition-colors"
+                className="text-sm text-terracotta border border-pink/30 bg-pink/5 px-4 py-2 rounded-lg hover:bg-pink/10 transition-colors"
               >
                 Disconnect HubSpot
               </button>

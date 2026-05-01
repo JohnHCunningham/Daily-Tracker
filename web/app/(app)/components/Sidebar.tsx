@@ -43,14 +43,14 @@ export default function Sidebar({ userRole }: { userRole: string }) {
   )
 
   return (
-    <aside className="w-60 bg-navy-dark border-r border-navy-light flex flex-col">
-      <div className="p-5 border-b border-navy-light">
+    <aside className="w-60 bg-white border-r border-bone-dark flex flex-col">
+      <div className="p-5 border-b border-bone-dark">
         {brand.logoUrl ? (
           <img src={brand.logoUrl} alt={brand.companyName} className="h-8 object-contain" />
         ) : (
-          <Link href="/dashboard" className="font-bold text-lg text-light">
+          <Link href="/dashboard" className="font-bold text-lg text-espresso">
             {brand.companyName === 'One Click Coaching' ? (
-              <>One Click<span className="text-teal"> Coaching</span></>
+              <>One Click<span className="text-terracotta"> Coaching</span></>
             ) : (
               <span>{brand.companyName}</span>
             )}
@@ -68,8 +68,8 @@ export default function Sidebar({ userRole }: { userRole: string }) {
               href={item.href}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
-                  ? 'bg-teal/10 text-teal'
-                  : 'text-light-muted hover:text-light hover:bg-navy-light'
+                  ? 'bg-terracotta/10 text-terracotta'
+                  : 'text-stone hover:text-espresso hover:bg-bone'
               }`}
             >
               <Icon className="text-lg flex-shrink-0" />
@@ -79,8 +79,8 @@ export default function Sidebar({ userRole }: { userRole: string }) {
         })}
       </nav>
 
-      <div className="p-4 border-t border-navy-light">
-        <p className="text-xs text-light-muted text-center">{brand.companyName}</p>
+      <div className="p-4 border-t border-bone-dark">
+        <p className="text-xs text-stone-light text-center">{brand.companyName}</p>
       </div>
     </aside>
   )

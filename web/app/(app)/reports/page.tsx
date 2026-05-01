@@ -57,7 +57,7 @@ function ScoreBar({ score, max = 10 }: { score: number; max?: number }) {
   const color = score >= 7 ? 'bg-teal' : score >= 5 ? 'bg-gold' : 'bg-pink'
   return (
     <div className="flex items-center gap-2">
-      <div className="flex-1 h-2 bg-navy rounded-full overflow-hidden">
+      <div className="flex-1 h-2 bg-bone rounded-full overflow-hidden">
         <div className={`h-full rounded-full transition-all ${color}`} style={{ width: `${pct}%` }} />
       </div>
       <span className={`text-xs font-bold w-6 text-right ${score >= 7 ? 'text-teal' : score >= 5 ? 'text-gold' : 'text-pink'}`}>
@@ -68,9 +68,9 @@ function ScoreBar({ score, max = 10 }: { score: number; max?: number }) {
 }
 
 function TrendIcon({ trend }: { trend: string }) {
-  if (trend === 'improving') return <HiTrendingUp className="text-teal text-lg" />
-  if (trend === 'declining') return <HiTrendingDown className="text-pink text-lg" />
-  return <HiMinus className="text-light-muted text-lg" />
+  if (trend === 'improving') return <HiTrendingUp className="text-terracotta text-lg" />
+  if (trend === 'declining') return <HiTrendingDown className="text-terracotta text-lg" />
+  return <HiMinus className="text-stone-light text-lg" />
 }
 
 function TrendBadge({ value, prev }: { value: number; prev?: number }) {
@@ -79,7 +79,7 @@ function TrendBadge({ value, prev }: { value: number; prev?: number }) {
   if (Math.abs(delta) < 0.2) return null
   const up = delta > 0
   return (
-    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${up ? 'bg-teal/10 text-teal' : 'bg-pink/10 text-pink'}`}>
+    <span className={`text-xs px-1.5 py-0.5 rounded-full font-medium ${up ? 'bg-terracotta/10 text-teal' : 'bg-pink/10 text-pink'}`}>
       {up ? '+' : ''}{delta.toFixed(1)}
     </span>
   )
@@ -130,7 +130,7 @@ export default function ReportsPage() {
   if (!isLeader) {
     return (
       <div className="flex items-center justify-center h-64">
-        <p className="text-light-muted">Reports are available to managers and coaches only.</p>
+        <p className="text-stone-light">Reports are available to managers and coaches only.</p>
       </div>
     )
   }
@@ -141,10 +141,10 @@ export default function ReportsPage() {
       <div className="flex items-start justify-between mb-8 print:mb-4">
         <div>
           <div className="flex items-center gap-3 mb-1">
-            <HiDocumentReport className="text-teal text-2xl print:hidden" />
-            <h1 className="text-2xl font-bold text-light print:text-black">Manager Report</h1>
+            <HiDocumentReport className="text-terracotta text-2xl print:hidden" />
+            <h1 className="text-2xl font-bold text-espresso print:text-black">Manager Report</h1>
           </div>
-          <p className="text-light-muted text-sm print:text-gray-600">
+          <p className="text-stone-light text-sm print:text-gray-600">
             Team performance analysis · Generated {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
@@ -152,7 +152,7 @@ export default function ReportsPage() {
           <select
             value={period}
             onChange={(e) => setPeriod(e.target.value)}
-            className="bg-navy-light border border-teal/20 text-light text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-teal"
+            className="bg-white border border-terracotta/20 text-espresso text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-terracotta"
           >
             <option value="7">Last 7 days</option>
             <option value="14">Last 14 days</option>
@@ -163,7 +163,7 @@ export default function ReportsPage() {
           <button
             onClick={generateReport}
             disabled={generating}
-            className="flex items-center gap-2 bg-teal text-navy px-4 py-2 rounded-lg font-bold text-sm hover:bg-aqua transition-colors disabled:opacity-50"
+            className="flex items-center gap-2 bg-terracotta text-white px-4 py-2 rounded-lg font-bold text-sm hover:bg-terracotta-bright transition-colors disabled:opacity-50"
           >
             <HiRefresh className={generating ? 'animate-spin' : ''} />
             {generating ? 'Generating...' : report ? 'Regenerate' : 'Generate Report'}
@@ -171,7 +171,7 @@ export default function ReportsPage() {
           {report && (
             <button
               onClick={printReport}
-              className="flex items-center gap-2 bg-navy-light text-light border border-teal/20 px-4 py-2 rounded-lg text-sm hover:bg-teal/10 transition-colors"
+              className="flex items-center gap-2 bg-white text-espresso border border-terracotta/20 px-4 py-2 rounded-lg text-sm hover:bg-terracotta/10 transition-colors"
             >
               <HiPrinter />
               Print / PDF
@@ -182,15 +182,15 @@ export default function ReportsPage() {
 
       {/* Empty state */}
       {!report && !loading && (
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-16 text-center">
-          <HiDocumentReport className="text-teal text-5xl mx-auto mb-4 opacity-40" />
-          <h2 className="text-xl font-bold text-light mb-2">Ready to Generate Your Report</h2>
-          <p className="text-light-muted text-sm max-w-md mx-auto mb-6">
+        <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-16 text-center">
+          <HiDocumentReport className="text-terracotta text-5xl mx-auto mb-4 opacity-40" />
+          <h2 className="text-xl font-bold text-espresso mb-2">Ready to Generate Your Report</h2>
+          <p className="text-stone-light text-sm max-w-md mx-auto mb-6">
             Select a time period and click Generate. The report analyses your team's Sandler methodology trends, identifies systemic weaknesses, and produces AI-powered coaching recommendations.
           </p>
           <button
             onClick={generateReport}
-            className="bg-teal text-navy px-6 py-3 rounded-lg font-bold hover:bg-aqua transition-colors"
+            className="bg-terracotta text-white px-6 py-3 rounded-lg font-bold hover:bg-terracotta-bright transition-colors"
           >
             Generate Report
           </button>
@@ -200,8 +200,8 @@ export default function ReportsPage() {
       {/* Loading */}
       {loading && (
         <div className="flex flex-col items-center justify-center h-64 gap-4">
-          <div className="w-10 h-10 border-2 border-teal border-t-transparent rounded-full animate-spin" />
-          <p className="text-light-muted text-sm">Analysing team performance and generating insights...</p>
+          <div className="w-10 h-10 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
+          <p className="text-stone-light text-sm">Analysing team performance and generating insights...</p>
         </div>
       )}
 
@@ -211,27 +211,27 @@ export default function ReportsPage() {
 
           {/* ── Section 1: Executive Summary ── */}
           {report.summary && (
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 print:border print:border-gray-200 print:rounded-lg">
-              <h2 className="text-lg font-bold text-light mb-4 print:text-black">Executive Summary</h2>
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 print:border print:border-gray-200 print:rounded-lg">
+              <h2 className="text-lg font-bold text-espresso mb-4 print:text-black">Executive Summary</h2>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                <div className="bg-navy/50 rounded-xl p-4 text-center print:bg-gray-50">
+                <div className="bg-bone/50 rounded-xl p-4 text-center print:bg-gray-50">
                   <div className={`text-3xl font-bold mb-1 ${report.summary.teamOverall >= 7 ? 'text-teal' : report.summary.teamOverall >= 5 ? 'text-gold' : 'text-pink'}`}>
                     {report.summary.teamOverall}
-                    <span className="text-lg font-normal text-light-muted">/10</span>
+                    <span className="text-lg font-normal text-stone-light">/10</span>
                   </div>
-                  <p className="text-xs text-light-muted">Team Sandler Score</p>
+                  <p className="text-xs text-stone-light">Team Sandler Score</p>
                 </div>
-                <div className="bg-navy/50 rounded-xl p-4 text-center print:bg-gray-50">
-                  <div className="text-3xl font-bold text-light mb-1">{report.summary.totalCalls}</div>
-                  <p className="text-xs text-light-muted">Calls Analysed</p>
+                <div className="bg-bone/50 rounded-xl p-4 text-center print:bg-gray-50">
+                  <div className="text-3xl font-bold text-espresso mb-1">{report.summary.totalCalls}</div>
+                  <p className="text-xs text-stone-light">Calls Analysed</p>
                 </div>
-                <div className="bg-navy/50 rounded-xl p-4 text-center print:bg-gray-50">
-                  <div className="text-3xl font-bold text-light mb-1">{report.summary.repCount}</div>
-                  <p className="text-xs text-light-muted">Active Reps</p>
+                <div className="bg-bone/50 rounded-xl p-4 text-center print:bg-gray-50">
+                  <div className="text-3xl font-bold text-espresso mb-1">{report.summary.repCount}</div>
+                  <p className="text-xs text-stone-light">Active Reps</p>
                 </div>
-                <div className="bg-navy/50 rounded-xl p-4 text-center print:bg-gray-50">
-                  <div className="text-3xl font-bold text-light mb-1">{report.coachingStats.sent}</div>
-                  <p className="text-xs text-light-muted">Coaching Sent</p>
+                <div className="bg-bone/50 rounded-xl p-4 text-center print:bg-gray-50">
+                  <div className="text-3xl font-bold text-espresso mb-1">{report.coachingStats.sent}</div>
+                  <p className="text-xs text-stone-light">Coaching Sent</p>
                 </div>
               </div>
 
@@ -239,14 +239,14 @@ export default function ReportsPage() {
               {(report.summary.strongComponents.length > 0 || report.summary.weakComponents.length > 0) && (
                 <div className="grid md:grid-cols-2 gap-4 mt-4">
                   {report.summary.strongComponents.length > 0 && (
-                    <div className="bg-teal/5 border border-teal/20 rounded-xl p-4">
+                    <div className="bg-teal/5 border border-terracotta/20 rounded-xl p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <HiCheckCircle className="text-teal" />
-                        <span className="text-sm font-bold text-teal">Team Strengths</span>
+                        <HiCheckCircle className="text-terracotta" />
+                        <span className="text-sm font-bold text-terracotta">Team Strengths</span>
                       </div>
                       {report.summary.strongComponents.map(([comp, score]) => (
-                        <p key={comp} className="text-sm text-light-muted">
-                          {COMPONENT_LABELS[comp] || comp} — <span className="text-teal font-medium">{score}/10</span>
+                        <p key={comp} className="text-sm text-stone-light">
+                          {COMPONENT_LABELS[comp] || comp} — <span className="text-terracotta font-medium">{score}/10</span>
                         </p>
                       ))}
                     </div>
@@ -254,12 +254,12 @@ export default function ReportsPage() {
                   {report.summary.weakComponents.length > 0 && (
                     <div className="bg-pink/5 border border-pink/20 rounded-xl p-4">
                       <div className="flex items-center gap-2 mb-2">
-                        <HiExclamationCircle className="text-pink" />
-                        <span className="text-sm font-bold text-pink">Needs Attention</span>
+                        <HiExclamationCircle className="text-terracotta" />
+                        <span className="text-sm font-bold text-terracotta">Needs Attention</span>
                       </div>
                       {report.summary.weakComponents.map(([comp, score]) => (
-                        <p key={comp} className="text-sm text-light-muted">
-                          {COMPONENT_LABELS[comp] || comp} — <span className="text-pink font-medium">{score}/10</span>
+                        <p key={comp} className="text-sm text-stone-light">
+                          {COMPONENT_LABELS[comp] || comp} — <span className="text-terracotta font-medium">{score}/10</span>
                         </p>
                       ))}
                     </div>
@@ -271,9 +271,9 @@ export default function ReportsPage() {
 
           {/* ── Section 2: Methodology Component Scores ── */}
           {Object.keys(report.componentAverages).length > 0 && (
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 print:border print:border-gray-200">
-              <h2 className="text-lg font-bold text-light mb-1 print:text-black">Sandler Methodology Scores</h2>
-              <p className="text-xs text-light-muted mb-4">Team averages across all analysed calls this period</p>
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 print:border print:border-gray-200">
+              <h2 className="text-lg font-bold text-espresso mb-1 print:text-black">Sandler Methodology Scores</h2>
+              <p className="text-xs text-stone-light mb-4">Team averages across all analysed calls this period</p>
               <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
                 {Object.entries(COMPONENT_LABELS).map(([key, label]) => {
                   const score = report.componentAverages[key]
@@ -283,7 +283,7 @@ export default function ReportsPage() {
                   return (
                     <div key={key}>
                       <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm text-light-muted">{label}</span>
+                        <span className="text-sm text-stone-light">{label}</span>
                         <div className="flex items-center gap-2">
                           <TrendBadge value={curr} prev={prev} />
                         </div>
@@ -298,13 +298,13 @@ export default function ReportsPage() {
 
           {/* ── Section 3: Rep Performance Matrix ── */}
           {report.repMatrix.length > 0 && (
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 print:border print:border-gray-200">
-              <h2 className="text-lg font-bold text-light mb-1 print:text-black">Rep Performance Matrix</h2>
-              <p className="text-xs text-light-muted mb-4">Individual scores, trends, and areas for development</p>
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 print:border print:border-gray-200">
+              <h2 className="text-lg font-bold text-espresso mb-1 print:text-black">Rep Performance Matrix</h2>
+              <p className="text-xs text-stone-light mb-4">Individual scores, trends, and areas for development</p>
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
-                    <tr className="text-left text-xs text-light-muted uppercase tracking-wider border-b border-navy">
+                    <tr className="text-left text-xs text-stone-light uppercase tracking-wider border-b border-bone">
                       <th className="pb-3 pr-4">Rep</th>
                       <th className="pb-3 pr-4 text-center">Overall</th>
                       <th className="pb-3 pr-4 text-center">Calls</th>
@@ -317,37 +317,37 @@ export default function ReportsPage() {
                     {report.repMatrix.map((rep) => {
                       const coachStats = report.coachingStats.byRep[rep.email]
                       return (
-                        <tr key={rep.email} className="border-b border-navy/40 last:border-0">
+                        <tr key={rep.email} className="border-b border-bone-dark last:border-0">
                           <td className="py-3 pr-4">
-                            <p className="text-sm font-medium text-light">{rep.name}</p>
-                            <p className="text-xs text-light-muted truncate max-w-32">{rep.email}</p>
+                            <p className="text-sm font-medium text-espresso">{rep.name}</p>
+                            <p className="text-xs text-stone-light truncate max-w-32">{rep.email}</p>
                           </td>
                           <td className="py-3 pr-4 text-center">
                             <span className={`text-sm font-bold px-2 py-1 rounded-lg ${
-                              rep.overallAvg >= 7 ? 'text-teal bg-teal/10' :
-                              rep.overallAvg >= 5 ? 'text-gold bg-gold/10' :
-                              'text-pink bg-pink/10'
+                              rep.overallAvg >= 7 ? 'text-terracotta bg-terracotta/10' :
+                              rep.overallAvg >= 5 ? 'text-clay bg-clay/10' :
+                              'text-terracotta bg-pink/10'
                             }`}>
                               {rep.overallAvg}
                             </span>
                           </td>
-                          <td className="py-3 pr-4 text-center text-sm text-light-muted">{rep.callCount}</td>
+                          <td className="py-3 pr-4 text-center text-sm text-stone-light">{rep.callCount}</td>
                           <td className="py-3 pr-4">
                             <div className="flex items-center justify-center gap-1">
                               <TrendIcon trend={rep.trend} />
-                              <span className={`text-xs ${rep.trend === 'improving' ? 'text-teal' : rep.trend === 'declining' ? 'text-pink' : 'text-light-muted'}`}>
+                              <span className={`text-xs ${rep.trend === 'improving' ? 'text-teal' : rep.trend === 'declining' ? 'text-pink' : 'text-stone-light'}`}>
                                 {rep.trend}
                               </span>
                             </div>
                           </td>
                           <td className="py-3 pr-4">
                             {rep.weakest && (
-                              <span className="text-xs text-pink bg-pink/10 px-2 py-1 rounded-full">
+                              <span className="text-xs text-terracotta bg-pink/10 px-2 py-1 rounded-full">
                                 {COMPONENT_LABELS[rep.weakest] || rep.weakest}
                               </span>
                             )}
                           </td>
-                          <td className="py-3 text-center text-xs text-light-muted">
+                          <td className="py-3 text-center text-xs text-stone-light">
                             {coachStats ? `${coachStats.sent} sent` : '—'}
                           </td>
                         </tr>
@@ -361,25 +361,25 @@ export default function ReportsPage() {
 
           {/* ── Section 4: Coaching Effectiveness ── */}
           {report.coachingStats.sent > 0 && (
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 print:border print:border-gray-200">
-              <h2 className="text-lg font-bold text-light mb-1 print:text-black">Coaching Effectiveness</h2>
-              <p className="text-xs text-light-muted mb-4">Engagement with coaching messages this period</p>
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 print:border print:border-gray-200">
+              <h2 className="text-lg font-bold text-espresso mb-1 print:text-black">Coaching Effectiveness</h2>
+              <p className="text-xs text-stone-light mb-4">Engagement with coaching messages this period</p>
               <div className="grid grid-cols-3 gap-4 mb-4">
-                <div className="bg-navy/50 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-light mb-1">{report.coachingStats.sent}</div>
-                  <p className="text-xs text-light-muted">Coaching Sent</p>
+                <div className="bg-bone/50 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-espresso mb-1">{report.coachingStats.sent}</div>
+                  <p className="text-xs text-stone-light">Coaching Sent</p>
                 </div>
-                <div className="bg-navy/50 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-teal mb-1">{report.coachingStats.replied}</div>
-                  <p className="text-xs text-light-muted">Reps Replied</p>
+                <div className="bg-bone/50 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-terracotta mb-1">{report.coachingStats.replied}</div>
+                  <p className="text-xs text-stone-light">Reps Replied</p>
                 </div>
-                <div className="bg-navy/50 rounded-xl p-4 text-center">
-                  <div className="text-2xl font-bold text-gold mb-1">
+                <div className="bg-bone/50 rounded-xl p-4 text-center">
+                  <div className="text-2xl font-bold text-clay mb-1">
                     {report.coachingStats.sent > 0
                       ? Math.round((report.coachingStats.replied / report.coachingStats.sent) * 100)
                       : 0}%
                   </div>
-                  <p className="text-xs text-light-muted">Reply Rate</p>
+                  <p className="text-xs text-stone-light">Reply Rate</p>
                 </div>
               </div>
               {Object.keys(report.coachingStats.byRep).length > 0 && (
@@ -387,12 +387,12 @@ export default function ReportsPage() {
                   {Object.entries(report.coachingStats.byRep).map(([email, stats]) => {
                     const rep = report.repMatrix.find(r => r.email === email)
                     return (
-                      <div key={email} className="flex items-center justify-between py-2 border-b border-navy/40 last:border-0">
-                        <span className="text-sm text-light">{rep?.name || email}</span>
-                        <div className="flex items-center gap-4 text-xs text-light-muted">
+                      <div key={email} className="flex items-center justify-between py-2 border-b border-bone-dark last:border-0">
+                        <span className="text-sm text-espresso">{rep?.name || email}</span>
+                        <div className="flex items-center gap-4 text-xs text-stone-light">
                           <span>{stats.sent} messages sent</span>
                           {stats.replied > 0 && (
-                            <span className="text-teal">{stats.replied} replied</span>
+                            <span className="text-terracotta">{stats.replied} replied</span>
                           )}
                         </div>
                       </div>
@@ -405,10 +405,10 @@ export default function ReportsPage() {
 
           {/* ── Section 5: AI Narrative ── */}
           {report.narrative && (
-            <div className="bg-gradient-to-br from-navy-light to-navy border border-teal/20 rounded-2xl p-6 print:border print:border-gray-200">
+            <div className="bg-gradient-to-br from-navy-light to-navy border border-terracotta/20 rounded-2xl p-6 print:border print:border-gray-200">
               <div className="flex items-center gap-2 mb-4">
-                <HiSparkles className="text-gold text-xl print:hidden" />
-                <h2 className="text-lg font-bold text-light print:text-black">AI Coaching Analysis & Recommendations</h2>
+                <HiSparkles className="text-clay text-xl print:hidden" />
+                <h2 className="text-lg font-bold text-espresso print:text-black">AI Coaching Analysis & Recommendations</h2>
               </div>
               <div className="prose prose-sm max-w-none">
                 {report.narrative.split('\n').map((line, i) => {
@@ -417,7 +417,7 @@ export default function ReportsPage() {
                   const isBullet = line.trim().startsWith('-') || line.trim().startsWith('•')
                   if (isHeader) {
                     return (
-                      <h3 key={i} className="text-teal font-bold text-sm mt-4 mb-2 uppercase tracking-wide print:text-blue-700">
+                      <h3 key={i} className="text-terracotta font-bold text-sm mt-4 mb-2 uppercase tracking-wide print:text-blue-700">
                         {line.replace(/^\d+\.\s*/, '').replace(/^#+\s*/, '').replace(/:$/, '')}
                       </h3>
                     )
@@ -425,19 +425,19 @@ export default function ReportsPage() {
                   if (isBullet) {
                     return (
                       <div key={i} className="flex gap-2 mb-1">
-                        <span className="text-teal mt-1 flex-shrink-0">▸</span>
-                        <p className="text-light-muted text-sm print:text-gray-700">
+                        <span className="text-terracotta mt-1 flex-shrink-0">▸</span>
+                        <p className="text-stone-light text-sm print:text-gray-700">
                           {line.replace(/^[-•]\s*/, '')}
                         </p>
                       </div>
                     )
                   }
-                  return <p key={i} className="text-light-muted text-sm mb-2 print:text-gray-700">{line}</p>
+                  return <p key={i} className="text-stone-light text-sm mb-2 print:text-gray-700">{line}</p>
                 })}
               </div>
-              <div className="mt-4 pt-4 border-t border-teal/10 flex items-center gap-2">
-                <HiLightBulb className="text-gold text-sm" />
-                <p className="text-xs text-light-muted">Generated by AI based on {report.summary?.totalCalls} calls over the last {report.summary?.period} days</p>
+              <div className="mt-4 pt-4 border-t border-bone-dark flex items-center gap-2">
+                <HiLightBulb className="text-clay text-sm" />
+                <p className="text-xs text-stone-light">Generated by AI based on {report.summary?.totalCalls} calls over the last {report.summary?.period} days</p>
               </div>
             </div>
           )}

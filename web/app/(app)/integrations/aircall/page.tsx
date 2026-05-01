@@ -124,7 +124,7 @@ export default function AircallPage() {
   }
 
   if (loading) {
-    return <div className="text-light-muted">Loading...</div>
+    return <div className="text-stone-light">Loading...</div>
   }
 
   const isConnected = connection?.connection_status === 'active'
@@ -133,7 +133,7 @@ export default function AircallPage() {
     <div>
       <Link
         href="/integrations"
-        className="flex items-center gap-2 text-teal hover:text-aqua mb-6 text-sm"
+        className="flex items-center gap-2 text-terracotta hover:text-terracotta-bright mb-6 text-sm"
       >
         <HiArrowLeft /> Back to Integrations
       </Link>
@@ -144,8 +144,8 @@ export default function AircallPage() {
             A
           </div>
           <div>
-            <h1 className="text-3xl font-bold text-light">Aircall</h1>
-            <p className="text-light-muted">Sync phone call recordings and metadata</p>
+            <h1 className="text-3xl font-bold text-espresso">Aircall</h1>
+            <p className="text-stone-light">Sync phone call recordings and metadata</p>
           </div>
         </div>
 
@@ -156,29 +156,29 @@ export default function AircallPage() {
         )}
 
         {/* Connection Status */}
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-6">
-          <h2 className="text-xl font-bold text-light mb-4">Connection Status</h2>
+        <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 mb-6">
+          <h2 className="text-xl font-bold text-espresso mb-4">Connection Status</h2>
           <div className="flex items-center gap-3">
             {isConnected ? (
               <>
                 <HiCheckCircle className="text-green-400 text-2xl" />
                 <div>
-                  <p className="font-semibold text-light">Connected</p>
-                  <p className="text-xs text-light-muted">
+                  <p className="font-semibold text-espresso">Connected</p>
+                  <p className="text-xs text-stone-light">
                     Since {new Date(connection.connected_at).toLocaleDateString()}
                   </p>
                 </div>
               </>
             ) : (
               <>
-                <HiExclamationCircle className="text-light-muted text-2xl" />
-                <p className="text-light-muted">Not connected</p>
+                <HiExclamationCircle className="text-stone-light text-2xl" />
+                <p className="text-stone-light">Not connected</p>
               </>
             )}
           </div>
 
           {connection?.last_error && (
-            <div className="mt-3 bg-pink/10 border border-pink/20 rounded-lg p-3 text-xs text-pink">
+            <div className="mt-3 bg-pink/10 border border-pink/20 rounded-lg p-3 text-xs text-terracotta">
               Last error: {connection.last_error}
             </div>
           )}
@@ -186,39 +186,39 @@ export default function AircallPage() {
 
         {/* Connect / Configure */}
         {!isConnected ? (
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-6">
-            <h2 className="text-xl font-bold text-light mb-4">Connect Aircall</h2>
-            <p className="text-sm text-light-muted mb-4">
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 mb-6">
+            <h2 className="text-xl font-bold text-espresso mb-4">Connect Aircall</h2>
+            <p className="text-sm text-stone-light mb-4">
               Enter your Aircall API credentials. You can find these in your Aircall dashboard
               under Integrations &gt; API Keys.
             </p>
             <form onSubmit={handleConnect} className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-light mb-2">API ID</label>
+                <label className="block text-sm font-medium text-espresso mb-2">API ID</label>
                 <input
                   type="text"
                   value={apiId}
                   onChange={(e) => setApiId(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-navy border border-teal/20 rounded-lg text-light placeholder-light-muted/50 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+                  className="w-full px-4 py-3 bg-bone border border-terracotta/20 rounded-lg text-espresso placeholder-light-muted/50 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-teal/20"
                   placeholder="Your Aircall API ID"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-light mb-2">API Token</label>
+                <label className="block text-sm font-medium text-espresso mb-2">API Token</label>
                 <input
                   type="password"
                   value={apiToken}
                   onChange={(e) => setApiToken(e.target.value)}
                   required
-                  className="w-full px-4 py-3 bg-navy border border-teal/20 rounded-lg text-light placeholder-light-muted/50 focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+                  className="w-full px-4 py-3 bg-bone border border-terracotta/20 rounded-lg text-espresso placeholder-light-muted/50 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-teal/20"
                   placeholder="Your Aircall API token"
                 />
               </div>
               <button
                 type="submit"
                 disabled={saving}
-                className="bg-gradient-to-r from-teal to-aqua text-navy font-bold py-2.5 px-6 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
+                className="bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-2.5 px-6 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
               >
                 {saving ? 'Connecting...' : 'Connect Aircall'}
               </button>
@@ -227,17 +227,17 @@ export default function AircallPage() {
         ) : (
           <div className="space-y-4">
             {/* Sync Controls */}
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-              <h2 className="text-xl font-bold text-light mb-4">Sync</h2>
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+              <h2 className="text-xl font-bold text-espresso mb-4">Sync</h2>
               {connection.last_successful_sync && (
-                <p className="text-sm text-light-muted mb-4">
+                <p className="text-sm text-stone-light mb-4">
                   Last synced: {new Date(connection.last_successful_sync).toLocaleString()}
                 </p>
               )}
               <button
                 onClick={handleSync}
                 disabled={syncing}
-                className="flex items-center gap-2 bg-teal text-navy font-bold py-2.5 px-6 rounded-lg hover:bg-aqua transition-colors disabled:opacity-50"
+                className="flex items-center gap-2 bg-terracotta text-white font-bold py-2.5 px-6 rounded-lg hover:bg-terracotta-bright transition-colors disabled:opacity-50"
               >
                 <HiRefresh className={syncing ? 'animate-spin' : ''} />
                 {syncing ? 'Syncing...' : 'Sync Now'}
@@ -245,14 +245,14 @@ export default function AircallPage() {
             </div>
 
             {/* Disconnect */}
-            <div className="bg-navy-light rounded-2xl border border-pink/20 p-6">
-              <h2 className="text-lg font-bold text-pink mb-2">Disconnect</h2>
-              <p className="text-sm text-light-muted mb-4">
+            <div className="bg-white rounded-2xl border border-pink/20 p-6">
+              <h2 className="text-lg font-bold text-terracotta mb-2">Disconnect</h2>
+              <p className="text-sm text-stone-light mb-4">
                 This will stop syncing data from Aircall. Existing data will be preserved.
               </p>
               <button
                 onClick={handleDisconnect}
-                className="text-sm text-pink border border-pink/30 bg-pink/5 px-4 py-2 rounded-lg hover:bg-pink/10 transition-colors"
+                className="text-sm text-terracotta border border-pink/30 bg-pink/5 px-4 py-2 rounded-lg hover:bg-pink/10 transition-colors"
               >
                 Disconnect Aircall
               </button>

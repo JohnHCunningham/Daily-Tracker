@@ -237,11 +237,11 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
   }
 
   if (loading) {
-    return <div className="text-light-muted">Loading...</div>
+    return <div className="text-stone-light">Loading...</div>
   }
 
   if (!member) {
-    return <div className="text-light-muted">Member not found.</div>
+    return <div className="text-stone-light">Member not found.</div>
   }
 
   const overallScore = avgScores
@@ -259,20 +259,20 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
     <div>
       <Link
         href="/team"
-        className="flex items-center gap-2 text-teal hover:text-aqua mb-6 text-sm"
+        className="flex items-center gap-2 text-terracotta hover:text-terracotta-bright mb-6 text-sm"
       >
         <HiArrowLeft /> Back to Team
       </Link>
 
-      <div className="bg-navy-light rounded-2xl border border-teal/10 p-8 mb-6">
+      <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-8 mb-6">
         <div className="flex items-center gap-6 mb-8">
-          <div className="w-20 h-20 bg-teal/20 rounded-full flex items-center justify-center">
-            <HiUserCircle className="text-teal text-5xl" />
+          <div className="w-20 h-20 bg-terracotta/20 rounded-full flex items-center justify-center">
+            <HiUserCircle className="text-terracotta text-5xl" />
           </div>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-light">{member.full_name || 'Unnamed'}</h1>
-            <p className="text-light-muted">{member.email}</p>
-            <p className="text-xs text-light-muted mt-1">
+            <h1 className="text-3xl font-bold text-espresso">{member.full_name || 'Unnamed'}</h1>
+            <p className="text-stone-light">{member.email}</p>
+            <p className="text-xs text-stone-light mt-1">
               Joined {new Date(member.created_at).toLocaleDateString()}
             </p>
           </div>
@@ -282,14 +282,14 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
         </div>
 
         {/* Role Management */}
-        <div className="border-t border-navy pt-6">
-          <h2 className="text-xl font-bold text-light mb-4">Role</h2>
+        <div className="border-t border-bone pt-6">
+          <h2 className="text-xl font-bold text-espresso mb-4">Role</h2>
           <div className="flex items-end gap-4">
             <div className="flex-1 max-w-xs">
               <select
                 value={selectedRole}
                 onChange={(e) => setSelectedRole(e.target.value)}
-                className="w-full px-4 py-3 bg-navy border border-teal/20 rounded-lg text-light focus:outline-none focus:border-teal focus:ring-2 focus:ring-teal/20"
+                className="w-full px-4 py-3 bg-bone border border-terracotta/20 rounded-lg text-espresso focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-teal/20"
               >
                 <option value="rep">Sales Rep</option>
                 <option value="coach">Coach</option>
@@ -301,7 +301,7 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
               <button
                 onClick={handleRoleChange}
                 disabled={saving}
-                className="bg-teal text-navy font-bold py-3 px-6 rounded-lg hover:bg-aqua transition-colors disabled:opacity-50"
+                className="bg-terracotta text-white font-bold py-3 px-6 rounded-lg hover:bg-terracotta-bright transition-colors disabled:opacity-50"
               >
                 {saving ? 'Saving...' : 'Update Role'}
               </button>
@@ -311,8 +311,8 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
       </div>
 
       {/* Pipeline Activity Row */}
-      <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-6">
-        <h2 className="text-xl font-bold text-light mb-4">Pipeline Activity</h2>
+      <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 mb-6">
+        <h2 className="text-xl font-bold text-espresso mb-4">Pipeline Activity</h2>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="flex flex-col items-center">
             <ScoreRadial
@@ -356,24 +356,24 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
       {/* Performance Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         {/* Sandler Breakdown */}
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-          <h2 className="text-xl font-bold text-light mb-4">Sandler Breakdown</h2>
+        <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+          <h2 className="text-xl font-bold text-espresso mb-4">Sandler Breakdown</h2>
           {avgScores ? (
             <SandlerBreakdown scores={avgScores} />
           ) : (
-            <p className="text-light-muted text-sm">
+            <p className="text-stone-light text-sm">
               No analyzed calls yet. Scores will appear after calls are analyzed.
             </p>
           )}
         </div>
 
         {/* Score Trend */}
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-          <h2 className="text-xl font-bold text-light mb-4">Score Trend</h2>
+        <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+          <h2 className="text-xl font-bold text-espresso mb-4">Score Trend</h2>
           {trendLabels.length > 1 ? (
             <ScoreTrendChart labels={trendLabels} scores={trendScores} />
           ) : (
-            <p className="text-light-muted text-sm">
+            <p className="text-stone-light text-sm">
               {trendLabels.length === 1
                 ? 'Need at least 2 analyzed calls to show trends.'
                 : 'No analyzed calls yet.'}
@@ -384,23 +384,23 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
 
       {/* Coaching History + Actions */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+        <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
           <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-light">Coaching History</h2>
-            <Link href="/coaching" className="text-teal text-xs hover:text-aqua">View All</Link>
+            <h2 className="text-xl font-bold text-espresso">Coaching History</h2>
+            <Link href="/coaching" className="text-terracotta text-xs hover:text-terracotta-bright">View All</Link>
           </div>
           {coachingHistory.length > 0 ? (
             <div className="space-y-3">
               {coachingHistory.map((c) => (
-                <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-navy/50">
+                <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-bone/50">
                   {c.status === 'sent' ? (
-                    <HiCheckCircle className="text-teal text-lg flex-shrink-0" />
+                    <HiCheckCircle className="text-terracotta text-lg flex-shrink-0" />
                   ) : (
-                    <HiAcademicCap className="text-gold text-lg flex-shrink-0" />
+                    <HiAcademicCap className="text-clay text-lg flex-shrink-0" />
                   )}
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm text-light truncate">{c.subject || 'Coaching Message'}</p>
-                    <p className="text-xs text-light-muted">
+                    <p className="text-sm text-espresso truncate">{c.subject || 'Coaching Message'}</p>
+                    <p className="text-xs text-stone-light">
                       {c.status === 'sent' ? 'Sent' : c.status} &middot; {getTimeAgo(c.created_at)}
                     </p>
                   </div>
@@ -408,45 +408,45 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
               ))}
             </div>
           ) : (
-            <p className="text-light-muted text-sm">No coaching messages yet.</p>
+            <p className="text-stone-light text-sm">No coaching messages yet.</p>
           )}
         </div>
 
         <div className="space-y-6">
           {/* 1-on-1 Notes Link */}
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-            <h2 className="text-xl font-bold text-light mb-3">1-on-1 Notes</h2>
-            <p className="text-light-muted text-sm mb-4">
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+            <h2 className="text-xl font-bold text-espresso mb-3">1-on-1 Notes</h2>
+            <p className="text-stone-light text-sm mb-4">
               Send private notes and prep for your next 1-on-1 meeting.
             </p>
             <Link
               href={`/notes?rep=${encodeURIComponent(member.email)}`}
-              className="flex items-center gap-2 bg-gradient-to-r from-teal to-aqua text-navy font-bold py-2.5 px-5 rounded-lg hover:shadow-lg transition-all text-sm"
+              className="flex items-center gap-2 bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-2.5 px-5 rounded-lg hover:shadow-lg transition-all text-sm"
             >
               <HiChatAlt2 /> Open Notes
             </Link>
           </div>
 
           {/* Recent Celebrations */}
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-light">Badges Earned</h2>
-              <Link href="/celebrations" className="text-teal text-xs hover:text-aqua">View All</Link>
+              <h2 className="text-xl font-bold text-espresso">Badges Earned</h2>
+              <Link href="/celebrations" className="text-terracotta text-xs hover:text-terracotta-bright">View All</Link>
             </div>
             {celebrations.length > 0 ? (
               <div className="space-y-3">
                 {celebrations.map((c) => (
-                  <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-navy/50">
-                    <HiSparkles className="text-gold text-lg flex-shrink-0" />
+                  <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-bone/50">
+                    <HiSparkles className="text-clay text-lg flex-shrink-0" />
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm text-light truncate">{c.title}</p>
-                      <p className="text-xs text-light-muted">{getTimeAgo(c.created_at)}</p>
+                      <p className="text-sm text-espresso truncate">{c.title}</p>
+                      <p className="text-xs text-stone-light">{getTimeAgo(c.created_at)}</p>
                     </div>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-light-muted text-sm">No badges earned yet.</p>
+              <p className="text-stone-light text-sm">No badges earned yet.</p>
             )}
           </div>
         </div>

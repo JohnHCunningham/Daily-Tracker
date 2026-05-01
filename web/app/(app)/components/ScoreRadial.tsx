@@ -36,7 +36,7 @@ export default function ScoreRadial({
     datasets: [
       {
         data: [percentage, 100 - percentage],
-        backgroundColor: [color, 'rgba(255,255,255,0.05)'],
+        backgroundColor: [color, 'rgba(42,34,28,0.08)'],
         borderWidth: 0,
         cutout: '78%',
         borderRadius: 6,
@@ -68,14 +68,14 @@ export default function ScoreRadial({
             {displayValue}
           </span>
           {sublabel && (
-            <span className="text-light-muted" style={{ fontSize: Math.max(size * 0.08, 10) }}>
+            <span className="text-stone-light" style={{ fontSize: Math.max(size * 0.08, 10) }}>
               {sublabel}
             </span>
           )}
         </div>
       </div>
       {label && (
-        <span className="text-xs font-medium text-light-muted text-center leading-tight">{label}</span>
+        <span className="text-xs font-medium text-stone-light text-center leading-tight">{label}</span>
       )}
     </div>
   )

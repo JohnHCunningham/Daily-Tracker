@@ -107,17 +107,17 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
   }
 
   function getScoreColor(score: number): string {
-    if (score >= 7) return 'text-teal bg-teal/20 border-teal/30'
-    if (score >= 5) return 'text-gold bg-gold/20 border-gold/30'
-    return 'text-pink bg-pink/20 border-pink/30'
+    if (score >= 7) return 'text-terracotta bg-terracotta/20 border-terracotta/30'
+    if (score >= 5) return 'text-clay bg-clay/20 border-clay/30'
+    return 'text-terracotta bg-pink/20 border-pink/30'
   }
 
   if (loading) {
-    return <div className="text-light-muted">Loading call...</div>
+    return <div className="text-stone-light">Loading call...</div>
   }
 
   if (!call) {
-    return <div className="text-light-muted">Call not found.</div>
+    return <div className="text-stone-light">Call not found.</div>
   }
 
   const scores = call.methodology_scores
@@ -126,7 +126,7 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
     <div>
       <Link
         href="/calls"
-        className="flex items-center gap-2 text-teal hover:text-aqua mb-6 text-sm"
+        className="flex items-center gap-2 text-terracotta hover:text-terracotta-bright mb-6 text-sm"
       >
         <HiArrowLeft /> Back to Calls
       </Link>
@@ -138,13 +138,13 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
       )}
 
       {/* Header */}
-      <div className="bg-navy-light rounded-2xl border border-teal/10 p-6 mb-6">
+      <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 mb-6">
         <div className="flex items-start justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-light mb-2">
+            <h1 className="text-2xl font-bold text-espresso mb-2">
               {call.participants?.join(', ') || call.rep_email || 'Call Details'}
             </h1>
-            <div className="flex items-center gap-4 text-sm text-light-muted">
+            <div className="flex items-center gap-4 text-sm text-stone-light">
               <span className="flex items-center gap-1">
                 <HiClock />
                 {new Date(call.call_date).toLocaleString()}
@@ -159,7 +159,7 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
               href={call.recording_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-2 bg-teal/10 text-teal border border-teal/20 px-4 py-2 rounded-lg hover:bg-teal/20 transition-colors text-sm font-medium"
+              className="flex items-center gap-2 bg-terracotta/10 text-terracotta border border-terracotta/20 px-4 py-2 rounded-lg hover:bg-terracotta/20 transition-colors text-sm font-medium"
             >
               <HiPlay /> Play Recording
             </a>
@@ -172,23 +172,23 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
         <div className="lg:col-span-2 space-y-6">
           {/* AI Summary */}
           {call.ai_summary && (
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-              <h2 className="text-xl font-bold text-light mb-3">AI Summary</h2>
-              <p className="text-light-muted text-sm whitespace-pre-wrap">{call.ai_summary}</p>
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+              <h2 className="text-xl font-bold text-espresso mb-3">AI Summary</h2>
+              <p className="text-stone-light text-sm whitespace-pre-wrap">{call.ai_summary}</p>
             </div>
           )}
 
           {/* Transcript */}
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-            <h2 className="text-xl font-bold text-light mb-3">Transcript</h2>
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+            <h2 className="text-xl font-bold text-espresso mb-3">Transcript</h2>
             {call.transcript ? (
               <div className="max-h-[500px] overflow-y-auto">
-                <pre className="text-light-muted text-sm whitespace-pre-wrap font-sans leading-relaxed">
+                <pre className="text-stone-light text-sm whitespace-pre-wrap font-sans leading-relaxed">
                   {call.transcript}
                 </pre>
               </div>
             ) : (
-              <p className="text-light-muted text-sm">No transcript available.</p>
+              <p className="text-stone-light text-sm">No transcript available.</p>
             )}
           </div>
         </div>
@@ -197,15 +197,15 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
         <div className="space-y-6">
           {/* Analyze Button */}
           {!call.analyzed_at && (
-            <div className="bg-navy-light rounded-2xl border border-gold/20 p-6">
-              <h2 className="text-lg font-bold text-light mb-2">Ready to Analyze</h2>
-              <p className="text-sm text-light-muted mb-4">
+            <div className="bg-white rounded-2xl border border-clay/30 p-6">
+              <h2 className="text-lg font-bold text-espresso mb-2">Ready to Analyze</h2>
+              <p className="text-sm text-stone-light mb-4">
                 Run Sandler methodology analysis on this call.
               </p>
               <button
                 onClick={handleAnalyze}
                 disabled={analyzing}
-                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-teal to-aqua text-navy font-bold py-2.5 px-6 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
+                className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-2.5 px-6 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
               >
                 <HiRefresh className={analyzing ? 'animate-spin' : ''} />
                 {analyzing ? 'Analyzing...' : 'Analyze Call'}
@@ -215,12 +215,12 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
 
           {/* Sandler Breakdown */}
           {scores && (
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-              <h2 className="text-xl font-bold text-light mb-4">Sandler Scores</h2>
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+              <h2 className="text-xl font-bold text-espresso mb-4">Sandler Scores</h2>
               <div className="space-y-3">
                 {Object.entries(scores).map(([component, score]) => (
                   <div key={component} className="flex items-center justify-between">
-                    <span className="text-sm text-light-muted">{component}</span>
+                    <span className="text-sm text-stone-light">{component}</span>
                     <span className={`text-sm font-bold px-2.5 py-1 rounded-lg border ${getScoreColor(score as number)}`}>
                       {score}/10
                     </span>
@@ -233,8 +233,8 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
                 const values = Object.values(scores) as number[]
                 const avg = values.length ? Math.round(values.reduce((a, b) => a + b, 0) / values.length) : 0
                 return (
-                  <div className="mt-4 pt-4 border-t border-navy flex items-center justify-between">
-                    <span className="font-bold text-light">Overall</span>
+                  <div className="mt-4 pt-4 border-t border-bone flex items-center justify-between">
+                    <span className="font-bold text-espresso">Overall</span>
                     <span className={`text-lg font-bold px-3 py-1 rounded-lg border ${getScoreColor(avg)}`}>
                       {avg}/10
                     </span>
@@ -245,19 +245,19 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
           )}
 
           {/* Coaching Status */}
-          <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-            <h2 className="text-lg font-bold text-light mb-2">Coaching</h2>
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+            <h2 className="text-lg font-bold text-espresso mb-2">Coaching</h2>
             {call.coaching_generated ? (
-              <div className="flex items-center gap-2 text-teal text-sm">
-                <span className="w-2 h-2 bg-teal rounded-full" />
+              <div className="flex items-center gap-2 text-terracotta text-sm">
+                <span className="w-2 h-2 bg-terracotta rounded-full" />
                 Coaching generated
               </div>
             ) : call.analyzed_at ? (
-              <p className="text-sm text-light-muted">
+              <p className="text-sm text-stone-light">
                 Analysis complete. Coaching can be generated from the coaching page.
               </p>
             ) : (
-              <p className="text-sm text-light-muted">
+              <p className="text-sm text-stone-light">
                 Analyze this call first to generate coaching.
               </p>
             )}
@@ -265,8 +265,8 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
 
           {/* CRM Activity (HubSpot) */}
           {hubspotActivities.length > 0 && (
-            <div className="bg-navy-light rounded-2xl border border-teal/10 p-6">
-              <h2 className="text-lg font-bold text-light mb-4">CRM Activity</h2>
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+              <h2 className="text-lg font-bold text-espresso mb-4">CRM Activity</h2>
               <div className="space-y-3">
                 {hubspotActivities.map((activity) => {
                   const IconComponent = hubspotTypeIcons[activity.activity_type] || HiClipboardList
@@ -274,13 +274,13 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
                   const duration = activity.metadata?.duration_minutes
 
                   return (
-                    <div key={activity.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-navy/50">
-                      <div className="w-8 h-8 bg-gold/10 rounded-lg flex items-center justify-center flex-shrink-0">
-                        <IconComponent className="text-gold text-sm" />
+                    <div key={activity.id} className="flex items-start gap-3 p-2 rounded-lg hover:bg-bone/50">
+                      <div className="w-8 h-8 bg-clay/10 rounded-lg flex items-center justify-center flex-shrink-0">
+                        <IconComponent className="text-clay text-sm" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm text-light font-medium truncate capitalize">{title}</p>
-                        <div className="flex items-center gap-2 text-xs text-light-muted mt-0.5">
+                        <p className="text-sm text-espresso font-medium truncate capitalize">{title}</p>
+                        <div className="flex items-center gap-2 text-xs text-stone-light mt-0.5">
                           <span className="capitalize">{activity.activity_type}</span>
                           {duration && <span>{duration} min</span>}
                         </div>
@@ -290,7 +290,7 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
                           href={activity.source_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-teal hover:text-aqua flex-shrink-0"
+                          className="text-terracotta hover:text-terracotta-bright flex-shrink-0"
                         >
                           <HiExternalLink className="text-sm" />
                         </a>

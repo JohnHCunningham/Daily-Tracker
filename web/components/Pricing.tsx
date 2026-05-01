@@ -3,98 +3,45 @@
 import { motion } from 'framer-motion'
 import { HiCheck } from 'react-icons/hi'
 import { useState } from 'react'
+import Link from 'next/link'
 
-const tiers = [
-  {
-    name: 'STARTER',
-    monthlyPrice: '$249',
-    annualPrice: '$207',
-    annualTotal: '$2,490',
-    period: '/month',
-    description: '1-4 reps',
-    perRep: '~$62-249/rep',
-    features: [
-      'Up to 4 users',
-      'Unlimited conversation analyses',
-      'Choose any methodology',
-      'AI-powered coaching with proven scripts',
-      'Activity & revenue tracking',
-      'Email support'
-    ],
-    cta: 'Start Free Trial',
-    highlighted: false
-  },
-  {
-    name: 'GROWTH',
-    monthlyPrice: '$489',
-    annualPrice: '$407',
-    annualTotal: '$4,890',
-    period: '/month',
-    description: '5-9 reps',
-    perRep: '~$54-98/rep',
-    badge: 'Most Popular',
-    features: [
-      'Up to 9 users',
-      'Everything in Starter, plus:',
-      'Admin dashboard',
-      'Team performance analytics',
-      'Adaptive learning memory',
-      'Conversion funnel metrics',
-      'Priority support'
-    ],
-    cta: 'Start Free Trial',
-    highlighted: true
-  },
-  {
-    name: 'SCALE',
-    monthlyPrice: '$1,148',
-    annualPrice: '$957',
-    annualTotal: '$11,480',
-    period: '/month',
-    description: '10-20 reps',
-    perRep: '~$57-115/rep',
-    features: [
-      'Up to 20 users',
-      'Everything in Growth, plus:',
-      'Advanced analytics',
-      'Custom reporting',
-      'Dedicated account manager',
-      'Quarterly business reviews',
-      'API access'
-    ],
-    cta: 'Start Free Trial',
-    highlighted: false
-  },
-  {
-    name: 'ENTERPRISE',
-    monthlyPrice: '$1,496',
-    annualPrice: '$1,247',
-    annualTotal: 'Custom',
-    period: '/month',
-    description: '20+ reps',
-    perRep: 'Custom pricing',
-    features: [
-      'Unlimited users',
-      'Everything in Scale, plus:',
-      'White-label branding',
-      'Custom integrations (Salesforce, HubSpot)',
-      'Custom methodology training',
-      'SLA guarantee',
-      'Dedicated success team'
-    ],
-    cta: 'Contact Sales',
-    highlighted: false
-  }
+// Per-rep pricing: $50/rep/month or $500/rep/year (2 months free)
+const PRICE_PER_REP_MONTHLY = 50
+const PRICE_PER_REP_ANNUAL = 500
+
+const features = [
+  'Unlimited conversation analyses',
+  'Choose any methodology',
+  'AI-powered coaching with proven scripts',
+  'Activity & revenue tracking',
+  'Admin dashboard & team analytics',
+  'Adaptive learning memory',
+  'Advanced reporting',
+  '14-day free trial',
+]
+
+const teamSizes = [
+  { reps: 1, label: '1 rep' },
+  { reps: 3, label: '3 reps' },
+  { reps: 5, label: '5 reps' },
+  { reps: 10, label: '10 reps' },
+  { reps: 20, label: '20 reps' },
 ]
 
 const Pricing = () => {
   const [isAnnual, setIsAnnual] = useState(false)
+  const [selectedReps, setSelectedReps] = useState(5)
 
-  const handlePricingClick = (tierName: string) => {
+  const monthlyTotal = selectedReps * PRICE_PER_REP_MONTHLY
+  const annualTotal = selectedReps * PRICE_PER_REP_ANNUAL
+  const annualSavings = (monthlyTotal * 12) - annualTotal
+
+  const handleGetStarted = () => {
     if (typeof window !== 'undefined' && (window as any).gtag) {
-      ; (window as any).gtag('event', 'view_pricing', {
+      ; (window as any).gtag('event', 'begin_checkout', {
         event_category: 'engagement',
-        event_label: tierName,
+        event_label: `${selectedReps}_reps_${isAnnual ? 'annual' : 'monthly'}`,
+        value: isAnnual ? annualTotal : monthlyTotal,
       })
     }
   }
@@ -118,11 +65,11 @@ const Pricing = () => {
           </div>
 
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            Protect Your Training Investment.{' '}
-            <span className="text-teal">Scale Coaching Without Scaling Headcount.</span>
+            Simple Per-Rep Pricing.{' '}
+            <span className="text-teal">Scale As You Grow.</span>
           </h2>
           <p className="text-xl text-light-muted max-w-3xl mx-auto mb-8">
-            For leaders who believe in their methodology but don't have 40 hours/week to coach every rep.
+            Pay only for the reps you're coaching. No tiers, no complexity, no surprises.
           </p>
 
           {/* Annual/Monthly Toggle */}
@@ -140,65 +87,89 @@ const Pricing = () => {
           </div>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-7xl mx-auto">
-          {tiers.map((tier, index) => (
-            <motion.div
-              key={index}
-              initial={{ opacity: 0, y: 30 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: index * 0.1 }}
-              className={`relative card ${tier.highlighted
-                  ? 'border-2 border-teal shadow-glow-teal scale-105'
-                  : 'border border-teal/10'
-                }`}
-            >
-              {tier.badge && (
-                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                  <span className="bg-gradient-gold text-navy px-4 py-1 rounded-full text-sm font-bold">
-                    ⭐ {tier.badge}
-                  </span>
-                </div>
-              )}
+        {/* Pricing Card */}
+        <div className="max-w-2xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="relative card border-2 border-teal shadow-glow-teal"
+          >
+            <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+              <span className="bg-gradient-gold text-navy px-4 py-1 rounded-full text-sm font-bold">
+                ⭐ 14-Day Free Trial
+              </span>
+            </div>
 
-              <div className="text-center mb-6">
-                <h3 className="text-2xl font-bold mb-2">{tier.name}</h3>
-                <div className="mb-2">
-                  <div>
-                    <span className="text-5xl font-bold text-teal">
-                      {isAnnual ? tier.annualPrice : tier.monthlyPrice}
-                    </span>
-                    <span className="text-light-muted">{tier.period}</span>
-                  </div>
-                  {isAnnual && tier.annualTotal !== 'Custom' && (
-                    <p className="text-sm text-gold mt-1">Billed {tier.annualTotal}/year</p>
-                  )}
-                </div>
-                <p className="text-light-muted">{tier.description}</p>
-                <p className="text-xs text-teal/70 mt-1">{tier.perRep}</p>
+            <div className="text-center mb-8">
+              {/* Per-Rep Price */}
+              <div className="mb-6">
+                <span className="text-6xl font-bold text-teal">
+                  ${isAnnual ? PRICE_PER_REP_ANNUAL : PRICE_PER_REP_MONTHLY}
+                </span>
+                <span className="text-light-muted text-xl">
+                  /rep/{isAnnual ? 'year' : 'month'}
+                </span>
               </div>
 
-              <ul className="space-y-3 mb-8">
-                {tier.features.map((feature, i) => (
-                  <li key={i} className="flex items-start gap-3">
-                    <HiCheck className="text-teal text-xl flex-shrink-0 mt-0.5" />
-                    <span className="text-light-muted">{feature}</span>
-                  </li>
-                ))}
-              </ul>
+              {/* Team Size Selector */}
+              <div className="mb-6">
+                <p className="text-light-muted mb-3">Select team size:</p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {teamSizes.map(({ reps, label }) => (
+                    <button
+                      key={reps}
+                      onClick={() => setSelectedReps(reps)}
+                      className={`px-4 py-2 rounded-lg font-medium transition-all ${
+                        selectedReps === reps
+                          ? 'bg-teal text-navy'
+                          : 'bg-navy-light text-light-muted border border-teal/20 hover:border-teal/50'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
 
-              <a
-                href="https://tidycal.com/aiautomations/sales-coach"
-                onClick={() => handlePricingClick(tier.name)}
-                className={`block w-full text-center font-bold py-3 px-6 rounded-lg transition-all ${tier.highlighted
-                    ? 'bg-gradient-gold text-navy hover:shadow-glow-gold'
-                    : 'bg-navy-light text-teal border border-teal hover:bg-teal hover:text-white'
-                  }`}
-              >
-                {tier.cta}
-              </a>
-            </motion.div>
-          ))}
+              {/* Total Price */}
+              <div className="p-4 bg-navy rounded-xl border border-teal/20">
+                <p className="text-light-muted text-sm mb-1">
+                  {selectedReps} rep{selectedReps !== 1 ? 's' : ''} × ${isAnnual ? PRICE_PER_REP_ANNUAL : PRICE_PER_REP_MONTHLY}/{isAnnual ? 'year' : 'month'}
+                </p>
+                <p className="text-3xl font-bold text-light">
+                  ${isAnnual ? annualTotal.toLocaleString() : monthlyTotal}/{isAnnual ? 'year' : 'month'}
+                </p>
+                {isAnnual && (
+                  <p className="text-sm text-gold mt-1">
+                    Save ${annualSavings.toLocaleString()}/year vs monthly
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Features */}
+            <ul className="space-y-3 mb-8">
+              {features.map((feature, i) => (
+                <li key={i} className="flex items-start gap-3">
+                  <HiCheck className="text-teal text-xl flex-shrink-0 mt-0.5" />
+                  <span className="text-light-muted">{feature}</span>
+                </li>
+              ))}
+            </ul>
+
+            {/* CTA */}
+            <Link
+              href={`/signup?reps=${selectedReps}&billing=${isAnnual ? 'annual' : 'monthly'}`}
+              onClick={handleGetStarted}
+              className="block w-full text-center font-bold py-4 px-6 rounded-lg bg-gradient-gold text-navy hover:shadow-glow-gold transition-all text-lg"
+            >
+              Start Free Trial
+            </Link>
+            <p className="text-center text-light-muted text-sm mt-3">
+              No credit card required for trial
+            </p>
+          </motion.div>
         </div>
 
         {/* ROI Calculator Section */}

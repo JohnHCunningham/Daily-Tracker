@@ -78,13 +78,13 @@ export default function IntegrationsPage() {
   ]
 
   if (loading) {
-    return <div className="text-light-muted">Loading integrations...</div>
+    return <div className="text-stone-light">Loading integrations...</div>
   }
 
   return (
     <div>
-      <h1 className="text-3xl font-bold text-light mb-2">Integrations</h1>
-      <p className="text-light-muted mb-8">Connect your tools to sync sales data for coaching analysis.</p>
+      <h1 className="text-3xl font-bold text-espresso mb-2">Integrations</h1>
+      <p className="text-stone-light mb-8">Connect your tools to sync sales data for coaching analysis.</p>
 
       <div className="grid gap-4 max-w-2xl">
         {integrations.map((integration) => {
@@ -95,33 +95,33 @@ export default function IntegrationsPage() {
             <Link
               key={integration.id}
               href={integration.href}
-              className="flex items-center gap-4 p-6 bg-navy-light rounded-2xl border border-teal/10 hover:border-teal/30 transition-colors"
+              className="flex items-center gap-4 p-6 bg-white rounded-2xl border border-bone-dark hover:border-terracotta/30 transition-colors"
             >
               <div className={`w-12 h-12 rounded-xl flex items-center justify-center font-bold text-lg border ${integration.color}`}>
                 {integration.icon}
               </div>
               <div className="flex-1">
                 <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-light">{integration.name}</h2>
+                  <h2 className="text-lg font-bold text-espresso">{integration.name}</h2>
                   {isConnected ? (
                     <span className="flex items-center gap-1 text-xs font-medium text-green-400 bg-green-400/10 px-2 py-0.5 rounded-full">
                       <HiCheckCircle /> Connected
                     </span>
                   ) : (
-                    <span className="flex items-center gap-1 text-xs font-medium text-light-muted bg-navy px-2 py-0.5 rounded-full">
+                    <span className="flex items-center gap-1 text-xs font-medium text-stone-light bg-bone px-2 py-0.5 rounded-full">
                       Not connected
                     </span>
                   )}
                 </div>
-                <p className="text-sm text-light-muted mt-1">{integration.description}</p>
+                <p className="text-sm text-stone-light mt-1">{integration.description}</p>
                 {status?.last_successful_sync && (
-                  <p className="text-xs text-light-muted mt-2 flex items-center gap-1">
-                    <HiRefresh className="text-teal" />
+                  <p className="text-xs text-stone-light mt-2 flex items-center gap-1">
+                    <HiRefresh className="text-terracotta" />
                     Last synced {new Date(status.last_successful_sync).toLocaleString()}
                   </p>
                 )}
               </div>
-              <HiExternalLink className="text-light-muted text-xl" />
+              <HiExternalLink className="text-stone-light text-xl" />
             </Link>
           )
         })}

@@ -42,6 +42,30 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const { data: loggedEvent, error: logError } = await supabaseAdmin
+      .from('Stripe_Webhook_Events')
+      .insert({
+        event_id: event.id,
+        event_type: event.type,
+        status: 'processing',
+        payload: event,
+        customer_id: (event.data.object as { customer?: string | null })?.customer || null,
+        subscription_id: (event.data.object as { subscription?: string | null })?.subscription || null,
+      })
+      .select('id')
+      .single()
+
+    if (logError) {
+      if ((logError as { code?: string }).code === '23505') {
+        return NextResponse.json({ received: true, duplicate: true })
+      }
+
+      console.error('Failed to log Stripe webhook event:', logError)
+      return NextResponse.json({ error: 'Webhook event log failed' }, { status: 500 })
+    }
+
+    const eventRowId = loggedEvent?.id
+
     switch (event.type) {
       case 'checkout.session.completed':
         await handleCheckoutComplete(event.data.object as Stripe.Checkout.Session)
@@ -68,9 +92,32 @@ export async function POST(request: NextRequest) {
         console.log(`Unhandled event type: ${event.type}`)
     }
 
+    if (eventRowId) {
+      await supabaseAdmin
+        .from('Stripe_Webhook_Events')
+        .update({
+          status: 'processed',
+          processed_at: new Date().toISOString(),
+          error_message: null,
+        })
+        .eq('id', eventRowId)
+    }
+
     return NextResponse.json({ received: true })
   } catch (error) {
     console.error('Webhook handler error:', error)
+    const message = error instanceof Error ? error.message : 'Webhook handler failed'
+    try {
+      await supabaseAdmin
+        .from('Stripe_Webhook_Events')
+        .update({
+          status: 'failed',
+          error_message: message,
+        })
+        .eq('event_id', event.id)
+    } catch {
+      // ignore secondary logging failure
+    }
     return NextResponse.json({ error: 'Webhook handler failed' }, { status: 500 })
   }
 }
@@ -116,6 +163,7 @@ async function handleCheckoutComplete(session: Stripe.Checkout.Session) {
       subscription_status: subscription.status,
       rep_count: repCount,
       billing_cycle: billingCycle,
+      billing_grace_ends_at: null,
       trial_ends_at: subscription.trial_end
         ? new Date(subscription.trial_end * 1000).toISOString()
         : null,
@@ -158,6 +206,7 @@ async function handleSubscriptionUpdate(subscription: Stripe.Subscription) {
       subscription_status: subscription.status,
       rep_count: quantity,
       billing_cycle: billingCycle,
+      billing_grace_ends_at: null,
       trial_ends_at: subscription.trial_end
         ? new Date(subscription.trial_end * 1000).toISOString()
         : null,
@@ -188,17 +237,19 @@ async function handleSubscriptionDeleted(subscription: Stripe.Subscription) {
     .update({
       subscription_status: 'canceled',
       cancel_at_period_end: false,
+      billing_grace_ends_at: null,
     })
     .eq('id', account.id)
 }
 
 async function handlePaymentFailed(invoice: Stripe.Invoice) {
   const customerId = invoice.customer as string
+  const stripe = getStripe()
   const supabaseAdmin = getSupabaseAdmin()
 
   const { data: account } = await supabaseAdmin
     .from('Accounts')
-    .select('id')
+    .select('id, name, company_name, stripe_customer_id')
     .eq('stripe_customer_id', customerId)
     .single()
 
@@ -208,8 +259,16 @@ async function handlePaymentFailed(invoice: Stripe.Invoice) {
     .from('Accounts')
     .update({
       subscription_status: 'past_due',
+      billing_grace_ends_at: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
     })
     .eq('id', account.id)
+
+  await notifyBillingFailure({
+    accountId: account.id,
+    accountName: account.company_name || account.name || 'One Click Coaching',
+    invoice,
+    stripe,
+  })
 }
 
 async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
@@ -234,7 +293,93 @@ async function handlePaymentSucceeded(invoice: Stripe.Invoice) {
       .from('Accounts')
       .update({
         subscription_status: 'active',
+        billing_grace_ends_at: null,
       })
       .eq('id', account.id)
+  } else {
+    await supabaseAdmin
+      .from('Accounts')
+      .update({
+        billing_grace_ends_at: null,
+      })
+      .eq('id', account.id)
+  }
+}
+
+async function notifyBillingFailure({
+  accountId,
+  accountName,
+  invoice,
+  stripe,
+}: {
+  accountId: string
+  accountName: string
+  invoice: Stripe.Invoice
+  stripe: Stripe
+}) {
+  const resendApiKey = process.env.RESEND_API_KEY
+  if (!resendApiKey) {
+    console.log('Billing failure notification skipped: RESEND_API_KEY not configured')
+    return
+  }
+
+  const supabaseAdmin = getSupabaseAdmin()
+  const { data: recipients } = await supabaseAdmin
+    .from('Users')
+    .select('full_name, email, role')
+    .eq('account_id', accountId)
+    .in('role', ['admin', 'manager'])
+
+  if (!recipients || recipients.length === 0) {
+    return
+  }
+
+  const currency = (invoice.currency || 'usd').toUpperCase()
+  const amountDue = (invoice.amount_due || 0) / 100
+  const invoiceNumber = invoice.number || invoice.id
+  const invoiceUrl = invoice.hosted_invoice_url || `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.oneclickcoaching.com'}/settings#billing`
+  const portalUrl = `${process.env.NEXT_PUBLIC_APP_URL || 'https://app.oneclickcoaching.com'}/settings#billing`
+  const nextAttempt = invoice.next_payment_attempt
+    ? new Date(invoice.next_payment_attempt * 1000).toLocaleString()
+    : 'soon'
+
+  for (const recipient of recipients) {
+    const recipientName = recipient.full_name || recipient.email || 'there'
+
+    const response = await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${resendApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        from: process.env.RESEND_FROM_EMAIL || 'One Click Coaching <noreply@oneclickcoaching.com>',
+        to: [recipient.email],
+        subject: `Billing issue for ${accountName}`,
+        html: `
+          <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; line-height: 1.5; color: #241a14;">
+            <h1 style="font-size: 24px; margin-bottom: 16px;">Billing issue detected</h1>
+            <p>Hi ${recipientName},</p>
+            <p>Stripe reported a payment failure for <strong>${accountName}</strong>.</p>
+            <ul style="padding-left: 20px;">
+              <li>Invoice: ${invoiceNumber}</li>
+              <li>Amount due: ${currency} ${amountDue.toFixed(2)}</li>
+              <li>Next retry: ${nextAttempt}</li>
+            </ul>
+            <p>
+              <a href="${invoiceUrl}" style="display:inline-block;background:#b5583e;color:white;padding:12px 18px;border-radius:8px;text-decoration:none;font-weight:700;margin-right:8px;">View invoice</a>
+              <a href="${portalUrl}" style="display:inline-block;background:#ffffff;color:#241a14;padding:12px 18px;border:1px solid #d8cbbf;border-radius:8px;text-decoration:none;font-weight:700;">Open billing</a>
+            </p>
+            <p style="font-size: 13px; color: #75685f;">The account stays in grace while billing retries are active.</p>
+          </div>
+        `,
+        text: `Billing issue detected for ${accountName}.\n\nInvoice: ${invoiceNumber}\nAmount due: ${currency} ${amountDue.toFixed(2)}\nNext retry: ${nextAttempt}\n\nView invoice: ${invoiceUrl}\nOpen billing: ${portalUrl}`,
+      }),
+    })
+
+    if (!response.ok) {
+      const body = await response.text()
+      console.error('Billing failure email failed:', response.status, body)
+    }
   }
 }

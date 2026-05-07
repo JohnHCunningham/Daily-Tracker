@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { HiMail, HiCheck, HiClock, HiEye, HiPencil, HiX, HiReply } from 'react-icons/hi'
 import toast from 'react-hot-toast'
@@ -43,11 +43,7 @@ export default function CoachingPage() {
   const [commitments, setCommitments] = useState<Record<string, Commitment[]>>({})
   const supabase = createClient()
 
-  useEffect(() => {
-    loadCoaching()
-  }, [])
-
-  async function loadCoaching() {
+  const loadCoaching = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -75,18 +71,22 @@ export default function CoachingPage() {
     const { data } = await query
     if (data) setMessages(data)
     setLoading(false)
-  }
+  }, [supabase])
 
-  async function handleApproveAndSend(messageId: string) {
+  useEffect(() => {
+    void loadCoaching()
+  }, [loadCoaching])
+
+  async function handleApproveAndPost(messageId: string) {
     const { error } = await supabase.functions.invoke('send-coaching-email', {
       body: { coaching_message_id: messageId },
     })
 
     if (!error) {
-      toast.success('Coaching sent to rep')
-      loadCoaching()
+      toast.success('Coaching posted to rep dashboard')
+      void loadCoaching()
     } else {
-      toast.error('Failed to send')
+      toast.error('Failed to post coaching')
     }
   }
 
@@ -102,7 +102,7 @@ export default function CoachingPage() {
     if (!error) {
       toast.success('Coaching updated')
       setEditingId(null)
-      loadCoaching()
+      void loadCoaching()
     }
   }
 
@@ -156,7 +156,7 @@ export default function CoachingPage() {
       toast.success('Reply sent')
       setReplyText('')
       setReplyingTo(null)
-      loadCoaching()
+      void loadCoaching()
     } else {
       toast.error('Failed to send reply')
     }
@@ -231,7 +231,7 @@ export default function CoachingPage() {
     <div>
       <h1 className="text-2xl font-bold text-espresso mb-1">Coaching</h1>
       <p className="text-stone-light text-sm mb-6">
-        {isLeader ? 'Review, edit, and approve coaching before sending to reps.' : 'Your coaching feedback.'}
+        {isLeader ? 'Review, edit, and approve coaching before posting to the rep dashboard.' : 'Your coaching feedback.'}
       </p>
 
       {/* Tabs */}
@@ -417,10 +417,10 @@ export default function CoachingPage() {
                     {isLeader && msg.status === 'generated' && !isEditing && (
                       <div className="mt-4 flex gap-3">
                         <button
-                          onClick={() => handleApproveAndSend(msg.id)}
+                          onClick={() => handleApproveAndPost(msg.id)}
                           className="flex items-center gap-2 bg-terracotta text-white font-bold py-2 px-4 rounded-lg hover:bg-terracotta-bright transition-colors text-sm"
                         >
-                          <HiCheck /> Approve & Send
+                          <HiCheck /> Approve & Post
                         </button>
                         <button
                           onClick={() => { setEditingId(msg.id); setEditContent(msg.coaching_content) }}

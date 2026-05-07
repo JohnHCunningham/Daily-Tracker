@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
@@ -46,7 +47,14 @@ export default function Sidebar({ userRole }: { userRole: string }) {
     <aside className="w-60 bg-gradient-to-b from-bone-light to-bone border-r border-bone-dark flex flex-col">
       <div className="p-5 border-b border-clay/20">
         {brand.logoUrl ? (
-          <img src={brand.logoUrl} alt={brand.companyName} className="h-8 object-contain" />
+          <Image
+            src={brand.logoUrl}
+            alt={brand.companyName}
+            width={160}
+            height={32}
+            unoptimized
+            className="h-8 w-auto object-contain"
+          />
         ) : (
           <Link href="/dashboard" className="font-bold text-lg text-espresso">
             {brand.companyName === 'One Click Coaching' ? (

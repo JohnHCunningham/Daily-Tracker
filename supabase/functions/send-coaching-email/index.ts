@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateEmbedding } from "../_shared/rag-utils.ts";
+import { getAuthorizedAccountContext } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -11,6 +12,7 @@ const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY");
+const INTERNAL_BEARER = `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
 
 interface CoachingEmailRequest {
   coaching_message_id: string;
@@ -121,6 +123,21 @@ serve(async (req) => {
   }
 
   try {
+    const authHeader = req.headers.get("Authorization");
+    const isInternalRequest = authHeader === INTERNAL_BEARER;
+    let callerAccountId: string | null = null;
+
+    if (!isInternalRequest) {
+      const auth = await getAuthorizedAccountContext(req);
+      if ("error" in auth) {
+        return new Response(
+          JSON.stringify({ error: auth.error }),
+          { status: auth.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+      callerAccountId = auth.accountId;
+    }
+
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
     // Parse request body
@@ -145,6 +162,13 @@ serve(async (req) => {
       return new Response(
         JSON.stringify({ error: "Coaching message not found" }),
         { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!isInternalRequest && callerAccountId !== coachingMsg.account_id) {
+      return new Response(
+        JSON.stringify({ error: "Forbidden" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
@@ -204,78 +228,10 @@ serve(async (req) => {
       console.error("Error updating coaching message:", updateError);
     }
 
-    // Check if Resend API key is configured
-    if (!RESEND_API_KEY) {
-      // Development mode - just log and return success
-      console.log("=== EMAIL WOULD BE SENT (DEV MODE) ===");
-      console.log("To:", body.to_email);
-      console.log("Subject:", body.subject);
-      console.log("Reply Token:", replyToken);
-      console.log("Content:", body.coaching_content.substring(0, 200) + "...");
-
-      return new Response(
-        JSON.stringify({
-          success: true,
-          message: "Email queued (development mode - Resend API key not configured)",
-          coaching_message_id: body.coaching_message_id,
-          dev_mode: true,
-        }),
-        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    // Use custom domain if verified, otherwise use Resend's test domain
-    const fromDomain = Deno.env.get("RESEND_DOMAIN");
-    const fromEmail = fromDomain
-      ? `One Click Coaching <coaching@${fromDomain}>`
-      : "One Click Coaching <onboarding@resend.dev>";
-
-    // Send email via Resend
-    const emailResponse = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Authorization": `Bearer ${RESEND_API_KEY}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        from: fromEmail,
-        to: [body.to_email],
-        subject: body.subject || "Coaching Feedback from Your Manager",
-        html: generateEmailHTML(body, replyToken),
-        text: generateEmailText(body),
-        reply_to: body.manager_email,
-        headers: {
-          "X-Coaching-Message-ID": body.coaching_message_id,
-          "X-Reply-Token": replyToken,
-        },
-      }),
-    });
-
-    if (!emailResponse.ok) {
-      const errorText = await emailResponse.text();
-      console.error("Resend API error:", errorText);
-
-      // Update message status to failed
-      await supabase
-        .from("Coaching_Messages")
-        .update({
-          status: "failed",
-          last_error: errorText,
-        })
-        .eq("id", body.coaching_message_id);
-
-      return new Response(
-        JSON.stringify({ error: "Failed to send email", details: errorText }),
-        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
-      );
-    }
-
-    const emailResult = await emailResponse.json();
-
-    // Log successful send
+    // This endpoint now posts coaching to the rep dashboard instead of sending email.
     await supabase.from("Integration_Sync_Log").insert({
       account_id: accountId,
-      provider: "resend",
+      provider: "dashboard",
       sync_status: "completed",
       activities_synced: 1,
       sync_completed_at: new Date().toISOString(),
@@ -340,6 +296,37 @@ serve(async (req) => {
         } else {
           console.warn("Skipping RAG insert — no embedding generated");
         }
+
+        await supabase.from("Coaching_Memory_Entries").insert({
+          account_id: coachingMsg.account_id,
+          source_type: "coaching",
+          source_table: "Coaching_Messages",
+          source_id: body.coaching_message_id,
+          title: `${wasEdited ? "Manager-edited" : "Manager-approved"} coaching for ${coachingMsg.rep_email || "rep"}`,
+          content: chunkText,
+          rep_email: coachingMsg.rep_email,
+          manager_email: coachingMsg.manager_email,
+          sender_email: coachingMsg.manager_email,
+          recipient_email: coachingMsg.rep_email,
+          methodology: coachingMsg.methodology || null,
+          status: coachingMsg.status || "sent",
+          weakness_tags: weakComponents.slice(0, 5),
+          situation_tags: [
+            "coaching",
+            "manager_approved",
+            ...(wasEdited ? ["manager_edited"] : []),
+            ...(lens ? [`lens:${lens}`] : []),
+          ],
+          metadata: {
+            coaching_lens: lens,
+            was_edited: wasEdited,
+            based_on_calls: coachingMsg.based_on_calls || [],
+          },
+          embedding: embedding || null,
+          embedding_model: embedding ? "text-embedding-3-small" : null,
+          embedding_status: embedding ? "ready" : "pending",
+          embedded_at: embedding ? new Date().toISOString() : null,
+        });
       } catch (ragError) {
         // Non-critical — log but don't fail the send
         console.warn("Failed to store coaching in RAG:", ragError);
@@ -349,9 +336,9 @@ serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: "Coaching email sent successfully",
+        message: "Coaching posted to dashboard successfully",
         coaching_message_id: body.coaching_message_id,
-        email_id: emailResult.id,
+        posted_to_dashboard: true,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

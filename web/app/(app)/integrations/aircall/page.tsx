@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { HiArrowLeft, HiCheckCircle, HiExclamationCircle, HiRefresh } from 'react-icons/hi'
@@ -24,11 +24,7 @@ export default function AircallPage() {
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const supabase = createClient()
 
-  useEffect(() => {
-    loadConnection()
-  }, [])
-
-  async function loadConnection() {
+  const loadConnection = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -54,7 +50,11 @@ export default function AircallPage() {
 
     if (data) setConnection(data)
     setLoading(false)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    void loadConnection()
+  }, [loadConnection])
 
   async function handleConnect(e: React.FormEvent) {
     e.preventDefault()
@@ -85,7 +85,7 @@ export default function AircallPage() {
       setMessage({ type: 'success', text: 'Aircall connected successfully.' })
       setApiId('')
       setApiToken('')
-      loadConnection()
+      void loadConnection()
     }
     setSaving(false)
   }
@@ -96,14 +96,14 @@ export default function AircallPage() {
     setMessage(null)
 
     const { error } = await supabase.functions.invoke('aircall-sync', {
-      body: { account_id: accountId },
+      body: {},
     })
 
     if (error) {
       setMessage({ type: 'error', text: 'Sync failed. Check your credentials and try again.' })
     } else {
       setMessage({ type: 'success', text: 'Sync completed successfully.' })
-      loadConnection()
+      void loadConnection()
     }
     setSyncing(false)
   }

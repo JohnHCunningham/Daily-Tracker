@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import {
   HiDocumentReport,
@@ -13,6 +13,7 @@ import {
   HiCheckCircle,
   HiLightBulb,
   HiSparkles,
+  HiClipboardCopy,
 } from 'react-icons/hi'
 
 const COMPONENT_LABELS: Record<string, string> = {
@@ -25,6 +26,11 @@ const COMPONENT_LABELS: Record<string, string> = {
   postSell: 'Post-Sell',
   negativeReverseSelling: 'Negative Reverse Selling',
 }
+
+const REPORT_PERIODS = {
+  weekly: { label: 'Weekly report', days: 7, compare: 'previous 7 days' },
+  monthly: { label: 'Monthly report', days: 30, compare: 'previous 30 days' },
+} as const
 
 interface RepRow {
   email: string
@@ -42,6 +48,15 @@ interface ReportData {
     totalCalls: number
     repCount: number
     period: number
+    periodLabel: string
+    comparisonLabel: string
+    previousTeamOverall: number
+    teamDelta: number
+    previousTotalCalls: number
+    callDelta: number
+    replyRate: number
+    bestImprovement: { component: string; delta: number } | null
+    biggestDrop: { component: string; delta: number } | null
     weakComponents: [string, number][]
     strongComponents: [string, number][]
   } | null
@@ -50,6 +65,9 @@ interface ReportData {
   trends: { firstHalf: Record<string, number>; secondHalf: Record<string, number> }
   coachingStats: { sent: number; replied: number; byRep: Record<string, { sent: number; replied: number }> }
   narrative: string
+  managerPunchList: string[]
+  shareSummary: string
+  previousSummary: { teamOverall: number; totalCalls: number }
 }
 
 function ScoreBar({ score, max = 10 }: { score: number; max?: number }) {
@@ -89,27 +107,28 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(false)
   const [generating, setGenerating] = useState(false)
   const [report, setReport] = useState<ReportData | null>(null)
-  const [period, setPeriod] = useState('30')
+  const [period, setPeriod] = useState<keyof typeof REPORT_PERIODS>('weekly')
   const [userRole, setUserRole] = useState('')
+  const [copyStatus, setCopyStatus] = useState<string | null>(null)
   const supabase = createClient()
 
-  useEffect(() => {
-    checkRole()
-  }, [])
-
-  async function checkRole() {
+  const checkRole = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
     const { data } = await supabase.from('Users').select('role').eq('auth_id', user.id).single()
     if (data) setUserRole(data.role)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    void checkRole()
+  }, [checkRole])
 
   async function generateReport() {
     setGenerating(true)
     setLoading(true)
     try {
       const { data, error } = await supabase.functions.invoke('generate-report', {
-        body: { period: parseInt(period) },
+        body: { period: REPORT_PERIODS[period].days },
       })
       if (error) throw error
       setReport(data)
@@ -119,6 +138,13 @@ export default function ReportsPage() {
       setGenerating(false)
       setLoading(false)
     }
+  }
+
+  async function copySummary() {
+    if (!report?.shareSummary) return
+    await navigator.clipboard.writeText(report.shareSummary)
+    setCopyStatus('Summary copied')
+    window.setTimeout(() => setCopyStatus(null), 2000)
   }
 
   function printReport() {
@@ -145,21 +171,23 @@ export default function ReportsPage() {
             <h1 className="text-2xl font-bold text-espresso print:text-black">Manager Report</h1>
           </div>
           <p className="text-stone-light text-sm print:text-gray-600">
-            Team performance analysis · Generated {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+            {report?.summary?.periodLabel || 'Weekly / monthly'} performance analysis · compares against {report?.summary?.comparisonLabel || 'the previous period'} · Generated {new Date().toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
           </p>
         </div>
         <div className="flex items-center gap-3 print:hidden">
-          <select
-            value={period}
-            onChange={(e) => setPeriod(e.target.value)}
-            className="bg-white border border-terracotta/20 text-espresso text-sm rounded-lg px-3 py-2 focus:outline-none focus:border-terracotta"
-          >
-            <option value="7">Last 7 days</option>
-            <option value="14">Last 14 days</option>
-            <option value="30">Last 30 days</option>
-            <option value="60">Last 60 days</option>
-            <option value="90">Last 90 days</option>
-          </select>
+          <div className="inline-flex rounded-lg border border-terracotta/20 bg-white p-1">
+            {(Object.keys(REPORT_PERIODS) as Array<keyof typeof REPORT_PERIODS>).map((key) => (
+              <button
+                key={key}
+                onClick={() => setPeriod(key)}
+                className={`px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                  period === key ? 'bg-terracotta text-white' : 'text-espresso hover:bg-terracotta/10'
+                }`}
+              >
+                {REPORT_PERIODS[key].label}
+              </button>
+            ))}
+          </div>
           <button
             onClick={generateReport}
             disabled={generating}
@@ -169,16 +197,31 @@ export default function ReportsPage() {
             {generating ? 'Generating...' : report ? 'Regenerate' : 'Generate Report'}
           </button>
           {report && (
-            <button
-              onClick={printReport}
-              className="flex items-center gap-2 bg-white text-espresso border border-terracotta/20 px-4 py-2 rounded-lg text-sm hover:bg-terracotta/10 transition-colors"
-            >
-              <HiPrinter />
-              Print / PDF
-            </button>
+            <>
+              <button
+                onClick={copySummary}
+                className="flex items-center gap-2 bg-white text-espresso border border-terracotta/20 px-4 py-2 rounded-lg text-sm hover:bg-terracotta/10 transition-colors"
+              >
+                <HiClipboardCopy />
+                Copy Summary
+              </button>
+              <button
+                onClick={printReport}
+                className="flex items-center gap-2 bg-white text-espresso border border-terracotta/20 px-4 py-2 rounded-lg text-sm hover:bg-terracotta/10 transition-colors"
+              >
+                <HiPrinter />
+                Print / PDF
+              </button>
+            </>
           )}
         </div>
       </div>
+
+      {copyStatus && (
+        <div className="mb-4 inline-flex items-center rounded-full bg-teal/10 px-3 py-1 text-xs font-medium text-teal print:hidden">
+          {copyStatus}
+        </div>
+      )}
 
       {/* Empty state */}
       {!report && !loading && (
@@ -266,6 +309,73 @@ export default function ReportsPage() {
                   )}
                 </div>
               )}
+
+              {(report.summary.bestImprovement || report.summary.biggestDrop) && (
+                <div className="grid md:grid-cols-2 gap-4 mt-4">
+                  {report.summary.bestImprovement && (
+                    <div className="rounded-xl border border-teal/20 bg-teal/5 p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <HiTrendingUp className="text-teal" />
+                        <span className="text-sm font-bold text-teal">Biggest Improvement</span>
+                      </div>
+                      <p className="text-sm text-stone-light">
+                        {COMPONENT_LABELS[report.summary.bestImprovement.component] || report.summary.bestImprovement.component} is up{' '}
+                        <span className="font-medium text-teal">+{report.summary.bestImprovement.delta}</span> vs the previous period.
+                      </p>
+                    </div>
+                  )}
+                  {report.summary.biggestDrop && (
+                    <div className="rounded-xl border border-pink/20 bg-pink/5 p-4">
+                      <div className="flex items-center gap-2 mb-2">
+                        <HiTrendingDown className="text-pink" />
+                        <span className="text-sm font-bold text-pink">Biggest Drop</span>
+                      </div>
+                      <p className="text-sm text-stone-light">
+                        {COMPONENT_LABELS[report.summary.biggestDrop.component] || report.summary.biggestDrop.component} is down{' '}
+                        <span className="font-medium text-pink">{report.summary.biggestDrop.delta}</span> vs the previous period.
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* ── Section 1b: Manager Punch List ── */}
+          {report.managerPunchList.length > 0 && (
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 print:border print:border-gray-200">
+              <div className="flex items-center gap-2 mb-4">
+                <HiCheckCircle className="text-terracotta" />
+                <h2 className="text-lg font-bold text-espresso print:text-black">Manager Punch List</h2>
+              </div>
+              <ol className="space-y-3 list-decimal list-inside">
+                {report.managerPunchList.map((item) => (
+                  <li key={item} className="text-sm text-stone-light leading-6">
+                    {item}
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          {/* ── Section 1c: Share Summary ── */}
+          {report.shareSummary && (
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 print:border print:border-gray-200">
+              <div className="flex items-center justify-between gap-3 mb-4">
+                <div className="flex items-center gap-2">
+                  <HiClipboardCopy className="text-terracotta" />
+                  <h2 className="text-lg font-bold text-espresso print:text-black">Shareable Summary</h2>
+                </div>
+                <button
+                  onClick={copySummary}
+                  className="text-xs font-medium text-terracotta hover:text-terracotta-bright print:hidden"
+                >
+                  Copy to clipboard
+                </button>
+              </div>
+              <pre className="whitespace-pre-wrap text-sm text-stone-light leading-6 font-sans bg-bone/30 rounded-xl p-4 overflow-x-auto">
+                {report.shareSummary}
+              </pre>
             </div>
           )}
 
@@ -410,6 +520,9 @@ export default function ReportsPage() {
                 <HiSparkles className="text-clay text-xl print:hidden" />
                 <h2 className="text-lg font-bold text-espresso print:text-black">AI Coaching Analysis & Recommendations</h2>
               </div>
+              <p className="text-xs text-stone-light mb-4">
+                {report.summary?.periodLabel || 'Weekly report'} · compares against {report.summary?.comparisonLabel || 'the previous period'}
+              </p>
               <div className="prose prose-sm max-w-none">
                 {report.narrative.split('\n').map((line, i) => {
                   if (!line.trim()) return <div key={i} className="h-2" />

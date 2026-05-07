@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { HiArrowLeft, HiCheckCircle, HiExclamationCircle, HiRefresh } from 'react-icons/hi'
@@ -16,18 +16,12 @@ interface FathomConnection {
 export default function FathomPage() {
   const [connection, setConnection] = useState<FathomConnection | null>(null)
   const [accountId, setAccountId] = useState<string | null>(null)
-  const [apiKey, setApiKey] = useState('')
   const [loading, setLoading] = useState(true)
-  const [saving, setSaving] = useState(false)
   const [syncing, setSyncing] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const supabase = createClient()
 
-  useEffect(() => {
-    loadConnection()
-  }, [])
-
-  async function loadConnection() {
+  const loadConnection = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -53,37 +47,17 @@ export default function FathomPage() {
 
     if (data) setConnection(data)
     setLoading(false)
-  }
+  }, [supabase])
 
-  async function handleConnect(e: React.FormEvent) {
-    e.preventDefault()
-    if (!accountId) return
-    setSaving(true)
-    setMessage(null)
-
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { error } = await supabase
-      .from('API_Connections')
-      .upsert({
-        account_id: accountId,
-        provider: 'fathom',
-        api_key: apiKey,
-        connected_by: user.id,
-        connected_at: new Date().toISOString(),
-        connection_status: 'active',
-      }, { onConflict: 'account_id,provider' })
-
-    if (error) {
-      setMessage({ type: 'error', text: 'Failed to save connection.' })
-    } else {
+  useEffect(() => {
+    void loadConnection()
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('oauth') === 'connected') {
       setMessage({ type: 'success', text: 'Fathom connected successfully.' })
-      setApiKey('')
-      loadConnection()
+    } else if (params.get('oauth') === 'error') {
+      setMessage({ type: 'error', text: 'Fathom OAuth failed. Check the app credentials and redirect URL.' })
     }
-    setSaving(false)
-  }
+  }, [loadConnection])
 
   async function handleSync() {
     if (!accountId) return
@@ -91,14 +65,14 @@ export default function FathomPage() {
     setMessage(null)
 
     const { error } = await supabase.functions.invoke('fathom-sync', {
-      body: { account_id: accountId },
+      body: {},
     })
 
     if (error) {
       setMessage({ type: 'error', text: 'Sync failed. Check your API key and try again.' })
     } else {
       setMessage({ type: 'success', text: 'Sync completed successfully.' })
-      loadConnection()
+      void loadConnection()
     }
     setSyncing(false)
   }
@@ -183,44 +157,12 @@ export default function FathomPage() {
         {!isConnected ? (
           <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 mb-6">
             <h2 className="text-xl font-bold text-espresso mb-4">Connect Fathom</h2>
-
-            <details className="mb-5 group">
-              <summary className="text-sm font-medium text-terracotta cursor-pointer hover:text-terracotta-bright transition-colors">
-                How to get your API key
-              </summary>
-              <ol className="mt-3 ml-4 space-y-2 text-sm text-stone-light list-decimal list-outside">
-                <li>Log in to your Fathom account at <span className="text-espresso">fathom.video</span></li>
-                <li>Click your <span className="text-espresso">profile icon</span> in the top-right corner</li>
-                <li>Go to <span className="text-espresso">Settings</span></li>
-                <li>Navigate to the <span className="text-espresso">API / Integrations</span> section</li>
-                <li>Click <span className="text-espresso">Generate API Key</span> (the key is shown only once)</li>
-                <li>Copy the key and paste it below</li>
-              </ol>
-            </details>
-
-            <p className="text-sm text-stone-light mb-4">
-              Enter your Fathom API key to start syncing call transcripts.
-            </p>
-            <form onSubmit={handleConnect} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-espresso mb-2">API Key</label>
-                <input
-                  type="password"
-                  value={apiKey}
-                  onChange={(e) => setApiKey(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 bg-bone border border-terracotta/20 rounded-lg text-espresso placeholder-light-muted/50 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-teal/20"
-                  placeholder="Your Fathom API key"
-                />
-              </div>
-              <button
-                type="submit"
-                disabled={saving}
-                className="bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-2.5 px-6 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
-              >
-                {saving ? 'Connecting...' : 'Connect Fathom'}
-              </button>
-            </form>
+            <a
+              href="/api/integrations/fathom/oauth/start"
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-2.5 px-6 rounded-lg hover:shadow-lg transition-all"
+            >
+              Connect with Fathom
+            </a>
           </div>
         ) : (
           <div className="space-y-4">

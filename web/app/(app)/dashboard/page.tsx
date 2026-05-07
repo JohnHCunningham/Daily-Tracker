@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { HiUserGroup, HiPhone, HiAcademicCap, HiRefresh, HiExclamationCircle, HiCheckCircle, HiSparkles, HiChatAlt2, HiMail, HiClipboardCheck } from 'react-icons/hi'
 import dynamic from 'next/dynamic'
 import SandlerBreakdown from '../components/SandlerBreakdown'
+import { getCelebrationBadgeConfig } from '@/lib/celebrations'
+import ManagerOnboardingMap, { type OnboardingStep } from '../components/ManagerOnboardingMap'
 
 const ScoreRadial = dynamic(() => import('../components/ScoreRadial'), { ssr: false })
 const ScoreTrendChart = dynamic(() => import('../components/ScoreTrendChart'), { ssr: false })
@@ -24,6 +26,26 @@ interface TeamMemberInfo {
   full_name: string
   email: string
   role: string
+}
+
+interface OnboardingContext {
+  company_name: string | null
+  unique_customer_profile: string | null
+  competitor_context: string | null
+  subscription_status: string | null
+  stripe_subscription_id: string | null
+  stripe_customer_id: string | null
+}
+
+interface IntegrationConnection {
+  provider: string
+  connection_status: string
+}
+
+interface RecentCall {
+  call_date: string
+  methodology_scores: Record<string, number> | null
+  rep_email: string | null
 }
 
 interface RepGoalProgress {
@@ -80,12 +102,44 @@ interface DirectMessagePreview {
   lastSender: string | null
 }
 
+interface PendingInvitationPreview {
+  id: string
+  email: string
+  role: string
+  token: string
+  expires_at: string
+}
+
+interface DashboardNotifications {
+  role: string
+  coachingUnread: number
+  coachingRead: number
+  coachingReplied: number
+  notesUnread: number
+  celebrationsRecent: number
+  latestCelebrationTitle: string | null
+  latestCelebrationBadgeKey: string | null
+  latestCoachName: string | null
+  latestNoteSenderName: string | null
+}
+
 interface CommitmentItem {
   id: string
   commitment_text: string
   rep_email: string
   status: string
   completed_at: string | null
+}
+
+interface BillingSnapshot {
+  status: string
+  amountPaid: number
+  amountDue: number
+  currency: string
+  createdAt: string
+  hostedInvoiceUrl: string | null
+  invoicePdf: string | null
+  number: string | null
 }
 
 export default function DashboardPage() {
@@ -105,6 +159,10 @@ export default function DashboardPage() {
   const [pipelineData, setPipelineData] = useState<PipelineStage[]>([])
   const [teamSandlerScores, setTeamSandlerScores] = useState<Record<string, number> | null>(null)
   const [recentCelebrations, setRecentCelebrations] = useState<CelebrationPreview[]>([])
+  const [billingSnapshot, setBillingSnapshot] = useState<BillingSnapshot | null>(null)
+  const [onboardingContext, setOnboardingContext] = useState<OnboardingContext | null>(null)
+  const [integrationConnections, setIntegrationConnections] = useState<IntegrationConnection[]>([])
+  const [leaderGoalCount, setLeaderGoalCount] = useState(0)
 
   // Commitments state (shared)
   const [openCommitments, setOpenCommitments] = useState<CommitmentItem[]>([])
@@ -116,49 +174,17 @@ export default function DashboardPage() {
   const [repPipeline, setRepPipeline] = useState<{ callsPercent: number; discoveryPercent: number; proposalsPercent: number; salesPercent: number } | null>(null)
   const [repCoachingMessages, setRepCoachingMessages] = useState<CoachingPreview[]>([])
   const [repNotesPreview, setRepNotesPreview] = useState<DirectMessagePreview>({ unreadCount: 0, lastMessage: null, lastSender: null })
+  const [repInvitation, setRepInvitation] = useState<PendingInvitationPreview | null>(null)
+  const [notifications, setNotifications] = useState<DashboardNotifications | null>(null)
 
   const supabase = createClient()
-
-  useEffect(() => {
-    loadDashboard()
-  }, [])
-
-  async function loadDashboard() {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { data: userData } = await supabase
-      .from('Users')
-      .select('role, full_name, email, account_id')
-      .eq('auth_id', user.id)
-      .single()
-
-    if (!userData) {
-      setLoading(false)
-      return
-    }
-    setUserInfo(userData)
-
-    if (['admin', 'manager', 'coach'].includes(userData.role)) {
-      await loadLeaderDashboard(userData.account_id)
-      await loadCommitments(userData.account_id)
-    } else {
-      await loadRepDashboard(userData.account_id, userData.email, user.id)
-      await loadCommitments(userData.account_id, userData.email)
-    }
-
-    // Load celebrations for both views
-    await loadCelebrations(userData.account_id)
-
-    setLoading(false)
-  }
 
   function getProgressPercent(current: number, target: number): number {
     if (target === 0) return 0
     return Math.min(Math.round((current / target) * 100), 100)
   }
 
-  async function loadCelebrations(accountId: string) {
+  const loadCelebrations = useCallback(async (accountId: string) => {
     const { data } = await supabase
       .from('Celebrations')
       .select('id, title, badge_key, rep_email, created_at')
@@ -167,9 +193,45 @@ export default function DashboardPage() {
       .limit(2)
 
     if (data) setRecentCelebrations(data)
-  }
+  }, [supabase])
 
-  async function loadCommitments(accountId: string, email?: string) {
+  const loadNotifications = useCallback(async () => {
+    const response = await fetch('/api/dashboard-notifications')
+    const data = await response.json().catch(() => null)
+
+    if (response.ok && data) {
+      setNotifications(data)
+    }
+  }, [])
+
+  const loadBillingSnapshot = useCallback(async () => {
+    const response = await fetch('/api/stripe/billing-history')
+    const data = await response.json().catch(() => null)
+
+    if (!response.ok || !data?.success) {
+      setBillingSnapshot(null)
+      return
+    }
+
+    const latestInvoice = data.invoices?.[0] || null
+    if (!latestInvoice) {
+      setBillingSnapshot(null)
+      return
+    }
+
+    setBillingSnapshot({
+      status: latestInvoice.status,
+      amountPaid: latestInvoice.amountPaid,
+      amountDue: latestInvoice.amountDue,
+      currency: latestInvoice.currency,
+      createdAt: latestInvoice.createdAt,
+      hostedInvoiceUrl: latestInvoice.hostedInvoiceUrl,
+      invoicePdf: latestInvoice.invoicePdf,
+      number: latestInvoice.number,
+    })
+  }, [])
+
+  const loadCommitments = useCallback(async (accountId: string, email?: string) => {
     let query = supabase
       .from('Coaching_Commitments')
       .select('id, commitment_text, rep_email, status, completed_at')
@@ -184,7 +246,7 @@ export default function DashboardPage() {
 
     const { data } = await query
     if (data) setOpenCommitments(data)
-  }
+  }, [supabase])
 
   async function handleCompleteCommitment(commitmentId: string) {
     const { error } = await supabase
@@ -197,15 +259,49 @@ export default function DashboardPage() {
     }
   }
 
-  async function loadLeaderDashboard(accountId: string) {
+  const loadLeaderDashboard = useCallback(async (accountId: string) => {
+    const { data: account } = await supabase
+      .from('Accounts')
+      .select('company_name, unique_customer_profile, competitor_context, subscription_status, stripe_subscription_id, stripe_customer_id')
+      .eq('id', accountId)
+      .single()
+
+    if (account) {
+      setOnboardingContext({
+        company_name: account.company_name,
+        unique_customer_profile: account.unique_customer_profile,
+        competitor_context: account.competitor_context,
+        subscription_status: account.subscription_status,
+        stripe_subscription_id: account.stripe_subscription_id,
+        stripe_customer_id: account.stripe_customer_id,
+      })
+    } else {
+      setOnboardingContext(null)
+    }
+
+    const { data: connections } = await supabase
+      .from('API_Connections')
+      .select('provider, connection_status')
+      .eq('account_id', accountId)
+
+    setIntegrationConnections((connections || []) as IntegrationConnection[])
+
+    const { count: goalCount } = await supabase
+      .from('Goals')
+      .select('*', { count: 'exact', head: true })
+      .eq('account_id', accountId)
+
+    setLeaderGoalCount(goalCount || 0)
+
     // Calls with scores
-    const { data: recentCalls } = await supabase
+    const { data: recentCallsData } = await supabase
       .from('Synced_Conversations')
       .select('call_date, methodology_scores, rep_email')
       .eq('account_id', accountId)
       .not('methodology_scores', 'is', null)
       .order('call_date', { ascending: true })
       .limit(50)
+    const recentCalls = (recentCallsData || []) as RecentCall[]
 
     // Team members
     const { data: members } = await supabase
@@ -236,6 +332,7 @@ export default function DashboardPage() {
       .lte('period_start', monthEnd)
 
     // Try loading pipeline stats via RPC
+    let hasRpcPipeline = false
     try {
       const { data: pipelineStats } = await supabase.rpc('get_pipeline_stats', {
         p_account_id: accountId,
@@ -259,6 +356,7 @@ export default function DashboardPage() {
           .map((s) => ({ stage: stageLabels[s], actual: stageAgg[s].actual, target: stageAgg[s].target }))
 
         setPipelineData(funnel)
+        hasRpcPipeline = true
       }
     } catch {
       // RPC may not exist yet if migration hasn't run — fall back to goals-based pipeline
@@ -277,7 +375,7 @@ export default function DashboardPage() {
         sales: { current: 0, target: 0 },
       }
 
-      members.forEach((m) => {
+      members.forEach((m: TeamMemberInfo) => {
         const repGoals = goalsData.filter(
           (g: Goal) => g.rep_email === m.email || g.rep_email === null
         )
@@ -332,7 +430,7 @@ export default function DashboardPage() {
       setRepGoalMap(goalMap)
 
       // Fallback pipeline if RPC didn't load
-      if (pipelineData.length === 0) {
+      if (!hasRpcPipeline) {
         fallbackPipeline = [
           { stage: 'Calls', actual: teamGoalAgg.contacts.current, target: teamGoalAgg.contacts.target },
           { stage: 'Discovery', actual: teamGoalAgg.discovery_calls.current, target: teamGoalAgg.discovery_calls.target },
@@ -412,10 +510,10 @@ export default function DashboardPage() {
         return Math.round(arr.reduce((a, b) => a + b, 0) / arr.length * 10) / 10
       }))
     }
-  }
+  }, [supabase])
 
-  async function loadRepDashboard(accountId: string, email: string, userId: string) {
-    const { data: scores } = await supabase
+  const loadRepDashboard = useCallback(async (accountId: string, email: string, userId: string) => {
+    const { data: scoresData } = await supabase
       .from('Synced_Conversations')
       .select('call_date, methodology_scores, rep_email')
       .eq('account_id', accountId)
@@ -423,6 +521,7 @@ export default function DashboardPage() {
       .not('methodology_scores', 'is', null)
       .order('call_date', { ascending: true })
       .limit(20)
+    const scores = (scoresData || []) as RecentCall[]
 
     // Goals for current month
     const now = new Date()
@@ -472,6 +571,22 @@ export default function DashboardPage() {
       .limit(3)
 
     if (coachingData) setRepCoachingMessages(coachingData)
+
+    const { data: invitationData } = await supabase
+      .from('Invitations')
+      .select('id, email, role, token, expires_at')
+      .eq('account_id', accountId)
+      .eq('email', email)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle()
+
+    if (invitationData) {
+      setRepInvitation(invitationData)
+    } else {
+      setRepInvitation(null)
+    }
 
     // 1-on-1 notes preview
     try {
@@ -534,7 +649,55 @@ export default function DashboardPage() {
       setTrendLabels(labels)
       setTrendScores(tScores)
     }
-  }
+  }, [supabase])
+
+  const loadDashboard = useCallback(async () => {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (!user) return
+
+    const { data: userData } = await supabase
+      .from('Users')
+      .select('role, full_name, email, account_id')
+      .eq('auth_id', user.id)
+      .single()
+
+    if (!userData) {
+      setLoading(false)
+      return
+    }
+    setUserInfo(userData)
+    await loadNotifications()
+
+    if (['admin', 'manager', 'coach'].includes(userData.role)) {
+      await loadLeaderDashboard(userData.account_id)
+      if (['admin', 'manager'].includes(userData.role)) {
+        await loadBillingSnapshot()
+      } else {
+        setBillingSnapshot(null)
+      }
+      await loadCommitments(userData.account_id)
+    } else {
+      setBillingSnapshot(null)
+      await loadRepDashboard(userData.account_id, userData.email, user.id)
+      await loadCommitments(userData.account_id, userData.email)
+    }
+
+    await loadCelebrations(userData.account_id)
+
+    setLoading(false)
+  }, [
+    supabase,
+    loadNotifications,
+    loadBillingSnapshot,
+    loadLeaderDashboard,
+    loadCommitments,
+    loadRepDashboard,
+    loadCelebrations,
+  ])
+
+  useEffect(() => {
+    void loadDashboard()
+  }, [loadDashboard])
 
   async function handleSyncNow() {
     setSyncing(true)
@@ -578,6 +741,73 @@ export default function DashboardPage() {
   // ─── LEADER DASHBOARD ───
   if (isLeader) {
     const repMembers = teamMembersInfo.filter((m) => m.role === 'rep')
+    const latestBillingStatus = billingSnapshot?.status || null
+    const latestBillingDate = billingSnapshot?.createdAt
+      ? new Date(billingSnapshot.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })
+      : null
+    const latestBillingLabel = billingSnapshot?.number ? `Invoice #${billingSnapshot.number}` : 'Latest invoice'
+    const billingNeedsAttention = ['open', 'past_due', 'uncollectible', 'void'].includes(latestBillingStatus || '')
+    const billingCurrency = (billingSnapshot?.currency || 'usd').toUpperCase()
+    const billingComplete = Boolean(
+      onboardingContext?.stripe_subscription_id &&
+      ['active', 'trialing'].includes(onboardingContext.subscription_status || '')
+    )
+    const companyContextComplete = Boolean(onboardingContext?.unique_customer_profile?.trim())
+    const competitorContextComplete = Boolean(onboardingContext?.competitor_context?.trim())
+    const goalsComplete = leaderGoalCount > 0
+    const repsComplete = repMembers.length > 0
+    const integrationsComplete = integrationConnections.some((connection) => connection.connection_status === 'active')
+
+    const onboardingSteps: OnboardingStep[] = [
+      {
+        key: 'billing',
+        title: 'Billing',
+        description: 'Choose monthly or annual billing and activate the account.',
+        href: '/settings#billing',
+        cta: 'Open Billing',
+        complete: billingComplete,
+      },
+      {
+        key: 'company-context',
+        title: 'Company context',
+        description: 'Define the unique customer, pain points, and buying context.',
+        href: '/settings#company-context',
+        cta: 'Add Context',
+        complete: companyContextComplete,
+      },
+      {
+        key: 'goals',
+        title: 'Goals and targets',
+        description: 'Set rep targets for activity, discovery, sales, and quota.',
+        href: '/goals',
+        cta: 'Set Goals',
+        complete: goalsComplete,
+      },
+      {
+        key: 'competitors',
+        title: 'Competitors',
+        description: 'Capture the 3 to 4 rivals the team sees most often.',
+        href: '/settings#company-context',
+        cta: 'Add Competitors',
+        complete: competitorContextComplete,
+      },
+      {
+        key: 'reps',
+        title: 'Invite reps',
+        description: 'Add the first rep so coaching and notes have somewhere to land.',
+        href: '/team',
+        cta: 'Invite Rep',
+        complete: repsComplete,
+      },
+      {
+        key: 'integrations',
+        title: 'Integrations',
+        description: 'Connect HubSpot, Fathom, or Aircall once the team structure is in place.',
+        href: '/integrations',
+        cta: 'Connect Tools',
+        complete: integrationsComplete,
+      },
+    ]
 
     return (
       <div>
@@ -585,7 +815,7 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-terracotta/10">
           <div>
             <h1 className="text-2xl font-bold text-espresso">
-              Good morning, {userInfo.full_name || 'Coach'}
+              Good morning, {userInfo.full_name || userInfo.email?.split('@')[0] || 'Manager'}
             </h1>
             <p className="text-stone text-sm mt-1">Here is your team at a glance.</p>
           </div>
@@ -598,6 +828,65 @@ export default function DashboardPage() {
             {syncing ? 'Syncing...' : 'Sync Now'}
           </button>
         </div>
+
+        {billingSnapshot && (
+          <div className={`mb-8 rounded-2xl border p-5 shadow-sm ${
+            billingNeedsAttention
+              ? 'border-pink/20 bg-gradient-to-r from-white to-pink/5'
+              : 'border-bone-dark bg-gradient-to-r from-white to-bone/30'
+          }`}>
+            <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className={`text-xs font-semibold uppercase tracking-wider ${
+                  billingNeedsAttention ? 'text-terracotta' : 'text-stone-light'
+                }`}>
+                  {billingNeedsAttention ? 'Billing needs attention' : 'Billing status'}
+                </p>
+                <h2 className="text-lg font-bold text-espresso mt-1">
+                  {billingNeedsAttention
+                    ? 'Review the latest invoice'
+                    : 'Billing is current'}
+                </h2>
+                <p className="text-sm text-stone-light mt-1">
+                  {latestBillingLabel}
+                  {latestBillingDate ? ` · ${latestBillingDate}` : ''}
+                  {latestBillingStatus === 'paid'
+                    ? billingSnapshot.amountPaid > 0
+                      ? ` · ${new Intl.NumberFormat('en-US', { style: 'currency', currency: billingCurrency }).format(billingSnapshot.amountPaid / 100)} paid`
+                      : ' · Paid'
+                    : billingSnapshot.amountDue > 0
+                      ? ` · ${new Intl.NumberFormat('en-US', { style: 'currency', currency: billingCurrency }).format(billingSnapshot.amountDue / 100)} due`
+                      : '' }
+                </p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <Link
+                  href="/settings#billing-history"
+                  className={`inline-flex items-center justify-center rounded-lg px-4 py-2.5 text-sm font-semibold transition-colors ${
+                    billingNeedsAttention
+                      ? 'bg-terracotta text-white hover:bg-terracotta-bright'
+                      : 'border border-terracotta/30 bg-white text-terracotta hover:bg-terracotta/5'
+                  }`}
+                >
+                  View Billing History
+                </Link>
+                <Link
+                  href="/settings#billing"
+                  className="inline-flex items-center justify-center rounded-lg border border-bone-dark bg-white px-4 py-2.5 text-sm font-semibold text-espresso hover:bg-bone-light transition-colors"
+                >
+                  Manage Billing
+                </Link>
+              </div>
+            </div>
+            {billingNeedsAttention && (
+              <p className="mt-3 text-xs text-stone-light">
+                Payment issues do not close the account immediately. You get a grace window before access is soft-locked.
+              </p>
+            )}
+          </div>
+        )}
+
+        <ManagerOnboardingMap steps={onboardingSteps} />
 
         {/* Pipeline Funnel */}
         {pipelineData.length > 0 && (
@@ -842,9 +1131,117 @@ export default function DashboardPage() {
       <div className="mb-8 pb-4 border-b-2 border-terracotta/10">
         <h1 className="text-2xl font-bold text-espresso mb-1">Your Performance</h1>
         <p className="text-stone text-sm">
-          Welcome back, {userInfo.full_name || 'there'}.
+          Welcome back, {userInfo.full_name || userInfo.email?.split('@')[0] || 'there'}.
         </p>
       </div>
+
+      {notifications && (notifications.coachingUnread > 0 || notifications.notesUnread > 0 || notifications.celebrationsRecent > 0) && (
+        <div className="bg-white rounded-2xl border-l-4 border-l-terracotta border-t border-r border-b border-bone-dark/50 p-5 mb-8 shadow-sm">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-3">
+              <span className="relative flex h-3 w-3">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-terracotta opacity-75 animate-ping" />
+                <span className="relative inline-flex h-3 w-3 rounded-full bg-terracotta" />
+              </span>
+              <div>
+                <h2 className="text-lg font-bold text-espresso">
+                  {notifications.role === 'rep'
+                    ? 'You have a new message'
+                    : 'New activity needs your attention'}
+                </h2>
+                <p className="text-sm text-stone-light">
+                  {notifications.role === 'rep'
+                    ? [
+                        notifications.celebrationsRecent > 0
+                          ? `a team win: ${notifications.latestCelebrationTitle || 'new celebration'}`
+                          : null,
+                        notifications.coachingUnread > 0
+                          ? `coaching from ${notifications.latestCoachName || 'your manager'}`
+                          : null,
+                        notifications.notesUnread > 0
+                          ? `a note from ${notifications.latestNoteSenderName || 'your manager'}`
+                          : null,
+                      ].filter(Boolean).join(' and ')
+                    : 'Review coaching, celebrations, and 1-on-1 notes that are waiting for action.'}
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              {notifications.celebrationsRecent > 0 && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-gold/20 bg-gold/10 px-3 py-1 text-xs font-semibold text-gold">
+                  Team wins {notifications.celebrationsRecent}
+                </span>
+              )}
+              {notifications.coachingUnread > 0 && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-terracotta/20 bg-terracotta/5 px-3 py-1 text-xs font-semibold text-terracotta">
+                  Coaching unread {notifications.coachingUnread}
+                </span>
+              )}
+              {notifications.coachingRead > 0 && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-clay/20 bg-clay/5 px-3 py-1 text-xs font-semibold text-clay">
+                  Coaching read {notifications.coachingRead}
+                </span>
+              )}
+              {notifications.coachingReplied > 0 && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-green-500/20 bg-green-500/5 px-3 py-1 text-xs font-semibold text-green-600">
+                  Coaching replied {notifications.coachingReplied}
+                </span>
+              )}
+              {notifications.notesUnread > 0 && (
+                <span className="inline-flex items-center gap-2 rounded-full border border-aqua/20 bg-aqua/5 px-3 py-1 text-xs font-semibold text-espresso">
+                  Notes unread {notifications.notesUnread}
+                </span>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {recentCelebrations.length > 0 && (
+        <div className="bg-gradient-to-br from-white to-clay/5 rounded-2xl border-t-2 border-t-clay border-l border-r border-b border-bone-dark/50 p-5 mb-8 shadow-sm">
+          <div className="flex items-center gap-3">
+            {(() => {
+              const config = getCelebrationBadgeConfig(recentCelebrations[0].badge_key)
+              const Icon = config.icon
+              return (
+                <div className={`flex h-12 w-12 items-center justify-center rounded-xl border ${config.color}`}>
+                  <Icon className="text-2xl" />
+                </div>
+              )
+            })()}
+            <div className="min-w-0">
+              <p className="text-xs font-semibold uppercase tracking-wider text-terracotta">Team win</p>
+              <h2 className="text-lg font-bold text-espresso truncate">
+                {recentCelebrations[0].title}
+              </h2>
+              <p className="text-sm text-stone-light truncate">
+                {recentCelebrations[0].rep_email && <span>{recentCelebrations[0].rep_email} · </span>}
+                {getTimeAgo(recentCelebrations[0].created_at)}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {repInvitation && (
+        <div className="bg-white rounded-2xl border-l-4 border-l-terracotta border-t border-r border-b border-bone-dark/50 p-5 mb-8 shadow-sm">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <p className="text-xs uppercase tracking-wider text-terracotta font-semibold">Invitation pending</p>
+              <h2 className="text-lg font-bold text-espresso mt-1">Finish your team setup</h2>
+              <p className="text-sm text-stone-light mt-1">
+                You were invited as a {repInvitation.role}. Open your invitation to complete setup and unlock the rep dashboard.
+              </p>
+            </div>
+            <Link
+              href={`/accept-invite?token=${repInvitation.token}`}
+              className="inline-flex items-center justify-center bg-terracotta text-white px-4 py-2 rounded-lg hover:bg-terracotta-dark transition-colors text-sm font-medium"
+            >
+              Finish Setup
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Hero: Sandler Score */}
       <div className="bg-gradient-to-br from-white via-bone-light/20 to-terracotta/5 rounded-2xl border-t-4 border-t-terracotta border-l border-r border-b border-bone-dark/50 p-6 mb-8 flex flex-col items-center shadow-md">
@@ -902,6 +1299,12 @@ export default function DashboardPage() {
         <div className="bg-white rounded-2xl border-l-4 border-l-terracotta/60 border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-terracotta/10">
             <h2 className="text-lg font-bold text-espresso">Coaching Feed</h2>
+            {notifications?.coachingUnread ? (
+              <span className="inline-flex items-center gap-2 rounded-full bg-terracotta/10 px-2.5 py-1 text-xs font-semibold text-terracotta">
+                <span className="h-2 w-2 rounded-full bg-terracotta animate-pulse" />
+                New
+              </span>
+            ) : null}
             <Link href="/coaching" className="text-terracotta text-xs hover:text-terracotta-bright">View All</Link>
           </div>
           {repCoachingMessages.length > 0 ? (
@@ -969,7 +1372,12 @@ export default function DashboardPage() {
         <div className="bg-white rounded-2xl border-l-4 border-l-clay border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-clay/20">
             <h2 className="text-lg font-bold text-espresso">1-on-1 Notes</h2>
-            {repNotesPreview.unreadCount > 0 && (
+            {notifications?.notesUnread ? (
+              <span className="inline-flex items-center gap-2 rounded-full bg-terracotta/10 px-2.5 py-1 text-xs font-semibold text-terracotta">
+                <span className="h-2 w-2 rounded-full bg-terracotta animate-pulse" />
+                {notifications.notesUnread} unread
+              </span>
+            ) : repNotesPreview.unreadCount > 0 && (
               <span className="bg-terracotta text-white text-xs font-bold px-2 py-0.5 rounded-full">
                 {repNotesPreview.unreadCount} unread
               </span>
@@ -999,7 +1407,11 @@ export default function DashboardPage() {
           <div className="space-y-3">
             {recentCelebrations.map((c) => (
               <div key={c.id} className="flex items-center gap-3 p-2 rounded-lg hover:bg-bone/50">
-                <HiSparkles className="text-clay text-lg flex-shrink-0" />
+                {(() => {
+                  const config = getCelebrationBadgeConfig(c.badge_key)
+                  const Icon = config.icon
+                  return <Icon className="text-clay text-lg flex-shrink-0" />
+                })()}
                 <div className="flex-1 min-w-0">
                   <p className="text-sm text-espresso truncate">{c.title}</p>
                   <p className="text-xs text-stone-light">

@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getAuthorizedAccountContext } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,11 +26,11 @@ interface FathomMeeting {
   recording_end_time?: string;
 }
 
-// Get Fathom API key from database
-async function getFathomApiKey(supabase: any, account_id: string): Promise<string | null> {
+// Get Fathom credentials from database. OAuth access_token is preferred; api_key is kept for old connections.
+async function getFathomCredential(supabase: any, account_id: string): Promise<{ token: string; type: "oauth" | "api_key" } | null> {
   const { data, error } = await supabase
     .from("API_Connections")
-    .select("api_key, connection_status")
+    .select("access_token, api_key, connection_status")
     .eq("account_id", account_id)
     .eq("provider", "fathom")
     .eq("connection_status", "active")
@@ -40,19 +41,27 @@ async function getFathomApiKey(supabase: any, account_id: string): Promise<strin
     return null;
   }
 
-  return data.api_key;
+  if (data.access_token) {
+    return { token: data.access_token, type: "oauth" };
+  }
+
+  if (data.api_key) {
+    return { token: data.api_key, type: "api_key" };
+  }
+
+  return null;
 }
 
 // Fetch meetings from Fathom API
-async function fetchFathomMeetings(apiKey: string): Promise<FathomMeeting[]> {
+async function fetchFathomMeetings(credential: { token: string; type: "oauth" | "api_key" }): Promise<FathomMeeting[]> {
   try {
+    const headers = credential.type === "oauth"
+      ? { "Authorization": `Bearer ${credential.token}` }
+      : { "X-Api-Key": credential.token };
+
     const response = await fetch(
       `${FATHOM_API_BASE}/meetings?include_transcript=true`,
-      {
-        headers: {
-          "X-Api-Key": apiKey,
-        },
-      }
+      { headers }
     );
 
     if (!response.ok) {
@@ -145,20 +154,20 @@ serve(async (req) => {
   }
 
   try {
-    const { account_id } = await req.json();
-
-    if (!account_id) {
+    const auth = await getAuthorizedAccountContext(req);
+    if ("error" in auth) {
       return new Response(
-        JSON.stringify({ error: "account_id is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: auth.error }),
+        { status: auth.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const account_id = auth.accountId;
 
-    // Get Fathom API key
-    const apiKey = await getFathomApiKey(supabase, account_id);
-    if (!apiKey) {
+    // Get Fathom credential
+    const credential = await getFathomCredential(supabase, account_id);
+    if (!credential) {
       return new Response(
         JSON.stringify({ error: "No active Fathom connection found" }),
         { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -166,7 +175,7 @@ serve(async (req) => {
     }
 
     // Fetch and sync meetings
-    const meetings = await fetchFathomMeetings(apiKey);
+    const meetings = await fetchFathomMeetings(credential);
     const syncedCount = await syncMeetings(supabase, meetings, account_id);
 
     // Update sync status

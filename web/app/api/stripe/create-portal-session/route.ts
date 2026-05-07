@@ -15,12 +15,16 @@ export async function POST(request: NextRequest) {
     // Get the user's account
     const { data: userData } = await supabase
       .from('Users')
-      .select('account_id')
+      .select('account_id, role')
       .eq('auth_id', user.id)
       .single()
 
     if (!userData?.account_id) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 })
+    }
+
+    if (!['admin', 'manager'].includes(userData.role)) {
+      return NextResponse.json({ error: 'Billing access denied' }, { status: 403 })
     }
 
     // Get account's Stripe customer ID

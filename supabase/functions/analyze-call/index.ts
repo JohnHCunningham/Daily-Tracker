@@ -6,6 +6,7 @@ import {
   buildCoachingContext,
   normalizeComponentName,
 } from "../_shared/rag-utils.ts";
+import { getAuthorizedAccountContext } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -259,15 +260,37 @@ serve(async (req) => {
     const body = await req.json();
     const use_rag = body.use_rag !== false;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const auth = await getAuthorizedAccountContext(req);
+    if ("error" in auth) {
+      return new Response(
+        JSON.stringify({ error: auth.error }),
+        { status: auth.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
 
     // ─── Batch Mode: query-only (fan-out is handled by run_daily_coaching_pipeline in DB) ───
     // This mode now only returns the list of unanalyzed calls for monitoring/debugging.
     // The DB function dispatches individual analyze-call invocations via pg_net.
-    if (body.mode === "batch" && body.account_id) {
+    if (body.mode === "batch") {
+      const batchAccountId = auth.internal ? body.account_id : auth.accountId;
+      if (!batchAccountId) {
+        return new Response(
+          JSON.stringify({ error: "account_id is required for batch mode" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      if (!auth.internal && body.account_id && body.account_id !== auth.accountId) {
+        return new Response(
+          JSON.stringify({ error: "Account scope mismatch" }),
+          { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
       const { data: unanalyzed, error: fetchErr } = await supabase
         .from("Synced_Conversations")
         .select("id, call_date, rep_email")
-        .eq("account_id", body.account_id)
+        .eq("account_id", batchAccountId)
         .is("analyzed_at", null)
         .not("transcript", "is", null)
         .order("call_date", { ascending: false })
@@ -301,6 +324,7 @@ serve(async (req) => {
       .from("Synced_Conversations")
       .select("*")
       .eq("id", call_id)
+      .eq("account_id", auth.accountId)
       .single();
 
     if (callError || !call) {

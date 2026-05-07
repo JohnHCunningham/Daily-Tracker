@@ -9,6 +9,52 @@ const corsHeaders = {
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const INTERNAL_BEARER = `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
+
+async function authorizeInternalOrUser(req: Request) {
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader) {
+    return { error: "Unauthorized", status: 401 as const };
+  }
+
+  if (authHeader === INTERNAL_BEARER) {
+    return { internal: true as const };
+  }
+
+  const supabase = createClient(
+    SUPABASE_URL,
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    {
+      global: {
+        headers: { Authorization: authHeader },
+      },
+    }
+  );
+
+  const { data: { user }, error: userError } = await supabase.auth.getUser();
+  if (userError || !user) {
+    return { error: "Unauthorized", status: 401 as const };
+  }
+
+  const { data: userData } = await supabase
+    .from("Users")
+    .select("account_id, role")
+    .eq("auth_id", user.id)
+    .single();
+
+  if (!userData?.account_id) {
+    return { error: "Account not found", status: 404 as const };
+  }
+
+  if (!["admin", "manager", "coach"].includes(userData.role)) {
+    return { error: "Forbidden", status: 403 as const };
+  }
+
+  return {
+    internal: false as const,
+    accountId: userData.account_id as string,
+  };
+}
 
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -17,8 +63,16 @@ serve(async (req) => {
 
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const auth = await authorizeInternalOrUser(req);
+    if ("error" in auth) {
+      return new Response(
+        JSON.stringify({ error: auth.error }),
+        { status: auth.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const body = await req.json().catch(() => ({}));
-    const accountId = body.account_id;
+    const accountId = auth.internal ? body.account_id : auth.accountId;
 
     let accountIds: string[] = [];
 

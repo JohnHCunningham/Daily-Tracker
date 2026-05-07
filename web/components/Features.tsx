@@ -1,5 +1,6 @@
 'use client'
 
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import { HiCheckCircle, HiLightningBolt, HiChartBar, HiCog, HiCurrencyDollar, HiUserGroup, HiClock, HiSparkles } from 'react-icons/hi'
 
@@ -145,10 +146,12 @@ const Features = () => {
           viewport={{ once: true }}
           className="mb-20"
         >
-          <img
+          <Image
             src="/daily-tracker-infographic.png"
             alt="AI Sales Coaching Platform Features: Activity tracking, admin reports dashboard, conversation analysis, revenue analytics, and team performance coaching for MEDDIC Sandler Challenger methodologies"
-            className="w-full max-w-6xl mx-auto rounded-2xl shadow-2xl border border-teal/20"
+            width={1600}
+            height={900}
+            className="w-full h-auto max-w-6xl mx-auto rounded-2xl shadow-2xl border border-teal/20"
           />
         </motion.div>
 

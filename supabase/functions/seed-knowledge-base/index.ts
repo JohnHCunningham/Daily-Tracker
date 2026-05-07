@@ -11,6 +11,7 @@ import { generateEmbedding } from "../_shared/rag-utils.ts";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
+const INTERNAL_BEARER = `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
 
 // ============================================
 // SANDLER METHODOLOGY DATA
@@ -736,8 +737,12 @@ serve(async (req) => {
 
     // Check for force re-seed
     let force = false;
-    try {
-      const body = await req.json();
+  try {
+    if (req.headers.get("Authorization") !== INTERNAL_BEARER) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    const body = await req.json();
       force = body?.force === true;
     } catch {
       // No body or invalid JSON is fine

@@ -1,9 +1,9 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useCallback, useEffect, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-import { HiArrowLeft, HiUserCircle, HiChatAlt2, HiCheckCircle, HiAcademicCap, HiSparkles } from 'react-icons/hi'
+import { HiArrowLeft, HiUserCircle, HiChatAlt2, HiCheckCircle, HiAcademicCap, HiSparkles, HiTrash } from 'react-icons/hi'
 import dynamic from 'next/dynamic'
 import SandlerBreakdown from '../../components/SandlerBreakdown'
 
@@ -16,6 +16,13 @@ interface MemberDetail {
   email: string
   role: string
   created_at: string
+}
+
+interface CurrentUser {
+  id: string
+  account_id: string
+  email: string
+  role: string
 }
 
 interface CallScore {
@@ -48,6 +55,7 @@ interface CelebrationItem {
 export default function MemberDetailPage({ params }: { params: { memberId: string } }) {
   const [member, setMember] = useState<MemberDetail | null>(null)
   const [loading, setLoading] = useState(true)
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [selectedRole, setSelectedRole] = useState('')
   const [saving, setSaving] = useState(false)
   const [callScores, setCallScores] = useState<CallScore[]>([])
@@ -55,174 +63,71 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
   const [pipelineProgress, setPipelineProgress] = useState<{ calls: number; discovery: number; proposals: number; sales: number }>({ calls: 0, discovery: 0, proposals: 0, sales: 0 })
   const [coachingHistory, setCoachingHistory] = useState<CoachingMessage[]>([])
   const [celebrations, setCelebrations] = useState<CelebrationItem[]>([])
-  const supabase = createClient()
+  const [removing, setRemoving] = useState(false)
+  const router = useRouter()
 
-  useEffect(() => {
-    loadMember()
+  const loadMember = useCallback(async () => {
+    const response = await fetch(`/api/team/members/${params.memberId}`)
+    const data = await response.json().catch(() => null)
+
+    if (!response.ok) {
+      setLoading(false)
+      return
+    }
+
+    setCurrentUser(data.currentUser)
+    setMember(data.member)
+    setSelectedRole(data.member.role)
+    setCallScores(data.callScores || [])
+    setAvgScores(data.avgScores || null)
+    setPipelineProgress(data.pipelineProgress || { calls: 0, discovery: 0, proposals: 0, sales: 0 })
+    setCoachingHistory(data.coachingHistory || [])
+    setCelebrations(data.celebrations || [])
+    setLoading(false)
   }, [params.memberId])
 
-  async function loadMember() {
-    const { data } = await supabase
-      .from('Users')
-      .select('id, full_name, email, role, created_at')
-      .eq('id', params.memberId)
-      .single()
-
-    if (data) {
-      setMember(data)
-      setSelectedRole(data.role)
-      await loadScores(data.email)
-      await loadGoals(data.email)
-      await loadCoaching(data.email)
-      await loadCelebrations(data.email)
-    }
-    setLoading(false)
-  }
-
-  async function loadScores(email: string) {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { data: userData } = await supabase
-      .from('Users')
-      .select('account_id')
-      .eq('auth_id', user.id)
-      .single()
-
-    if (!userData) return
-
-    const { data: scores } = await supabase
-      .from('Synced_Conversations')
-      .select('call_date, methodology_scores')
-      .eq('account_id', userData.account_id)
-      .eq('rep_email', email)
-      .not('methodology_scores', 'is', null)
-      .order('call_date', { ascending: true })
-      .limit(20)
-
-    if (scores && scores.length > 0) {
-      setCallScores(scores)
-
-      const totals: Record<string, { sum: number; count: number }> = {}
-      scores.forEach((s) => {
-        if (s.methodology_scores) {
-          Object.entries(s.methodology_scores).forEach(([key, val]) => {
-            if (!totals[key]) totals[key] = { sum: 0, count: 0 }
-            totals[key].sum += val as number
-            totals[key].count += 1
-          })
-        }
-      })
-      const avgs: Record<string, number> = {}
-      Object.entries(totals).forEach(([key, { sum, count }]) => {
-        avgs[key] = Math.round((sum / count) * 10) / 10
-      })
-      setAvgScores(avgs)
-    }
-  }
-
-  async function loadGoals(email: string) {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { data: userData } = await supabase
-      .from('Users')
-      .select('account_id')
-      .eq('auth_id', user.id)
-      .single()
-
-    if (!userData) return
-
-    const now = new Date()
-    const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString().split('T')[0]
-    const monthEnd = new Date(now.getFullYear(), now.getMonth() + 1, 0).toISOString().split('T')[0]
-
-    const { data: goalsData } = await supabase
-      .from('Goals')
-      .select('*')
-      .eq('account_id', userData.account_id)
-      .gte('period_end', monthStart)
-      .lte('period_start', monthEnd)
-
-    if (goalsData) {
-      const repGoals = goalsData.filter((g: Goal) => g.rep_email === email || g.rep_email === null)
-
-      const pct = (type: string): number => {
-        const matched = repGoals.filter((g: Goal) => g.goal_type === type)
-        const target = matched.reduce((s: number, g: Goal) => s + g.target_value, 0)
-        const current = matched.reduce((s: number, g: Goal) => s + g.current_value, 0)
-        if (target === 0) return 0
-        return Math.min(Math.round((current / target) * 100), 100)
-      }
-
-      setPipelineProgress({
-        calls: pct('contacts'),
-        discovery: pct('discovery_calls'),
-        proposals: pct('proposals'),
-        sales: pct('sales'),
-      })
-    }
-  }
-
-  async function loadCoaching(email: string) {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { data: userData } = await supabase
-      .from('Users')
-      .select('account_id')
-      .eq('auth_id', user.id)
-      .single()
-
-    if (!userData) return
-
-    const { data: coaching } = await supabase
-      .from('Coaching_Messages')
-      .select('id, subject, status, created_at')
-      .eq('account_id', userData.account_id)
-      .eq('rep_email', email)
-      .order('created_at', { ascending: false })
-      .limit(5)
-
-    if (coaching) setCoachingHistory(coaching)
-  }
-
-  async function loadCelebrations(email: string) {
-    const { data: { user } } = await supabase.auth.getUser()
-    if (!user) return
-
-    const { data: userData } = await supabase
-      .from('Users')
-      .select('account_id')
-      .eq('auth_id', user.id)
-      .single()
-
-    if (!userData) return
-
-    const { data } = await supabase
-      .from('Celebrations')
-      .select('id, title, badge_key, created_at')
-      .eq('account_id', userData.account_id)
-      .eq('rep_email', email)
-      .order('created_at', { ascending: false })
-      .limit(5)
-
-    if (data) setCelebrations(data)
-  }
+  useEffect(() => {
+    void loadMember()
+  }, [loadMember])
 
   async function handleRoleChange() {
     if (!member || selectedRole === member.role) return
+    if (!currentUser || !['admin', 'manager'].includes(currentUser.role)) return
     setSaving(true)
 
-    const { error } = await supabase
-      .from('Users')
-      .update({ role: selectedRole })
-      .eq('id', member.id)
+    const response = await fetch(`/api/team/members/${member.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ role: selectedRole }),
+    })
 
-    if (!error) {
+    if (response.ok) {
       setMember({ ...member, role: selectedRole })
     }
     setSaving(false)
+  }
+
+  async function handleRemoveRep() {
+    if (!member || !currentUser || !['admin', 'manager'].includes(currentUser.role)) return
+    setRemoving(true)
+
+    try {
+      const response = await fetch(`/api/team/members/${member.id}`, {
+        method: 'DELETE',
+      })
+      const data = await response.json().catch(() => ({}))
+
+      if (!response.ok) {
+        alert(data.error || 'Failed to remove rep')
+        return
+      }
+
+      router.push('/team')
+    } finally {
+      setRemoving(false)
+    }
   }
 
   function getTimeAgo(dateStr: string): string {
@@ -284,29 +189,45 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
         {/* Role Management */}
         <div className="border-t border-bone pt-6">
           <h2 className="text-xl font-bold text-espresso mb-4">Role</h2>
-          <div className="flex items-end gap-4">
-            <div className="flex-1 max-w-xs">
-              <select
-                value={selectedRole}
-                onChange={(e) => setSelectedRole(e.target.value)}
-                className="w-full px-4 py-3 bg-bone border border-terracotta/20 rounded-lg text-espresso focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-teal/20"
-              >
-                <option value="rep">Sales Rep</option>
-                <option value="coach">Coach</option>
-                <option value="manager">Manager</option>
-                <option value="admin">Admin</option>
-              </select>
+          {currentUser && ['admin', 'manager'].includes(currentUser.role) ? (
+            <div className="flex items-end gap-4">
+              <div className="flex-1 max-w-xs">
+                <select
+                  value={selectedRole}
+                  onChange={(e) => setSelectedRole(e.target.value)}
+                  className="w-full px-4 py-3 bg-bone border border-terracotta/20 rounded-lg text-espresso focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-teal/20"
+                >
+                  <option value="rep">Sales Rep</option>
+                  <option value="coach">Coach</option>
+                  <option value="manager">Manager</option>
+                  <option value="admin">Admin</option>
+                </select>
+              </div>
+              {selectedRole !== member.role && (
+                <button
+                  onClick={handleRoleChange}
+                  disabled={saving}
+                  className="bg-terracotta text-white font-bold py-3 px-6 rounded-lg hover:bg-terracotta-bright transition-colors disabled:opacity-50"
+                >
+                  {saving ? 'Saving...' : 'Update Role'}
+                </button>
+              )}
+              {member.role === 'rep' && (
+                <button
+                  onClick={handleRemoveRep}
+                  disabled={removing}
+                  className="inline-flex items-center gap-2 bg-white text-terracotta border border-terracotta/20 font-bold py-3 px-6 rounded-lg hover:bg-terracotta/5 transition-colors disabled:opacity-50"
+                >
+                  <HiTrash />
+                  {removing ? 'Removing...' : 'Remove Rep'}
+                </button>
+              )}
             </div>
-            {selectedRole !== member.role && (
-              <button
-                onClick={handleRoleChange}
-                disabled={saving}
-                className="bg-terracotta text-white font-bold py-3 px-6 rounded-lg hover:bg-terracotta-bright transition-colors disabled:opacity-50"
-              >
-                {saving ? 'Saving...' : 'Update Role'}
-              </button>
-            )}
-          </div>
+          ) : (
+            <span className="inline-flex text-xs font-bold px-3 py-1 rounded-full border bg-white text-stone-light border-bone-dark">
+              {member.role.toUpperCase()}
+            </span>
+          )}
         </div>
       </div>
 

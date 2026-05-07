@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import { getStripe, STRIPE_PRICES } from '@/lib/stripe'
+import { getStripe, STRIPE_PRICES, type BillingCycle } from '@/lib/stripe'
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,7 +13,11 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { newRepCount } = body as { newRepCount: number }
+    const { newRepCount, billingCycle } = body as {
+      newRepCount: number
+      billingCycle?: BillingCycle
+    }
+    const selectedBillingCycle: BillingCycle = billingCycle === 'annual' ? 'annual' : 'monthly'
 
     if (!newRepCount || newRepCount < 1) {
       return NextResponse.json({ error: 'Invalid rep count' }, { status: 400 })
@@ -22,12 +26,16 @@ export async function POST(request: NextRequest) {
     // Get the user's account
     const { data: userData } = await supabase
       .from('Users')
-      .select('account_id')
+      .select('account_id, role')
       .eq('auth_id', user.id)
       .single()
 
     if (!userData?.account_id) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 })
+    }
+
+    if (!['admin', 'manager'].includes(userData.role)) {
+      return NextResponse.json({ error: 'Billing access denied' }, { status: 403 })
     }
 
     // Get account with subscription info
@@ -39,6 +47,30 @@ export async function POST(request: NextRequest) {
 
     if (!account) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 })
+    }
+
+    const { count: activeRepCount } = await supabase
+      .from('Users')
+      .select('*', { count: 'exact', head: true })
+      .eq('account_id', account.id)
+      .eq('role', 'rep')
+
+    const { count: pendingRepInvites } = await supabase
+      .from('Invitations')
+      .select('*', { count: 'exact', head: true })
+      .eq('account_id', account.id)
+      .eq('role', 'rep')
+      .eq('status', 'pending')
+
+    const usedSlots = (activeRepCount || 0) + (pendingRepInvites || 0)
+
+    if (newRepCount < usedSlots) {
+      return NextResponse.json(
+        {
+          error: `You currently have ${usedSlots} rep${usedSlots !== 1 ? 's' : ''} using slots. Increase rep slots before reducing the plan.`,
+        },
+        { status: 409 }
+      )
     }
 
     // If no subscription exists, create a new checkout session
@@ -62,13 +94,22 @@ export async function POST(request: NextRequest) {
           .eq('id', account.id)
       }
 
+      const priceId = STRIPE_PRICES[selectedBillingCycle]
+
+      if (!priceId) {
+        return NextResponse.json(
+          { error: `Stripe ${selectedBillingCycle} price not configured` },
+          { status: 500 }
+        )
+      }
+
       const session = await stripe.checkout.sessions.create({
         customer: customerId,
         mode: 'subscription',
         payment_method_types: ['card'],
         line_items: [
           {
-            price: STRIPE_PRICES.monthly,
+            price: priceId,
             quantity: newRepCount,
             adjustable_quantity: {
               enabled: true,
@@ -82,7 +123,7 @@ export async function POST(request: NextRequest) {
           metadata: {
             account_id: account.id,
             rep_count: String(newRepCount),
-            billing_cycle: 'monthly',
+            billing_cycle: selectedBillingCycle,
           },
         },
         success_url: `${request.headers.get('origin')}/settings?checkout=success`,
@@ -103,16 +144,27 @@ export async function POST(request: NextRequest) {
     }
 
     // Update the quantity
+    const priceId = STRIPE_PRICES[selectedBillingCycle]
+
+    if (!priceId) {
+      return NextResponse.json(
+        { error: `Stripe ${selectedBillingCycle} price not configured` },
+        { status: 500 }
+      )
+    }
+
     await stripe.subscriptions.update(account.stripe_subscription_id, {
       items: [
         {
           id: subscriptionItemId,
+          price: priceId,
           quantity: newRepCount,
         },
       ],
       proration_behavior: 'create_prorations', // Charge/credit the difference
       metadata: {
         rep_count: String(newRepCount),
+        billing_cycle: selectedBillingCycle,
       },
     })
 
@@ -122,10 +174,11 @@ export async function POST(request: NextRequest) {
       .update({
         rep_count: newRepCount,
         max_team_members: newRepCount,
+        billing_cycle: selectedBillingCycle,
       })
       .eq('id', account.id)
 
-    return NextResponse.json({ success: true, newRepCount, type: 'updated' })
+    return NextResponse.json({ success: true, newRepCount, billingCycle: selectedBillingCycle, type: 'updated' })
   } catch (error) {
     console.error('Update subscription error:', error)
     return NextResponse.json(

@@ -4,6 +4,7 @@ import Sidebar from './components/Sidebar'
 import TopBar from './components/TopBar'
 import BrandProvider from './components/BrandProvider'
 import SubscriptionBanner from './components/SubscriptionBanner'
+import BillingAccessGate from './components/BillingAccessGate'
 
 export default async function AppLayout({
   children,
@@ -44,17 +45,19 @@ export default async function AppLayout({
   // Get subscription status for banner
   let subscriptionStatus = 'trialing'
   let trialEndsAt: string | null = null
+  let billingGraceEndsAt: string | null = null
 
   if (userData?.account_id) {
     const { data: account } = await supabase
       .from('Accounts')
-      .select('subscription_status, trial_ends_at')
+      .select('subscription_status, trial_ends_at, billing_grace_ends_at')
       .eq('id', userData.account_id)
       .single()
 
     if (account) {
       subscriptionStatus = account.subscription_status || 'trialing'
       trialEndsAt = account.trial_ends_at
+      billingGraceEndsAt = account.billing_grace_ends_at
     }
   }
 
@@ -69,10 +72,17 @@ export default async function AppLayout({
           <SubscriptionBanner
             status={subscriptionStatus}
             trialEndsAt={trialEndsAt}
+            billingGraceEndsAt={billingGraceEndsAt}
             userRole={userRole}
           />
           <main className="flex-1 p-6 overflow-auto">
-            {children}
+            <BillingAccessGate
+              status={subscriptionStatus}
+              trialEndsAt={trialEndsAt}
+              billingGraceEndsAt={billingGraceEndsAt}
+            >
+              {children}
+            </BillingAccessGate>
           </main>
         </div>
       </div>

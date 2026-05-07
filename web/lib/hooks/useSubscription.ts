@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 
 export interface SubscriptionInfo {
@@ -8,6 +8,7 @@ export interface SubscriptionInfo {
   billingCycle: 'monthly' | 'annual'
   repCount: number
   trialEndsAt: string | null
+  billingGraceEndsAt: string | null
   currentPeriodEnd: string | null
   cancelAtPeriodEnd: boolean
   stripeCustomerId: string | null
@@ -24,7 +25,16 @@ export interface UseSubscriptionReturn {
   isPastDue: boolean
   isCanceled: boolean
   daysLeftInTrial: number | null
+  daysLeftInGrace: number | null
+  isBillingGraceActive: boolean
   refetch: () => Promise<void>
+}
+
+function getDaysRemaining(endsAt: string | null) {
+  if (!endsAt) return null
+  const diffTime = new Date(endsAt).getTime() - Date.now()
+  const days = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
+  return Math.max(days, 0)
 }
 
 export function useSubscription(): UseSubscriptionReturn {
@@ -34,7 +44,7 @@ export function useSubscription(): UseSubscriptionReturn {
 
   const supabase = createClient()
 
-  const fetchSubscription = async () => {
+  const fetchSubscription = useCallback(async () => {
     try {
       setLoading(true)
       setError(null)
@@ -63,6 +73,7 @@ export function useSubscription(): UseSubscriptionReturn {
           billing_cycle,
           rep_count,
           trial_ends_at,
+          billing_grace_ends_at,
           current_period_end,
           cancel_at_period_end,
           stripe_customer_id,
@@ -80,6 +91,7 @@ export function useSubscription(): UseSubscriptionReturn {
           billingCycle: account.billing_cycle || 'monthly',
           repCount: account.rep_count || 1,
           trialEndsAt: account.trial_ends_at,
+          billingGraceEndsAt: account.billing_grace_ends_at,
           currentPeriodEnd: account.current_period_end,
           cancelAtPeriodEnd: account.cancel_at_period_end || false,
           stripeCustomerId: account.stripe_customer_id,
@@ -93,11 +105,11 @@ export function useSubscription(): UseSubscriptionReturn {
     } finally {
       setLoading(false)
     }
-  }
+  }, [supabase])
 
   useEffect(() => {
-    fetchSubscription()
-  }, [])
+    void fetchSubscription()
+  }, [fetchSubscription])
 
   const isActive = subscription?.subscriptionStatus === 'active'
   const isTrialing = subscription?.subscriptionStatus === 'trialing'
@@ -105,14 +117,10 @@ export function useSubscription(): UseSubscriptionReturn {
   const isCanceled = subscription?.subscriptionStatus === 'canceled'
 
   // Calculate days left in trial
-  let daysLeftInTrial: number | null = null
-  if (isTrialing && subscription?.trialEndsAt) {
-    const trialEnd = new Date(subscription.trialEndsAt)
-    const now = new Date()
-    const diffTime = trialEnd.getTime() - now.getTime()
-    daysLeftInTrial = Math.ceil(diffTime / (1000 * 60 * 60 * 24))
-    if (daysLeftInTrial < 0) daysLeftInTrial = 0
-  }
+  const daysLeftInTrial = isTrialing ? getDaysRemaining(subscription?.trialEndsAt ?? null) : null
+  const daysLeftInGrace = isPastDue ? getDaysRemaining(subscription?.billingGraceEndsAt ?? null) : null
+  const isBillingGraceActive =
+    isPastDue && !!subscription?.billingGraceEndsAt && new Date(subscription.billingGraceEndsAt).getTime() > Date.now()
 
   return {
     subscription,
@@ -123,6 +131,8 @@ export function useSubscription(): UseSubscriptionReturn {
     isPastDue,
     isCanceled,
     daysLeftInTrial,
+    daysLeftInGrace,
+    isBillingGraceActive,
     refetch: fetchSubscription,
   }
 }

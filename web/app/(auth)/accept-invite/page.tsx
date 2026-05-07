@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, useEffect, useState, useCallback } from 'react'
+import { Suspense, useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import confetti from 'canvas-confetti'
 import Link from 'next/link'
@@ -24,44 +24,45 @@ function AcceptInviteForm() {
   const token = searchParams.get('token')
   const supabase = createClient()
 
+  const verifyToken = useCallback(async () => {
+    try {
+      if (!token) {
+        setError('No invitation token provided.')
+        return
+      }
+
+      const { data, error: fetchError } = await supabase
+        .from('Invitations')
+        .select('email, role, status, expires_at')
+        .eq('token', token)
+        .single()
+
+      if (fetchError || !data) {
+        setError('Invalid invitation link.')
+        return
+      }
+
+      if (data.status !== 'pending') {
+        setError('This invitation has already been used.')
+        return
+      }
+
+      if (new Date(data.expires_at) < new Date()) {
+        setError('This invitation has expired. Please ask your admin to send a new one.')
+        return
+      }
+
+      setInviteInfo({ email: data.email, role: data.role })
+    } catch {
+      setError('Could not verify this invitation. Please refresh the link or ask for a new invite.')
+    } finally {
+      setVerifying(false)
+    }
+  }, [supabase, token])
+
   useEffect(() => {
-    verifyToken()
-  }, [token])
-
-  async function verifyToken() {
-    if (!token) {
-      setError('No invitation token provided.')
-      setVerifying(false)
-      return
-    }
-
-    const { data, error: fetchError } = await supabase
-      .from('Invitations')
-      .select('email, role, status, expires_at')
-      .eq('token', token)
-      .single()
-
-    if (fetchError || !data) {
-      setError('Invalid invitation link.')
-      setVerifying(false)
-      return
-    }
-
-    if (data.status !== 'pending') {
-      setError('This invitation has already been used.')
-      setVerifying(false)
-      return
-    }
-
-    if (new Date(data.expires_at) < new Date()) {
-      setError('This invitation has expired. Please ask your admin to send a new one.')
-      setVerifying(false)
-      return
-    }
-
-    setInviteInfo({ email: data.email, role: data.role })
-    setVerifying(false)
-  }
+    void verifyToken()
+  }, [verifyToken])
 
   const handleAccept = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -73,6 +74,8 @@ function AcceptInviteForm() {
       setLoading(false)
       return
     }
+
+    await supabase.auth.signOut()
 
     // 1. Create auth user with the invited email
     let authId: string | null = null
@@ -108,20 +111,34 @@ function AcceptInviteForm() {
       authId = authData.user?.id || null
     }
 
-    // 2. Accept invitation via API route (bypasses PostgREST schema cache)
-    if (authId) {
-      const acceptRes = await fetch('/api/accept-invite', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token, authId }),
-      })
+    if (!authId) {
+      setError('We could not create your account. Please try again or sign in with the invited email.')
+      setLoading(false)
+      return
+    }
 
-      if (!acceptRes.ok) {
-        const errBody = await acceptRes.json().catch(() => ({}))
-        setError(errBody.error || 'Failed to join team')
-        setLoading(false)
-        return
-      }
+    const acceptRes = await fetch('/api/accept-invite', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, authId }),
+    })
+
+    if (!acceptRes.ok) {
+      const errBody = await acceptRes.json().catch(() => ({}))
+      setError(errBody.error || 'Failed to join team')
+      setLoading(false)
+      return
+    }
+
+    const { error: finalSignInError } = await supabase.auth.signInWithPassword({
+      email: inviteInfo.email,
+      password,
+    })
+
+    if (finalSignInError) {
+      setError(finalSignInError.message || 'Invitation accepted, but sign-in failed.')
+      setLoading(false)
+      return
     }
 
     setSuccess(true)
@@ -130,7 +147,7 @@ function AcceptInviteForm() {
       spread: 80,
       origin: { y: 0.6 },
     })
-    setTimeout(() => router.push('/dashboard'), 2500)
+    setTimeout(() => router.replace('/dashboard'), 2500)
   }
 
   if (verifying) {

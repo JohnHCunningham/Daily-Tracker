@@ -1,8 +1,14 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
-import { HiSparkles, HiStar, HiFire, HiLightningBolt, HiTrendingUp, HiHeart } from 'react-icons/hi'
+import { HiHeart, HiSparkles } from 'react-icons/hi'
+import {
+  celebrationBadgeConfig,
+  celebrationBadgeSections,
+  celebrationCategories,
+  getCelebrationBadgeConfig,
+} from '@/lib/celebrations'
 
 interface Celebration {
   id: string
@@ -21,14 +27,13 @@ interface LeaderboardEntry {
   count: number
 }
 
-const badgeConfig: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string }> = {
-  first_call: { icon: HiSparkles, color: 'bg-terracotta/20 text-terracotta border-terracotta/30' },
-  pain_funnel_pro: { icon: HiFire, color: 'bg-pink/20 text-terracotta border-pink/30' },
-  consistent_closer: { icon: HiTrendingUp, color: 'bg-clay/20 text-clay border-clay/30' },
-  perfect_score: { icon: HiStar, color: 'bg-clay/20 text-clay border-clay/30' },
-  streak_builder: { icon: HiLightningBolt, color: 'bg-terracotta-bright/20 text-terracotta-bright border-aqua/30' },
-  score_champion: { icon: HiStar, color: 'bg-terracotta/20 text-terracotta border-terracotta/30' },
-  quota_hit: { icon: HiTrendingUp, color: 'bg-clay/20 text-clay border-clay/30' },
+interface CelebrationUser {
+  email: string
+  full_name: string | null
+}
+
+interface CelebrationRow {
+  rep_email: string | null
 }
 
 const TABS = [
@@ -48,19 +53,54 @@ export default function CelebrationsPage() {
   const [accountId, setAccountId] = useState('')
   const supabase = createClient()
 
-  useEffect(() => {
-    loadCelebrations()
-  }, [])
+  const fetchCelebrations = useCallback(async (accId: string) => {
+    const { data } = await supabase
+      .from('Celebrations')
+      .select('*')
+      .eq('account_id', accId)
+      .order('created_at', { ascending: false })
+      .limit(50)
 
-  // Auto-refresh every 60 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      if (accountId) refreshCelebrations()
-    }, 60000)
-    return () => clearInterval(interval)
-  }, [accountId])
+    if (data) setCelebrations(data)
+  }, [supabase])
 
-  async function loadCelebrations() {
+  const buildLeaderboard = useCallback(async (accId: string) => {
+    const { data } = await supabase
+      .from('Celebrations')
+      .select('rep_email')
+      .eq('account_id', accId)
+
+    if (!data) return
+
+    const { data: users } = await supabase
+      .from('Users')
+      .select('email, full_name')
+      .eq('account_id', accId)
+
+    const nameMap: Record<string, string> = {}
+    if (users) {
+      users.forEach((u: CelebrationUser) => { nameMap[u.email] = u.full_name || u.email })
+    }
+
+    const counts: Record<string, number> = {}
+    data.forEach((c: CelebrationRow) => {
+      if (c.rep_email) {
+        counts[c.rep_email] = (counts[c.rep_email] || 0) + 1
+      }
+    })
+
+    const sorted = Object.entries(counts)
+      .map(([email, count]) => ({
+        rep_email: email,
+        rep_name: nameMap[email] || email,
+        count,
+      }))
+      .sort((a, b) => b.count - a.count)
+
+    setLeaderboard(sorted)
+  }, [supabase])
+
+  const loadCelebrations = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -79,64 +119,28 @@ export default function CelebrationsPage() {
     setAccountId(userData.account_id)
 
     await fetchCelebrations(userData.account_id)
-
-    // Build leaderboard
     await buildLeaderboard(userData.account_id)
 
     setLoading(false)
-  }
+  }, [buildLeaderboard, fetchCelebrations, supabase])
 
-  async function fetchCelebrations(accId: string) {
-    const { data } = await supabase
-      .from('Celebrations')
-      .select('*')
-      .eq('account_id', accId)
-      .order('created_at', { ascending: false })
-      .limit(50)
+  useEffect(() => {
+    void loadCelebrations()
+  }, [loadCelebrations])
 
-    if (data) setCelebrations(data)
-  }
-
-  async function refreshCelebrations() {
-    await fetchCelebrations(accountId)
-  }
-
-  async function buildLeaderboard(accId: string) {
-    const { data } = await supabase
-      .from('Celebrations')
-      .select('rep_email')
-      .eq('account_id', accId)
-
-    if (!data) return
-
-    // Load user names
-    const { data: users } = await supabase
-      .from('Users')
-      .select('email, full_name')
-      .eq('account_id', accId)
-
-    const nameMap: Record<string, string> = {}
-    if (users) {
-      users.forEach((u) => { nameMap[u.email] = u.full_name || u.email })
+  const refreshCelebrations = useCallback(async () => {
+    if (accountId) {
+      await fetchCelebrations(accountId)
     }
+  }, [accountId, fetchCelebrations])
 
-    const counts: Record<string, number> = {}
-    data.forEach((c) => {
-      if (c.rep_email) {
-        counts[c.rep_email] = (counts[c.rep_email] || 0) + 1
-      }
-    })
-
-    const sorted = Object.entries(counts)
-      .map(([email, count]) => ({
-        rep_email: email,
-        rep_name: nameMap[email] || email,
-        count,
-      }))
-      .sort((a, b) => b.count - a.count)
-
-    setLeaderboard(sorted)
-  }
+  // Auto-refresh every 60 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      if (accountId) refreshCelebrations()
+    }, 60000)
+    return () => clearInterval(interval)
+  }, [accountId, refreshCelebrations])
 
   async function handleCelebrate(celebrationId: string) {
     if (celebratedIds.has(celebrationId)) return
@@ -228,33 +232,37 @@ export default function CelebrationsPage() {
               {activeTab === 'all' && (
                 <div className="mt-8">
                   <h3 className="text-lg font-bold text-espresso mb-4">Available Badges</h3>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg mx-auto text-left">
-                    {[
-                      { key: 'first_call', title: 'First Call Analyzed', desc: 'Have your first call analyzed by the system' },
-                      { key: 'pain_funnel_pro', title: 'Pain Funnel Pro', desc: 'Score 8+ on Pain three times' },
-                      { key: 'consistent_closer', title: 'Consistent Closer', desc: 'Score 7+ overall on 5 consecutive calls' },
-                      { key: 'perfect_score', title: 'Perfect Score', desc: 'Score 10/10 on any Sandler component' },
-                      { key: 'streak_builder', title: 'Streak Builder', desc: 'Improve scores on 3 consecutive calls' },
-                      { key: 'score_champion', title: 'Score Champion', desc: 'Achieve an average Sandler score of 8+' },
-                      { key: 'quota_hit', title: 'Quota Crusher', desc: 'Hit or exceed a target goal' },
-                    ].map((badge) => {
-                      const config = badgeConfig[badge.key] || { icon: HiSparkles, color: 'bg-terracotta/20 text-terracotta border-terracotta/30' }
-                      const Icon = config.icon
-                      return (
-                        <div
-                          key={badge.key}
-                          className="flex items-center gap-3 p-3 bg-bone rounded-lg border border-bone-dark/50"
-                        >
-                          <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${config.color}`}>
-                            <Icon className="text-lg" />
-                          </div>
-                          <div>
-                            <p className="text-sm font-medium text-espresso">{badge.title}</p>
-                            <p className="text-xs text-stone-light">{badge.desc}</p>
-                          </div>
+                  <div className="space-y-5 max-w-3xl mx-auto text-left">
+                    {celebrationCategories.map((category) => (
+                      <div key={category.key}>
+                        <div className="mb-3">
+                          <p className="text-sm font-semibold uppercase tracking-wider text-terracotta">
+                            {category.label}
+                          </p>
+                          <p className="text-xs text-stone-light">{category.description}</p>
                         </div>
-                      )
-                    })}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          {celebrationBadgeSections[category.key].map((badgeKey) => {
+                            const config = celebrationBadgeConfig[badgeKey] || getCelebrationBadgeConfig(badgeKey)
+                            const Icon = config.icon
+                            return (
+                              <div
+                                key={badgeKey}
+                                className="flex items-center gap-3 p-3 bg-bone rounded-lg border border-bone-dark/50"
+                              >
+                                <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${config.color}`}>
+                                  <Icon className="text-lg" />
+                                </div>
+                                <div>
+                                  <p className="text-sm font-medium text-espresso">{config.label}</p>
+                                  <p className="text-xs text-stone-light">{config.description}</p>
+                                </div>
+                              </div>
+                            )
+                          })}
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
@@ -262,9 +270,7 @@ export default function CelebrationsPage() {
           ) : (
             <div className="space-y-4">
               {filteredCelebrations.map((celebration) => {
-                const config = celebration.badge_key
-                  ? badgeConfig[celebration.badge_key] || { icon: HiSparkles, color: 'bg-terracotta/20 text-terracotta border-terracotta/30' }
-                  : { icon: HiSparkles, color: 'bg-terracotta/20 text-terracotta border-terracotta/30' }
+                const config = getCelebrationBadgeConfig(celebration.badge_key)
                 const Icon = config.icon
                 const isCelebrated = celebratedIds.has(celebration.id)
 

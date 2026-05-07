@@ -1,11 +1,13 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import Image from 'next/image'
+import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import toast from 'react-hot-toast'
 import Link from 'next/link'
 import { useSubscription } from '@/lib/hooks/useSubscription'
 import { PRICE_PER_REP } from '@/lib/stripe'
+import { HiDownload, HiExternalLink } from 'react-icons/hi'
 
 interface AccountInfo {
   id: string
@@ -15,17 +17,45 @@ interface AccountInfo {
   primary_color: string | null
   accent_color: string | null
   company_name: string | null
+  unique_customer_profile: string | null
+  competitor_context: string | null
   email_from_name: string | null
+}
+
+interface CurrentUser {
+  account_id: string
+  role: string
+}
+
+interface BillingHistoryItem {
+  id: string
+  number: string | null
+  status: string
+  currency: string
+  amountPaid: number
+  amountDue: number
+  createdAt: string
+  periodStart: string | null
+  periodEnd: string | null
+  hostedInvoiceUrl: string | null
+  invoicePdf: string | null
+  billingReason: string | null
+  description: string | null
+  paidAt: string | null
+  failureReason: string | null
 }
 
 export default function SettingsPage() {
   const [account, setAccount] = useState<AccountInfo | null>(null)
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [form, setForm] = useState({
     name: '',
     company_name: '',
     logo_url: '',
     primary_color: '#2A221C', // Espresso
     accent_color: '#B5583E', // Terracotta
+    unique_customer_profile: '',
+    competitor_context: '',
     email_from_name: 'One Click Coaching',
   })
   const [loading, setLoading] = useState(true)
@@ -33,28 +63,46 @@ export default function SettingsPage() {
   const [billingLoading, setBillingLoading] = useState(false)
   const [newRepCount, setNewRepCount] = useState<number | null>(null)
   const [updatingPlan, setUpdatingPlan] = useState(false)
+  const [subscriptionActionLoading, setSubscriptionActionLoading] = useState(false)
+  const [selectedBillingCycle, setSelectedBillingCycle] = useState<'monthly' | 'annual'>('monthly')
+  const [billingHistory, setBillingHistory] = useState<BillingHistoryItem[]>([])
+  const [billingHistoryLoading, setBillingHistoryLoading] = useState(false)
+  const [stripeConfig, setStripeConfig] = useState<{
+    configured: boolean
+    hasSecretKey: boolean
+    hasWebhookSecret: boolean
+    hasMonthlyPrice: boolean
+    hasAnnualPrice: boolean
+  } | null>(null)
   const supabase = createClient()
-  const { subscription, loading: subscriptionLoading, isActive, isTrialing, isPastDue, daysLeftInTrial, refetch } = useSubscription()
+  const {
+    subscription,
+    loading: subscriptionLoading,
+    isActive,
+    isTrialing,
+    isPastDue,
+    daysLeftInTrial,
+    daysLeftInGrace,
+    isBillingGraceActive,
+    refetch,
+  } = useSubscription()
 
-  useEffect(() => {
-    loadSettings()
-  }, [])
-
-  async function loadSettings() {
+  const loadSettings = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
     const { data: currentUser } = await supabase
       .from('Users')
-      .select('account_id')
+      .select('account_id, role')
       .eq('auth_id', user.id)
       .single()
 
     if (!currentUser) { setLoading(false); return }
+    setCurrentUser(currentUser)
 
     const { data: accountData } = await supabase
       .from('Accounts')
-      .select('id, name, admin_designation, logo_url, primary_color, accent_color, company_name, email_from_name')
+      .select('id, name, admin_designation, logo_url, primary_color, accent_color, company_name, unique_customer_profile, competitor_context, email_from_name')
       .eq('id', currentUser.account_id)
       .single()
 
@@ -66,14 +114,69 @@ export default function SettingsPage() {
         logo_url: accountData.logo_url || '',
         primary_color: accountData.primary_color || '#0C1030',
         accent_color: accountData.accent_color || '#10C3B0',
+        unique_customer_profile: accountData.unique_customer_profile || '',
+        competitor_context: accountData.competitor_context || '',
         email_from_name: accountData.email_from_name || 'One Click Coaching',
       })
     }
     setLoading(false)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    void loadSettings()
+  }, [loadSettings])
+
+  useEffect(() => {
+    let mounted = true
+    ;(async () => {
+      try {
+        const response = await fetch('/api/stripe/config-status')
+        const data = await response.json()
+        if (mounted) setStripeConfig(data)
+      } catch {
+        if (mounted) setStripeConfig(null)
+      }
+    })()
+
+    return () => {
+      mounted = false
+    }
+  }, [])
+
+  useEffect(() => {
+    let mounted = true
+
+    ;(async () => {
+      if (!currentUser || !['admin', 'manager'].includes(currentUser.role)) {
+        return
+      }
+
+      setBillingHistoryLoading(true)
+      try {
+        const response = await fetch('/api/stripe/billing-history')
+        const data = await response.json().catch(() => null)
+
+        if (mounted && response.ok && data?.success) {
+          setBillingHistory(data.invoices || [])
+        }
+      } catch {
+        if (mounted) setBillingHistory([])
+      } finally {
+        if (mounted) setBillingHistoryLoading(false)
+      }
+    })()
+
+    return () => {
+      mounted = false
+    }
+  }, [currentUser])
 
   async function handleSave() {
     if (!account) return
+    if (!currentUser || !['admin', 'manager'].includes(currentUser.role)) {
+      toast.error('Only admins and managers can update account settings')
+      return
+    }
     setSaving(true)
 
     const { error } = await supabase
@@ -84,6 +187,8 @@ export default function SettingsPage() {
         logo_url: form.logo_url || null,
         primary_color: form.primary_color,
         accent_color: form.accent_color,
+        unique_customer_profile: form.unique_customer_profile,
+        competitor_context: form.competitor_context,
         email_from_name: form.email_from_name,
       })
       .eq('id', account.id)
@@ -103,15 +208,26 @@ export default function SettingsPage() {
     }
   }, [subscription, newRepCount])
 
+  useEffect(() => {
+    if (subscription) {
+      setSelectedBillingCycle(subscription.billingCycle)
+    }
+  }, [subscription])
+
   async function handleUpdatePlan() {
-    if (!newRepCount || newRepCount === subscription?.repCount) return
+    if (!subscription) return
+    if (newRepCount === subscription.repCount && selectedBillingCycle === subscription.billingCycle) return
+    if (!currentUser || !['admin', 'manager'].includes(currentUser.role)) {
+      toast.error('Only admins and managers can update billing')
+      return
+    }
 
     setUpdatingPlan(true)
     try {
       const response = await fetch('/api/stripe/update-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ newRepCount }),
+        body: JSON.stringify({ newRepCount: newRepCount || subscription.repCount, billingCycle: selectedBillingCycle }),
       })
       const data = await response.json()
 
@@ -119,7 +235,7 @@ export default function SettingsPage() {
         // Redirect to checkout for new subscription
         window.location.href = data.url
       } else if (data.success) {
-        toast.success(`Plan updated to ${newRepCount} reps`)
+        toast.success(`Plan updated to ${data.billingCycle === 'annual' ? 'annual' : 'monthly'} billing`)
         refetch()
       } else {
         toast.error(data.error || 'Failed to update plan')
@@ -128,6 +244,56 @@ export default function SettingsPage() {
       toast.error('Failed to update plan')
     } finally {
       setUpdatingPlan(false)
+    }
+  }
+
+  async function handleSubscriptionAction(action: 'cancel' | 'reactivate') {
+    if (!subscription?.stripeSubscriptionId) return
+    if (!currentUser || !['admin', 'manager'].includes(currentUser.role)) {
+      toast.error('Only admins and managers can update billing')
+      return
+    }
+
+    setSubscriptionActionLoading(true)
+    try {
+      const response = await fetch('/api/stripe/manage-subscription', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action }),
+      })
+      const data = await response.json()
+
+      if (data.success) {
+        toast.success(action === 'cancel' ? 'Subscription set to cancel at period end' : 'Subscription reactivated')
+        refetch()
+      } else {
+        toast.error(data.error || 'Failed to update subscription')
+      }
+    } catch {
+      toast.error('Failed to update subscription')
+    } finally {
+      setSubscriptionActionLoading(false)
+    }
+  }
+
+  async function handleStartCheckout(repCount: number, billingCycle: 'monthly' | 'annual' = 'monthly') {
+    setBillingLoading(true)
+    try {
+      const response = await fetch('/api/stripe/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ repCount, billingCycle }),
+      })
+      const data = await response.json()
+      if (data.url) {
+        window.location.href = data.url
+      } else {
+        toast.error(data.error || 'Failed to start checkout')
+      }
+    } catch {
+      toast.error('Failed to start checkout')
+    } finally {
+      setBillingLoading(false)
     }
   }
 
@@ -144,7 +310,17 @@ export default function SettingsPage() {
       <h1 className="text-2xl font-bold text-espresso mb-8">Settings</h1>
 
       <div className="max-w-2xl space-y-6">
+        {currentUser && !['admin', 'manager'].includes(currentUser.role) && (
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+            <h2 className="text-lg font-bold text-espresso mb-2">Account Settings</h2>
+            <p className="text-sm text-stone-light">
+              Ask an admin or manager to update account settings, billing, branding, and integrations.
+            </p>
+          </div>
+        )}
+
         {/* Account Settings */}
+        {currentUser && ['admin', 'manager'].includes(currentUser.role) && (
         <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
           <h2 className="text-lg font-bold text-espresso mb-4">Account</h2>
           <div className="space-y-4">
@@ -168,8 +344,45 @@ export default function SettingsPage() {
             </div>
           </div>
         </div>
+        )}
+
+        {/* Company Context */}
+        {currentUser && ['admin', 'manager'].includes(currentUser.role) && (
+        <div id="company-context" className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+          <h2 className="text-lg font-bold text-espresso mb-4">Company Context</h2>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-stone-light mb-1">Unique Customer</label>
+              <textarea
+                value={form.unique_customer_profile}
+                onChange={(e) => setForm({ ...form, unique_customer_profile: e.target.value })}
+                rows={4}
+                placeholder="Who do you sell to, what do they care about, and what makes them a fit?"
+                className="w-full px-3 py-2 bg-bone border border-terracotta/20 rounded-lg text-espresso text-sm focus:outline-none focus:border-terracotta placeholder:text-stone-light/50"
+              />
+              <p className="text-xs text-stone-light mt-1">
+                Describe the customer profile the coaching brain should optimize for.
+              </p>
+            </div>
+            <div>
+              <label className="block text-sm text-stone-light mb-1">Competitors</label>
+              <textarea
+                value={form.competitor_context}
+                onChange={(e) => setForm({ ...form, competitor_context: e.target.value })}
+                rows={4}
+                placeholder="List 3-4 competitors and the main objection or advantage for each."
+                className="w-full px-3 py-2 bg-bone border border-terracotta/20 rounded-lg text-espresso text-sm focus:outline-none focus:border-terracotta placeholder:text-stone-light/50"
+              />
+              <p className="text-xs text-stone-light mt-1">
+                Keep it practical: who they lose to, why they win, and the objection to expect.
+              </p>
+            </div>
+          </div>
+        </div>
+        )}
 
         {/* White-Label Branding */}
+        {currentUser && ['admin', 'manager'].includes(currentUser.role) && (
         <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
           <h2 className="text-lg font-bold text-espresso mb-4">Branding</h2>
           <div className="space-y-4">
@@ -222,13 +435,15 @@ export default function SettingsPage() {
             {form.logo_url && (
               <div className="p-3 bg-bone rounded-lg border border-bone-dark">
                 <p className="text-xs text-stone-light mb-2">Preview:</p>
-                <img src={form.logo_url} alt="Logo preview" className="h-8 object-contain" />
+                <Image src={form.logo_url} alt="Logo preview" width={160} height={32} className="h-8 w-auto object-contain" />
               </div>
             )}
           </div>
         </div>
+        )}
 
         {/* Email Settings */}
+        {currentUser && ['admin', 'manager'].includes(currentUser.role) && (
         <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
           <h2 className="text-lg font-bold text-espresso mb-4">Email</h2>
           <div>
@@ -242,10 +457,27 @@ export default function SettingsPage() {
             <p className="text-xs text-stone-light mt-1">This name appears in coaching emails sent to reps.</p>
           </div>
         </div>
+        )}
 
         {/* Billing Section */}
+        {currentUser && ['admin', 'manager'].includes(currentUser.role) && (
         <div id="billing" className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
           <h2 className="text-lg font-bold text-espresso mb-4">Billing & Subscription</h2>
+
+          {stripeConfig && !stripeConfig.configured && (
+            <div className="mb-4 rounded-lg border border-pink/30 bg-pink/5 p-4">
+              <p className="font-semibold text-terracotta">Stripe is not fully configured</p>
+              <p className="text-sm text-stone-light mt-1">
+                Missing:{' '}
+                {[
+                  !stripeConfig.hasSecretKey ? 'secret key' : null,
+                  !stripeConfig.hasWebhookSecret ? 'webhook secret' : null,
+                  !stripeConfig.hasMonthlyPrice ? 'monthly price' : null,
+                  !stripeConfig.hasAnnualPrice ? 'annual price' : null,
+                ].filter(Boolean).join(', ')}
+              </p>
+            </div>
+          )}
 
           {subscriptionLoading ? (
             <div className="flex items-center justify-center py-4">
@@ -284,6 +516,40 @@ export default function SettingsPage() {
 
               {/* Rep Count Adjuster */}
               <div className="p-4 bg-bone rounded-lg border border-bone-dark">
+                <p className="text-sm text-stone-light mb-3">Plan</p>
+                <div className="grid grid-cols-2 gap-3 mb-4">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBillingCycle('monthly')}
+                    className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                      selectedBillingCycle === 'monthly'
+                        ? 'border-terracotta bg-terracotta/10 text-espresso'
+                        : 'border-terracotta/20 bg-white text-stone-light hover:border-terracotta/40'
+                    }`}
+                  >
+                    <div className="font-semibold">Monthly</div>
+                    <div className="text-xs mt-1 text-stone-light">
+                      ${PRICE_PER_REP.monthly} / rep / month
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedBillingCycle('annual')}
+                    className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                      selectedBillingCycle === 'annual'
+                        ? 'border-terracotta bg-terracotta/10 text-espresso'
+                        : 'border-terracotta/20 bg-white text-stone-light hover:border-terracotta/40'
+                    }`}
+                  >
+                    <div className="font-semibold">Annual</div>
+                    <div className="text-xs mt-1 text-stone-light">
+                      ${PRICE_PER_REP.annual} / rep / year
+                    </div>
+                  </button>
+                </div>
+                <p className="text-xs text-stone-light mb-3">
+                  Annual saves ${PRICE_PER_REP.monthly * 12 - PRICE_PER_REP.annual} per rep each year.
+                </p>
                 <p className="text-sm text-stone-light mb-3">Adjust Rep Slots</p>
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
@@ -324,7 +590,18 @@ export default function SettingsPage() {
                     disabled={updatingPlan}
                     className="mt-4 w-full bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-2.5 px-4 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
                   >
-                    {updatingPlan ? 'Updating...' : newRepCount > subscription.repCount ? `Upgrade to ${newRepCount} Reps` : `Downgrade to ${newRepCount} Reps`}
+                    {updatingPlan
+                      ? 'Updating...'
+                      : `${newRepCount > subscription.repCount ? 'Upgrade' : 'Downgrade'} to ${newRepCount} Reps`}
+                  </button>
+                )}
+                {newRepCount === subscription.repCount && selectedBillingCycle !== subscription.billingCycle && (
+                  <button
+                    onClick={handleUpdatePlan}
+                    disabled={updatingPlan}
+                    className="mt-4 w-full bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-2.5 px-4 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
+                  >
+                    {updatingPlan ? 'Updating...' : `Switch to ${selectedBillingCycle === 'annual' ? 'Annual' : 'Monthly'} Billing`}
                   </button>
                 )}
               </div>
@@ -353,71 +630,188 @@ export default function SettingsPage() {
                 <div className="p-4 bg-pink/10 border border-pink/30 rounded-lg">
                   <p className="text-terracotta font-semibold">Payment Failed</p>
                   <p className="text-sm text-pink/80 mt-1">
-                    Please update your payment method to continue using all features.
+                    {isBillingGraceActive
+                      ? daysLeftInGrace !== null
+                        ? `Please update your payment method within ${daysLeftInGrace} day${daysLeftInGrace === 1 ? '' : 's'} to avoid losing access.`
+                        : 'Please update your payment method within the grace period to avoid losing access.'
+                      : 'Your grace period has ended. Update your payment method to restore access.'}
                   </p>
                 </div>
               )}
 
               {/* Manage Subscription Button */}
               {subscription.stripeCustomerId && (
-                <button
-                  onClick={async () => {
-                    setBillingLoading(true)
-                    try {
-                      const response = await fetch('/api/stripe/create-portal-session', {
-                        method: 'POST',
-                      })
-                      const data = await response.json()
-                      if (data.url) {
-                        window.location.href = data.url
-                      } else {
-                        toast.error(data.error || 'Failed to open billing portal')
+                <div className="space-y-3">
+                  <button
+                    onClick={async () => {
+                      setBillingLoading(true)
+                      try {
+                        const response = await fetch('/api/stripe/create-portal-session', {
+                          method: 'POST',
+                        })
+                        const data = await response.json()
+                        if (data.url) {
+                          window.location.href = data.url
+                        } else {
+                          toast.error(data.error || 'Failed to open billing portal')
+                        }
+                      } catch {
+                        toast.error('Failed to open billing portal')
+                      } finally {
+                        setBillingLoading(false)
                       }
-                    } catch {
-                      toast.error('Failed to open billing portal')
-                    } finally {
-                      setBillingLoading(false)
-                    }
-                  }}
-                  disabled={billingLoading}
-                  className="w-full bg-terracotta/10 border border-terracotta/30 text-terracotta font-semibold py-3 px-4 rounded-lg hover:bg-terracotta/20 transition-colors disabled:opacity-50"
-                >
-                  {billingLoading ? 'Opening...' : 'Manage Subscription'}
-                </button>
+                    }}
+                    disabled={billingLoading || !stripeConfig?.configured}
+                    className="w-full bg-terracotta/10 border border-terracotta/30 text-terracotta font-semibold py-3 px-4 rounded-lg hover:bg-terracotta/20 transition-colors disabled:opacity-50"
+                  >
+                    {billingLoading ? 'Opening...' : 'Manage Subscription'}
+                  </button>
+
+                  {subscription.subscriptionStatus !== 'canceled' && (
+                    <button
+                      onClick={() => handleSubscriptionAction(subscription.cancelAtPeriodEnd ? 'reactivate' : 'cancel')}
+                      disabled={subscriptionActionLoading || !stripeConfig?.configured}
+                      className={`w-full font-semibold py-3 px-4 rounded-lg border transition-colors disabled:opacity-50 ${
+                        subscription.cancelAtPeriodEnd
+                          ? 'bg-white border-bone-dark text-espresso hover:bg-bone-light'
+                          : 'bg-pink/5 border-pink/30 text-terracotta hover:bg-pink/10'
+                      }`}
+                    >
+                      {subscriptionActionLoading
+                        ? 'Updating...'
+                        : subscription.cancelAtPeriodEnd
+                          ? 'Reactivate Subscription'
+                          : 'Cancel at Period End'}
+                    </button>
+                  )}
+                </div>
               )}
             </div>
           ) : (
             <div className="text-center py-4">
               <p className="text-stone-light mb-4">No active subscription</p>
-              <button
-                onClick={async () => {
-                  setBillingLoading(true)
-                  try {
-                    const response = await fetch('/api/stripe/create-checkout-session', {
-                      method: 'POST',
-                      headers: { 'Content-Type': 'application/json' },
-                      body: JSON.stringify({ repCount: 1, billingCycle: 'monthly' }),
-                    })
-                    const data = await response.json()
-                    if (data.url) {
-                      window.location.href = data.url
-                    } else {
-                      toast.error(data.error || 'Failed to start checkout')
-                    }
-                  } catch {
-                    toast.error('Failed to start checkout')
-                  } finally {
-                    setBillingLoading(false)
-                  }
-                }}
-                disabled={billingLoading}
-                className="bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-3 px-6 rounded-lg hover:shadow-glow-teal transition-all disabled:opacity-50"
-              >
-                {billingLoading ? 'Loading...' : 'Subscribe Now'}
-              </button>
+                <button
+                  onClick={() => void handleStartCheckout(1, 'monthly')}
+                  disabled={billingLoading || !stripeConfig?.configured}
+                  className="bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-3 px-6 rounded-lg hover:shadow-glow-teal transition-all disabled:opacity-50"
+                >
+                  {billingLoading ? 'Loading...' : 'Subscribe Now'}
+                </button>
             </div>
           )}
         </div>
+        )}
+
+        {subscription && subscription.subscriptionStatus === 'canceled' && (
+          <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+            <h2 className="text-lg font-bold text-espresso mb-2">Subscription Ended</h2>
+            <p className="text-sm text-stone-light mb-4">
+              This subscription is canceled. Start a new one to regain access.
+            </p>
+              <button
+              onClick={() => void handleStartCheckout(subscription.repCount, selectedBillingCycle)}
+              disabled={billingLoading || !stripeConfig?.configured}
+              className="bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-3 px-6 rounded-lg hover:shadow-glow-teal transition-all disabled:opacity-50"
+            >
+              {billingLoading ? 'Loading...' : 'Reactivate Subscription'}
+            </button>
+          </div>
+        )}
+
+        {/* Billing History */}
+        {currentUser && ['admin', 'manager'].includes(currentUser.role) && (
+          <div id="billing-history" className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+            <div className="flex items-center justify-between gap-3 mb-4">
+              <div>
+                <h2 className="text-lg font-bold text-espresso">Billing History</h2>
+                <p className="text-xs text-stone-light">Download receipts and invoice PDFs from Stripe.</p>
+              </div>
+            </div>
+
+            {billingHistoryLoading ? (
+              <div className="flex items-center justify-center py-8">
+                <div className="w-6 h-6 border-2 border-terracotta border-t-transparent rounded-full animate-spin" />
+              </div>
+            ) : billingHistory.length > 0 ? (
+              <div className="space-y-3">
+                {billingHistory.map((invoice) => (
+                  <div key={invoice.id} className="rounded-xl border border-bone-dark bg-bone/40 p-4">
+                    <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                      <div className="space-y-1">
+                        <div className="flex items-center gap-2">
+                          <p className="font-semibold text-espresso">
+                            {invoice.number ? `Invoice #${invoice.number}` : 'Invoice'}
+                          </p>
+                          <span className={`rounded-full px-2 py-0.5 text-[11px] font-medium ${
+                            invoice.status === 'paid'
+                              ? 'bg-teal/10 text-teal'
+                              : invoice.status === 'open'
+                                ? 'bg-gold/10 text-gold'
+                                : invoice.status === 'void'
+                                  ? 'bg-stone-light/20 text-stone-light'
+                                  : 'bg-pink/10 text-pink'
+                          }`}>
+                            {invoice.status}
+                          </span>
+                        </div>
+                        <p className="text-sm text-stone-light">
+                          {invoice.description || invoice.billingReason || 'Stripe invoice'} · {new Date(invoice.createdAt).toLocaleDateString('en-US', {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
+                        </p>
+                        <p className="text-xs text-stone-light">
+                          {invoice.amountPaid > 0
+                            ? `${(invoice.amountPaid / 100).toLocaleString(undefined, { style: 'currency', currency: invoice.currency.toUpperCase() })} paid`
+                            : `${(invoice.amountDue / 100).toLocaleString(undefined, { style: 'currency', currency: invoice.currency.toUpperCase() })} due`}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        {invoice.hostedInvoiceUrl && (
+                          <a
+                            href={invoice.hostedInvoiceUrl}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 rounded-lg border border-terracotta/20 bg-white px-3 py-2 text-sm font-medium text-espresso hover:bg-terracotta/10"
+                          >
+                            <HiExternalLink />
+                            View
+                          </a>
+                        )}
+                        {invoice.invoicePdf && (
+                          <a
+                            href={invoice.invoicePdf}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-2 rounded-lg bg-terracotta px-3 py-2 text-sm font-medium text-white hover:bg-terracotta-bright"
+                          >
+                            <HiDownload />
+                            PDF
+                          </a>
+                        )}
+                      </div>
+                    </div>
+                    {(invoice.periodStart || invoice.periodEnd) && (
+                      <p className="mt-3 text-xs text-stone-light">
+                        {invoice.periodStart ? new Date(invoice.periodStart).toLocaleDateString('en-US') : 'Start'} - {invoice.periodEnd ? new Date(invoice.periodEnd).toLocaleDateString('en-US') : 'End'}
+                      </p>
+                    )}
+                    {invoice.failureReason && (
+                      <p className="mt-2 text-xs text-pink">
+                        {invoice.failureReason}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="rounded-xl border border-dashed border-bone-dark bg-bone/30 p-6 text-sm text-stone-light">
+                No invoices found yet. Stripe receipts will appear here after the first successful payment.
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Quick Links */}
         <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
@@ -442,6 +836,7 @@ export default function SettingsPage() {
         </div>
 
         {/* Save */}
+        {currentUser && ['admin', 'manager'].includes(currentUser.role) && (
         <button
           onClick={handleSave}
           disabled={saving}
@@ -449,15 +844,30 @@ export default function SettingsPage() {
         >
           {saving ? 'Saving...' : 'Save All Settings'}
         </button>
+        )}
 
         {/* Danger Zone */}
+        {currentUser?.role === 'admin' && (
         <div className="bg-white rounded-2xl border border-pink/20 p-6">
           <h2 className="text-lg font-bold text-terracotta mb-2">Danger Zone</h2>
           <p className="text-stone-light text-sm mb-4">These actions are irreversible.</p>
           <button className="text-sm text-terracotta border border-pink/30 bg-pink/5 px-4 py-2 rounded-lg hover:bg-pink/10 transition-colors">
             Delete Account
           </button>
+          <div className="mt-4 rounded-lg border border-bone-dark bg-bone/30 p-4">
+            <p className="text-sm font-semibold text-espresso">Emergency ownership handoff</p>
+            <p className="text-xs text-stone-light mt-1">
+              Use the support-only transfer screen if the primary manager is unavailable.
+            </p>
+            <Link
+              href="/support"
+              className="mt-3 inline-flex rounded-lg bg-terracotta px-4 py-2 text-sm font-semibold text-white hover:bg-terracotta-bright"
+            >
+              Open Support Screen
+            </Link>
+          </div>
         </div>
+        )}
       </div>
     </div>
   )

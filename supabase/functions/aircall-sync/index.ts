@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getAuthorizedAccountContext } from "../_shared/auth.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -40,8 +41,10 @@ interface AircallCall {
   };
 }
 
-// Get Aircall credentials from database
-async function getAircallCredentials(supabase: any, account_id: string): Promise<{ apiId: string; apiToken: string } | null> {
+// Get Aircall credentials from database.
+// The UI stores a single Basic-auth payload in api_key for new connections.
+// Older rows may still have raw api_key/api_secret values.
+async function getAircallCredentials(supabase: any, account_id: string): Promise<{ authHeader: string } | null> {
   const { data, error } = await supabase
     .from("API_Connections")
     .select("api_key, api_secret, connection_status")
@@ -55,11 +58,20 @@ async function getAircallCredentials(supabase: any, account_id: string): Promise
     return null;
   }
 
-  // api_key = API ID, api_secret = API Token
-  return {
-    apiId: data.api_key,
-    apiToken: data.api_secret,
-  };
+  if (data.api_key && data.api_secret) {
+    return {
+      authHeader: createAuthHeader(data.api_key, data.api_secret),
+    };
+  }
+
+  if (data.api_key) {
+    return {
+      authHeader: data.api_key.startsWith("Basic ") ? data.api_key : `Basic ${data.api_key}`,
+    };
+  }
+
+  console.error("Aircall connection is missing stored credentials");
+  return null;
 }
 
 // Create Basic Auth header
@@ -69,10 +81,8 @@ function createAuthHeader(apiId: string, apiToken: string): string {
 }
 
 // Fetch calls from Aircall API
-async function fetchAircallCalls(apiId: string, apiToken: string): Promise<AircallCall[]> {
+async function fetchAircallCalls(authHeader: string): Promise<AircallCall[]> {
   try {
-    const authHeader = createAuthHeader(apiId, apiToken);
-
     // Get calls from the last 30 days
     const thirtyDaysAgo = Math.floor((Date.now() - 30 * 24 * 60 * 60 * 1000) / 1000);
 
@@ -176,16 +186,16 @@ serve(async (req) => {
   }
 
   try {
-    const { account_id } = await req.json();
-
-    if (!account_id) {
+    const auth = await getAuthorizedAccountContext(req);
+    if ("error" in auth) {
       return new Response(
-        JSON.stringify({ error: "account_id is required" }),
-        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        JSON.stringify({ error: auth.error }),
+        { status: auth.status, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const account_id = auth.accountId;
 
     // Get Aircall credentials
     const credentials = await getAircallCredentials(supabase, account_id);
@@ -197,7 +207,7 @@ serve(async (req) => {
     }
 
     // Fetch and sync calls
-    const calls = await fetchAircallCalls(credentials.apiId, credentials.apiToken);
+    const calls = await fetchAircallCalls(credentials.authHeader);
     const { synced, withRecordings } = await syncCalls(supabase, calls, account_id);
 
     // Update sync status

@@ -2,6 +2,54 @@
 -- Adds 'proposals' to the Goals goal_type constraint and creates
 -- an RPC function for aggregating pipeline metrics.
 
+-- Recreate the base Goals table if it is missing in production.
+-- The remote migration history says 054 is present, but the live schema is missing
+-- the relation, so this patch makes 074 resilient to that drift.
+CREATE TABLE IF NOT EXISTS "Goals" (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  account_id UUID NOT NULL REFERENCES "Accounts"(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES "Users"(id) ON DELETE CASCADE,
+  rep_email TEXT,
+  goal_type TEXT NOT NULL CHECK (goal_type IN ('contacts', 'discovery_calls', 'sales', 'quota', 'sandler_score')),
+  target_value NUMERIC NOT NULL,
+  current_value NUMERIC NOT NULL DEFAULT 0,
+  period TEXT NOT NULL DEFAULT 'monthly' CHECK (period IN ('weekly', 'monthly', 'quarterly')),
+  period_start DATE NOT NULL DEFAULT (date_trunc('month', CURRENT_DATE)::date),
+  period_end DATE NOT NULL DEFAULT ((date_trunc('month', CURRENT_DATE) + INTERVAL '1 month' - INTERVAL '1 day')::date),
+  set_by UUID REFERENCES auth.users(id),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE "Goals" ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "managers_manage_goals" ON "Goals";
+CREATE POLICY "managers_manage_goals" ON "Goals"
+  FOR ALL
+  USING (
+    EXISTS (
+      SELECT 1 FROM "Users"
+      WHERE "Users".auth_id = auth.uid()
+      AND "Users".account_id = "Goals".account_id
+      AND "Users".role IN ('admin', 'manager')
+    )
+  );
+
+DROP POLICY IF EXISTS "reps_view_own_goals" ON "Goals";
+CREATE POLICY "reps_view_own_goals" ON "Goals"
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM "Users"
+      WHERE "Users".auth_id = auth.uid()
+      AND "Users".account_id = "Goals".account_id
+      AND ("Goals".user_id = "Users".id OR "Goals".rep_email = "Users".email)
+    )
+  );
+
+CREATE INDEX IF NOT EXISTS idx_goals_account ON "Goals"(account_id);
+CREATE INDEX IF NOT EXISTS idx_goals_user ON "Goals"(user_id);
+
 -- 1. Expand Goals check constraint to include 'proposals'
 ALTER TABLE "Goals" DROP CONSTRAINT IF EXISTS "Goals_goal_type_check";
 ALTER TABLE "Goals" ADD CONSTRAINT "Goals_goal_type_check"

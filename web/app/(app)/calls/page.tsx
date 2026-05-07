@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { HiPhone, HiPlay, HiClock, HiUser } from 'react-icons/hi'
@@ -23,11 +23,7 @@ export default function CallsPage() {
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
-  useEffect(() => {
-    loadCalls()
-  }, [])
-
-  async function loadCalls() {
+  const loadCalls = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -58,7 +54,11 @@ export default function CallsPage() {
 
     if (data) setCalls(data)
     setLoading(false)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    void loadCalls()
+  }, [loadCalls])
 
   function getOverallScore(scores: Record<string, number> | null): number | null {
     if (!scores) return null

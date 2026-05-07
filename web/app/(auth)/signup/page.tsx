@@ -3,7 +3,8 @@
 import { useState, Suspense } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
+import { PRICE_PER_REP } from '@/lib/stripe'
 
 function SignupForm() {
   const [name, setName] = useState('')
@@ -12,12 +13,13 @@ function SignupForm() {
   const [company, setCompany] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const router = useRouter()
   const searchParams = useSearchParams()
 
   // Get optional plan parameters from URL
   const repCount = parseInt(searchParams.get('reps') || '1', 10)
-  const billingCycle = searchParams.get('billing') || 'monthly'
+  const [selectedBillingCycle, setSelectedBillingCycle] = useState<'monthly' | 'annual'>(
+    searchParams.get('billing') === 'annual' ? 'annual' : 'monthly'
+  )
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -69,7 +71,7 @@ function SignupForm() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           repCount: repCount,
-          billingCycle: billingCycle as 'monthly' | 'annual',
+          billingCycle: selectedBillingCycle,
         }),
       })
 
@@ -79,12 +81,46 @@ function SignupForm() {
         window.location.href = data.url
         return
       }
+
+      if (data.error) {
+        if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email,
+            password,
+          })
+
+          if (signInError) {
+            setError(data.error)
+            setLoading(false)
+            return
+          }
+
+          window.location.href = '/dashboard'
+          return
+        }
+
+        setError(data.error)
+        setLoading(false)
+        return
+      }
     } catch (checkoutError) {
       console.error('Checkout redirect error:', checkoutError)
-      // If checkout fails, still redirect to dashboard (they can subscribe later)
-    }
+      if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        })
 
-    router.push('/dashboard')
+        if (!signInError) {
+          window.location.href = '/dashboard'
+          return
+        }
+      }
+
+      setError('Checkout could not be started. Please try again.')
+      setLoading(false)
+      return
+    }
   }
 
   return (
@@ -133,6 +169,45 @@ function SignupForm() {
               className="w-full px-4 py-3 bg-espresso-light border border-terracotta/20 rounded-lg text-bone placeholder-stone/50 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20"
               placeholder="Acme Corp"
             />
+          </div>
+
+          <div>
+            <p className="block text-sm font-medium text-bone mb-2">
+              Billing cycle
+            </p>
+            <div className="grid grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setSelectedBillingCycle('monthly')}
+                className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                  selectedBillingCycle === 'monthly'
+                    ? 'border-terracotta bg-terracotta/10 text-bone'
+                    : 'border-terracotta/20 bg-espresso-light text-stone-light hover:border-terracotta/40'
+                }`}
+              >
+                <div className="font-semibold">Monthly</div>
+                <div className="text-xs mt-1 text-stone-light">
+                  ${PRICE_PER_REP.monthly} per rep / month
+                </div>
+              </button>
+              <button
+                type="button"
+                onClick={() => setSelectedBillingCycle('annual')}
+                className={`rounded-lg border px-4 py-3 text-left transition-colors ${
+                  selectedBillingCycle === 'annual'
+                    ? 'border-terracotta bg-terracotta/10 text-bone'
+                    : 'border-terracotta/20 bg-espresso-light text-stone-light hover:border-terracotta/40'
+                }`}
+              >
+                <div className="font-semibold">Annual</div>
+                <div className="text-xs mt-1 text-stone-light">
+                  ${PRICE_PER_REP.annual} per rep / year
+                </div>
+              </button>
+            </div>
+            <p className="text-xs text-stone-light mt-2">
+              Annual billing saves ${PRICE_PER_REP.monthly * 12 - PRICE_PER_REP.annual} per rep each year.
+            </p>
           </div>
 
           <div>

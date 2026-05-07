@@ -1,6 +1,47 @@
 -- Migration 076: Milestone detection function
 -- Checks for achievements and inserts into Celebrations with dedup.
 
+-- Recreate the base Celebrations table if production drift removed it.
+CREATE TABLE IF NOT EXISTS "Celebrations" (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  account_id UUID NOT NULL REFERENCES "Accounts"(id) ON DELETE CASCADE,
+  user_id UUID REFERENCES "Users"(id) ON DELETE CASCADE,
+  rep_email TEXT,
+  type TEXT NOT NULL CHECK (type IN ('badge', 'milestone', 'streak', 'achievement')),
+  title TEXT NOT NULL,
+  description TEXT,
+  badge_key TEXT,
+  metadata JSONB DEFAULT '{}',
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+ALTER TABLE "Celebrations" ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "account_view_celebrations" ON "Celebrations";
+CREATE POLICY "account_view_celebrations" ON "Celebrations"
+  FOR SELECT
+  USING (
+    EXISTS (
+      SELECT 1 FROM "Users"
+      WHERE "Users".auth_id = auth.uid()
+      AND "Users".account_id = "Celebrations".account_id
+    )
+  );
+
+DROP POLICY IF EXISTS "managers_create_celebrations" ON "Celebrations";
+CREATE POLICY "managers_create_celebrations" ON "Celebrations"
+  FOR INSERT
+  WITH CHECK (
+    EXISTS (
+      SELECT 1 FROM "Users"
+      WHERE "Users".auth_id = auth.uid()
+      AND "Users".account_id = "Celebrations".account_id
+    )
+  );
+
+CREATE INDEX IF NOT EXISTS idx_celebrations_account ON "Celebrations"(account_id);
+CREATE INDEX IF NOT EXISTS idx_celebrations_user ON "Celebrations"(user_id);
+
 -- Add badge_key + rep_email unique index for dedup (if not exists)
 CREATE UNIQUE INDEX IF NOT EXISTS idx_celebrations_dedup
   ON "Celebrations"(account_id, rep_email, badge_key)

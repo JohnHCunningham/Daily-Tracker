@@ -1,7 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import { createClient } from '@/lib/supabase/client'
+import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
 import { HiArrowLeft, HiPlay, HiClock, HiRefresh, HiPhone, HiMail, HiCalendar, HiClipboardList, HiExternalLink } from 'react-icons/hi'
 
@@ -29,6 +28,12 @@ interface HubSpotActivity {
   metadata: Record<string, any> | null
 }
 
+interface CurrentUser {
+  account_id: string
+  email: string
+  role: string
+}
+
 const hubspotTypeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
   call: HiPhone,
   email: HiMail,
@@ -53,46 +58,35 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
   const [analyzing, setAnalyzing] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const [hubspotActivities, setHubspotActivities] = useState<HubSpotActivity[]>([])
-  const supabase = createClient()
+  const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
 
-  useEffect(() => {
-    loadCall()
+  const loadCall = useCallback(async () => {
+    const response = await fetch(`/api/calls/${params.callId}`)
+    const data = await response.json().catch(() => null)
+
+    if (!response.ok) {
+      setLoading(false)
+      return
+    }
+
+    setCurrentUser(data.currentUser)
+    setCall(data.call)
+    setHubspotActivities(data.hubspotActivities || [])
+    setLoading(false)
   }, [params.callId])
 
-  async function loadCall() {
-    const { data } = await supabase
-      .from('Synced_Conversations')
-      .select('*')
-      .eq('id', params.callId)
-      .single()
-
-    if (data) {
-      setCall(data)
-      if (data.rep_email && data.call_date) {
-        loadHubspotActivities(data.rep_email, data.call_date)
-      }
-    }
-    setLoading(false)
-  }
-
-  async function loadHubspotActivities(repEmail: string, callDate: string) {
-    const dateStr = new Date(callDate).toISOString().split('T')[0]
-    const { data } = await supabase
-      .from('Synced_Activities')
-      .select('id, activity_type, activity_date, source_url, metadata')
-      .eq('rep_email', repEmail)
-      .eq('source_provider', 'hubspot')
-      .gte('activity_date', `${dateStr}T00:00:00`)
-      .lt('activity_date', `${dateStr}T23:59:59`)
-
-    if (data) setHubspotActivities(data)
-  }
+  useEffect(() => {
+    void loadCall()
+  }, [loadCall])
 
   async function handleAnalyze() {
     if (!call) return
+    if (!currentUser || currentUser.role === 'rep') return
     setAnalyzing(true)
     setMessage(null)
 
+    const { createClient } = await import('@/lib/supabase/client')
+    const supabase = createClient()
     const { error } = await supabase.functions.invoke('analyze-call', {
       body: { conversation_id: call.id },
     })
@@ -101,7 +95,7 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
       setMessage({ type: 'error', text: 'Analysis failed. Please try again.' })
     } else {
       setMessage({ type: 'success', text: 'Analysis complete.' })
-      loadCall()
+      void loadCall()
     }
     setAnalyzing(false)
   }
@@ -196,7 +190,7 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
         {/* Right: Sandler Scores */}
         <div className="space-y-6">
           {/* Analyze Button */}
-          {!call.analyzed_at && (
+          {!call.analyzed_at && currentUser?.role !== 'rep' && (
             <div className="bg-white rounded-2xl border border-clay/30 p-6">
               <h2 className="text-lg font-bold text-espresso mb-2">Ready to Analyze</h2>
               <p className="text-sm text-stone-light mb-4">

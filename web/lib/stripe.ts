@@ -22,8 +22,8 @@ export const stripe = typeof process.env.STRIPE_SECRET_KEY === 'string'
 
 // Price IDs for per-rep pricing ($50/rep/month, $500/rep/year)
 export const STRIPE_PRICES = {
-  monthly: process.env.STRIPE_PRICE_MONTHLY || 'price_1TP7rfI7b0TP2n0DO8e7jchG',
-  annual: process.env.STRIPE_PRICE_ANNUAL || 'price_1TP819I7b0TP2n0DvW758SYZ',
+  monthly: process.env.STRIPE_PRICE_MONTHLY,
+  annual: process.env.STRIPE_PRICE_ANNUAL,
 } as const
 
 // Per-rep pricing

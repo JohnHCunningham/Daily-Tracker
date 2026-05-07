@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { HiPlus, HiTrash, HiChartBar } from 'react-icons/hi'
 import dynamic from 'next/dynamic'
@@ -59,11 +59,7 @@ export default function GoalsPage() {
 
   const supabase = createClient()
 
-  useEffect(() => {
-    loadGoals()
-  }, [])
-
-  async function loadGoals() {
+  const loadGoals = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -108,7 +104,11 @@ export default function GoalsPage() {
     }
 
     setLoading(false)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    void loadGoals()
+  }, [loadGoals])
 
   async function handleCreateGoal(e: React.FormEvent) {
     e.preventDefault()
@@ -142,7 +142,7 @@ export default function GoalsPage() {
       setFormRepEmail('')
       setFormType('contacts')
       setFormTarget('')
-      loadGoals()
+      void loadGoals()
     }
     setSaving(false)
   }

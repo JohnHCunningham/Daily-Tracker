@@ -19,6 +19,7 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
+const INTERNAL_BEARER = `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
 
 serve(async (req) => {
   // Handle CORS preflight
@@ -27,6 +28,10 @@ serve(async (req) => {
   }
 
   try {
+    if (req.headers.get("Authorization") !== INTERNAL_BEARER) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
     const body = await req.json();
     const { text, texts } = body;
 

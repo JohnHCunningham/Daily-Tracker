@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { HiExternalLink, HiRefresh, HiCheckCircle, HiExclamationCircle } from 'react-icons/hi'
@@ -18,11 +18,7 @@ export default function IntegrationsPage() {
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
-  useEffect(() => {
-    loadConnections()
-  }, [])
-
-  async function loadConnections() {
+  const loadConnections = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
     if (!user) return
 
@@ -44,7 +40,11 @@ export default function IntegrationsPage() {
 
     if (data) setConnections(data)
     setLoading(false)
-  }
+  }, [supabase])
+
+  useEffect(() => {
+    void loadConnections()
+  }, [loadConnections])
 
   function getConnectionStatus(provider: string) {
     return connections.find((c) => c.provider === provider)

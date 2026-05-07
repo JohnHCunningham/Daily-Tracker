@@ -21,12 +21,40 @@ export async function POST(request: NextRequest) {
     // Get the user's account
     const { data: userData } = await supabase
       .from('Users')
-      .select('account_id')
+      .select('account_id, role')
       .eq('auth_id', user.id)
       .single()
 
     if (!userData?.account_id) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 })
+    }
+
+    if (!['admin', 'manager'].includes(userData.role)) {
+      return NextResponse.json({ error: 'Billing access denied' }, { status: 403 })
+    }
+
+    const { count: activeRepCount } = await supabase
+      .from('Users')
+      .select('*', { count: 'exact', head: true })
+      .eq('account_id', userData.account_id)
+      .eq('role', 'rep')
+
+    const { count: pendingRepInvites } = await supabase
+      .from('Invitations')
+      .select('*', { count: 'exact', head: true })
+      .eq('account_id', userData.account_id)
+      .eq('role', 'rep')
+      .eq('status', 'pending')
+
+    const usedSlots = (activeRepCount || 0) + (pendingRepInvites || 0)
+
+    if (repCount < usedSlots) {
+      return NextResponse.json(
+        {
+          error: `You currently have ${usedSlots} rep${usedSlots !== 1 ? 's' : ''} using slots. Increase rep slots before starting checkout.`,
+        },
+        { status: 409 }
+      )
     }
 
     // Get account details
@@ -61,20 +89,11 @@ export async function POST(request: NextRequest) {
         .eq('id', account.id)
     }
 
-    // Get the appropriate price ID (fall back to monthly if annual not configured)
-    let priceId = STRIPE_PRICES.monthly
-    let actualBillingCycle = billingCycle
-
-    if (billingCycle === 'annual' && STRIPE_PRICES.annual) {
-      priceId = STRIPE_PRICES.annual
-    } else if (billingCycle === 'annual') {
-      // Annual not available, fall back to monthly
-      actualBillingCycle = 'monthly'
-    }
+    const priceId = billingCycle === 'annual' ? STRIPE_PRICES.annual : STRIPE_PRICES.monthly
 
     if (!priceId) {
       return NextResponse.json(
-        { error: 'Stripe price not configured' },
+        { error: `Stripe ${billingCycle} price not configured` },
         { status: 500 }
       )
     }
@@ -100,7 +119,7 @@ export async function POST(request: NextRequest) {
         metadata: {
           account_id: account.id,
           rep_count: String(repCount),
-          billing_cycle: actualBillingCycle,
+          billing_cycle: billingCycle,
         },
       },
       success_url: `${request.headers.get('origin')}/dashboard?checkout=success`,

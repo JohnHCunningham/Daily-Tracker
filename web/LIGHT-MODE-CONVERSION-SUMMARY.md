@@ -78,8 +78,6 @@ Applied comprehensive color updates to all remaining pages:
 - **coaching/page.tsx**
 - **calls/[callId]/page.tsx**
 - **calls/page.tsx**
-- **planning/page.tsx** (if exists)
-
 ## Color Mapping Reference
 
 ### Backgrounds

@@ -819,7 +819,6 @@ export default function SettingsPage() {
           <div className="space-y-2">
             <Link href="/integrations" className="block text-terracotta text-sm hover:text-terracotta-bright">Manage Integrations (HubSpot, Fathom, Aircall)</Link>
             <Link href="/team" className="block text-terracotta text-sm hover:text-terracotta-bright">Manage Team Members</Link>
-            <Link href="/planning" className="block text-terracotta text-sm hover:text-terracotta-bright">Planning & Benchmarks</Link>
           </div>
         </div>
 

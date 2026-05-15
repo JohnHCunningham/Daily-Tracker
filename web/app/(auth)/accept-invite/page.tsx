@@ -53,6 +53,10 @@ function AcceptInviteForm() {
       }
 
       setInviteInfo({ email: data.email, role: data.role })
+      const { data: sessionData } = await supabase.auth.getUser()
+      if (sessionData.user?.email && sessionData.user.email !== data.email) {
+        await supabase.auth.signOut()
+      }
     } catch {
       setError('Could not verify this invitation. Please refresh the link or ask for a new invite.')
     } finally {
@@ -196,6 +200,20 @@ function AcceptInviteForm() {
         )}
 
         <div>
+          <label htmlFor="email" className="block text-sm font-medium text-bone mb-2">
+            Invited Email
+          </label>
+          <input
+            id="email"
+            type="email"
+            value={inviteInfo?.email || ''}
+            readOnly
+            autoComplete="username"
+            className="w-full px-4 py-3 bg-espresso-light border border-terracotta/20 rounded-lg text-bone/80 placeholder-stone/50 focus:outline-none"
+          />
+        </div>
+
+        <div>
           <label htmlFor="name" className="block text-sm font-medium text-bone mb-2">
             Full Name
           </label>
@@ -205,6 +223,7 @@ function AcceptInviteForm() {
             value={name}
             onChange={(e) => setName(e.target.value)}
             required
+            autoComplete="name"
             className="w-full px-4 py-3 bg-espresso-light border border-terracotta/20 rounded-lg text-bone placeholder-stone/50 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20"
             placeholder="Your name"
           />
@@ -221,6 +240,7 @@ function AcceptInviteForm() {
             onChange={(e) => setPassword(e.target.value)}
             required
             minLength={8}
+            autoComplete="new-password"
             className="w-full px-4 py-3 bg-espresso-light border border-terracotta/20 rounded-lg text-bone placeholder-stone/50 focus:outline-none focus:border-terracotta focus:ring-2 focus:ring-terracotta/20"
             placeholder="Min 8 characters"
           />

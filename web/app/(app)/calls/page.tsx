@@ -29,7 +29,7 @@ export default function CallsPage() {
 
     const { data: userData } = await supabase
       .from('Users')
-      .select('account_id, role')
+      .select('account_id, role, email')
       .eq('auth_id', user.id)
       .single()
 
@@ -47,7 +47,7 @@ export default function CallsPage() {
 
     // Reps only see their own calls
     if (userData.role === 'rep') {
-      query = query.eq('rep_email', user.email)
+      query = query.eq('rep_email', userData.email)
     }
 
     const { data } = await query

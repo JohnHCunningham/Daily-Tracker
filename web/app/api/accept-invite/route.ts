@@ -14,6 +14,24 @@ export async function POST(request: NextRequest) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (user && user.id === authId) {
+      const { data: invitation, error: invitationError } = await supabase
+        .from('Invitations')
+        .select('email, status, expires_at')
+        .eq('token', token)
+        .single()
+
+      if (invitationError || !invitation) {
+        return NextResponse.json({ error: 'Invalid invitation' }, { status: 404 })
+      }
+
+      if (invitation.status !== 'pending' || new Date(invitation.expires_at) < new Date()) {
+        return NextResponse.json({ error: 'Invalid or expired invitation' }, { status: 400 })
+      }
+
+      if (user.email !== invitation.email) {
+        return NextResponse.json({ error: 'Invitation email does not match the signed-in account' }, { status: 403 })
+      }
+
       const { data, error } = await supabase.rpc('accept_invitation', {
         p_token: token,
         p_auth_id: authId,

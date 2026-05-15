@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { generateEmbedding } from '@/lib/rag'
 
+export const dynamic = 'force-dynamic'
+
 const leaderRoles = new Set(['admin', 'manager', 'coach'])
 
 function buildConversationBadges(
@@ -83,6 +85,8 @@ export async function GET(request: NextRequest) {
         selectedEmail,
         messages: messages || [],
         conversationBadges: buildConversationBadges(allMessages || [], currentUser.email),
+      }, {
+        headers: { 'Cache-Control': 'no-store' },
       })
     }
 
@@ -115,6 +119,8 @@ export async function GET(request: NextRequest) {
       selectedEmail: members[0]?.email || '',
       messages: directMessages || [],
       conversationBadges: buildConversationBadges(directMessages || [], currentUser.email),
+    }, {
+      headers: { 'Cache-Control': 'no-store' },
     })
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal server error'

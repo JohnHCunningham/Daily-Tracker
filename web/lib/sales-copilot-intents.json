@@ -1,0 +1,128 @@
+[
+  {
+    "name": "rapport_and_contract_setup",
+    "stage": "Bonding & Up-Front Contract",
+    "sample_user_utterances": [
+      "How should I start a Sandler call?",
+      "What do I say at the beginning of a discovery?",
+      "Give me an upfront contract example"
+    ],
+    "bot_behavior": "Provide 1–2 up-front contract templates that normalize 'no', confirm time, agenda, and outcomes, and model equal business stature.",
+    "response_templates": [
+      "Here's a simple Sandler-style opener you can adapt:\n\n\"{prospect_name}, thanks for taking the time today. We scheduled {duration} minutes to see if it even makes sense to keep talking. I'd like to ask a few questions about {prospect_context}, share a bit about how we help teams like yours, and then we can both decide if it makes sense to take a next step. If it's not a fit, are you comfortable just telling me 'no' so we don't create any maybes?\"\n\nWould you like a shorter or more formal version?",
+      "Another version for a follow-up call:\n\n\"Last time we talked about {summary_of_last_call}. For today's {duration}-minute call, my agenda was: 1) fill in any gaps on your side, 2) walk through how we'd tackle {top_pain}, and 3) agree on whether we move forward or not. What would you add or change?\""
+    ]
+  },
+  {
+    "name": "explore_pain",
+    "stage": "Pain",
+    "sample_user_utterances": [
+      "Give me pain funnel questions",
+      "How do I go deeper on pain here?",
+      "Help me turn this symptom into real pain"
+    ],
+    "bot_behavior": "Generate pain-funnel style follow-up questions that move from surface to impact to personal consequences, and suggest 1–2 follow-ups based on the user's last question or transcript snippet.",
+    "response_templates": [
+      "Here's a Sandler-style micro pain funnel you can plug in right after the prospect mentions a problem:\n\n1. \"Can you tell me a bit more about that?\" \n2. \"How long has that been going on?\" \n3. \"What does that mean in terms of {money_time_risk}?\" \n4. \"How does that affect you and your team personally?\" \n5. \"What happens if nothing changes over the next {timeframe}?\"\n\nPaste the last thing your prospect said and I'll suggest the next two questions.",
+      "To go deeper on a vague statement like \"our reps aren't consistent,\" you might ask:\n\n\"When you say 'not consistent', what does that actually look like in a typical week?\" \n\"How do you know it's a problem—what's the impact on pipeline or close rates?\""
+    ]
+  },
+  {
+    "name": "handle_budget_question_early",
+    "stage": "Budget",
+    "sample_user_utterances": [
+      "Prospect just asked price at the start",
+      "They said 'Give me a ballpark'",
+      "How do I answer budget without blowing it?"
+    ],
+    "bot_behavior": "Model a calm reverse that acknowledges the money question but loops back to discovery, then proposes a range once there's enough context.",
+    "response_templates": [
+      "Sandler-style response when budget comes up too early:\n\n\"Great question. It varies quite a bit depending on what we're solving for. Would it be okay if I ask a few more questions about {top_pains} so I can give you a range that's actually meaningful?\"\n\nIf they insist, add: \"Most clients in situations like yours invest somewhere between {low_range} and {high_range} per {time_unit}, but it only makes sense if we both agree it's fixing a real problem.\"",
+      "If they say \"Just give me the price\":\n\n\"I can share numbers, I just don't want to mislead you. If I quote something that's way off from what you actually need, that doesn't help either of us. Can we spend 5–10 minutes on what you're trying to change first?\""
+    ]
+  },
+  {
+    "name": "clarify_decision_process",
+    "stage": "Decision",
+    "sample_user_utterances": [
+      "How do I find the real decision maker?",
+      "They said 'I'll bring it to the team'",
+      "Ask about decision without sounding pushy"
+    ],
+    "bot_behavior": "Suggest neutral, mapping-style questions that uncover people, process, and timing, plus a 'what then?' question for demo/POC scenarios.",
+    "response_templates": [
+      "Try this sequence:\n\n\"Besides you, who else has strong opinions about decisions like this?\" \n\"Walk me through how something like this normally gets approved there.\" \n\"Let's say we do this meeting, you love what you see, and you want to move forward—what happens next on your side?\"",
+      "If they say \"I'll take it to the team\":\n\n\"Makes sense. When you bring it to them, what do you think they'll care about most?\" \n\"If they're excited, what are the steps after that? If they're hesitant, what typically gets in the way?\""
+    ]
+  },
+  {
+    "name": "respond_to_proposal_request_too_early",
+    "stage": "Budget & Decision",
+    "sample_user_utterances": [
+      "They just said 'Send a proposal'",
+      "Prospect wants a deck to share internally",
+      "How do I avoid becoming column fodder?"
+    ],
+    "bot_behavior": "Detect a premature proposal request and respond with a reverse that clarifies intent, decision path, and criteria before agreeing.",
+    "response_templates": [
+      "\"Happy to put something together if it makes sense. Just so we don't create homework for both of us, what would you need to see in a proposal to decide whether this is worth changing?\" \n\nFollow with: \"If you liked what you saw in that proposal, what would the steps be to get it approved?\"",
+      "If it feels like a brush-off:\n\n\"I can certainly send something over. Sometimes when people ask for a proposal at this stage, it's a polite way of saying this isn't really a priority. Is that what's going on here, or is there a real chance we move forward if the fit and numbers look right?\""
+    ]
+  },
+  {
+    "name": "handle_stall_or_think_it_over",
+    "stage": "Post-Fulfillment / Close",
+    "sample_user_utterances": [
+      "They said 'We'll think about it'",
+      "How to handle a soft maybe?",
+      "Sandler negative reverse for hesitation"
+    ],
+    "bot_behavior": "Offer negative reverse options to turn a vague stall into a clear yes or no, or to surface the real objection.",
+    "response_templates": [
+      "Classic Sandler-style negative reverse:\n\n\"Totally fair. When people tell me they want to 'think it over,' it usually means one of three things: 1) they're leaning no but don't want to say it, 2) something important didn't land, or 3) the timing just isn't right. Which bucket are you closest to?\"",
+      "Gentler version:\n\n\"We can absolutely give you time. Before we do, would it be okay if I ask: what would have to be true for you to feel comfortable saying 'yes' today?\""
+    ]
+  },
+  {
+    "name": "handle_price_pushback",
+    "stage": "Budget / Pain",
+    "sample_user_utterances": [
+      "They said 'Too expensive'",
+      "Price is higher than competitor",
+      "Pushback on cost"
+    ],
+    "bot_behavior": "Combine pain reinforcement with a mild negative reverse to test seriousness of the pain and willingness to invest.",
+    "response_templates": [
+      "\"That makes sense. A lot of people feel that way at first. Sometimes when that happens, it means the problem isn't painful enough to justify changing things right now. Is that what's going on here, or have we not connected the dots yet between {pain} and {impact}?\"",
+      "You can also ask:\n\n\"If we left things as they are for the next 6–12 months, what do you think that would cost in {metric}?\" \n\"If the investment were in the right ballpark and we could prove it's working, would the cost still be the main barrier?\""
+    ]
+  },
+  {
+    "name": "qualify_out_no_fit",
+    "stage": "Any / Disqualify",
+    "sample_user_utterances": [
+      "I think this prospect is bad fit",
+      "How do I walk away Sandler style?",
+      "They're too small / wrong profile"
+    ],
+    "bot_behavior": "Provide language for respectfully disqualifying while keeping the door open for later, reinforcing equal business stature.",
+    "response_templates": [
+      "\"Based on what you've shared, I'm not convinced we're the best fit for you right now. I don't want to sell you something that won't feel like a win on your side. Would it be okay if we part as friends, and I point you to a couple of alternatives that might fit better?\"",
+      "Short version:\n\n\"I'm not sure we can honestly deliver the outcome you're looking for. I'd rather say no now than disappoint you later. How does that land?\""
+    ]
+  },
+  {
+    "name": "close_for_next_step",
+    "stage": "Post-Sell / Next Action",
+    "sample_user_utterances": [
+      "How do I set a clear next step?",
+      "What's a Sandler close line?",
+      "We had a good call but no commitment"
+    ],
+    "bot_behavior": "Help the user ask for a specific, mutual next step with time and ownership, framed as a joint decision rather than a hard close.",
+    "response_templates": [
+      "\"It sounds like we agree there's a real problem with {pain} and that our approach could help. The question is whether it makes sense to keep moving. Would it be crazy to suggest we schedule {next_step_format} with {stakeholders} in the next {timeframe} to either confirm this or decide it's a no?\"",
+      "For later-stage deals:\n\n\"We've outlined the rollout and success metrics. Are you comfortable saying 'yes' to moving forward, or is there something we haven't addressed that's holding you back?\""
+    ]
+  }
+]

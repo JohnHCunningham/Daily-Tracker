@@ -1,0 +1,128 @@
+[
+  {
+    "name": "qualify_metrics",
+    "stage": "Metrics",
+    "sample_user_utterances": [
+      "How do I quantify the business impact?",
+      "What metrics should I track?",
+      "Help me establish baseline metrics"
+    ],
+    "bot_behavior": "Guide the rep to identify and quantify measurable business outcomes that justify the purchase decision.",
+    "response_templates": [
+      "In MEDDIC, Metrics are quantifiable measures of success. Ask:\n\n\"What metric would you use to measure success for this initiative?\" \n\"What's the current baseline for {metric} today?\" \n\"If we hit this number in {timeframe}, what would that mean for your business?\" \n\"Who tracks this metric currently, and how often do they review it?\"\n\nThe goal is to anchor your solution to a number they already care about.",
+      "To build a compelling metric:\n\n1. **Identify the baseline**: \"What is your current {cost/time/revenue} for {process}?\" \n2. **Define the goal**: \"Where would you need to get to for this to feel like a meaningful win?\" \n3. **Calculate the delta**: \"If we close that gap, what's the annual impact?\" \n4. **Assign ownership**: \"Who owns improving this number on your side?\"\n\nWithout a clear metric, you're selling on hope."
+    ]
+  },
+  {
+    "name": "identify_economic_buyer",
+    "stage": "Economic Buyer",
+    "sample_user_utterances": [
+      "How do I find the economic buyer?",
+      "Who really signs the contract here?",
+      "Map the economic buyer"
+    ],
+    "bot_behavior": "Help the rep identify and gain access to the person with budgetary authority and final approval power.",
+    "response_templates": [
+      "The Economic Buyer has the authority to approve budget. Ask:\n\n\"Who ultimately signs off on budget decisions like this?\" \n\"If everyone else says yes, is there anyone who could still say no?\" \n\"Walk me through the approval process for a purchase of this size.\" \n\"Have you worked with {suspected_eb} on deals like this before?\"\n\nIf you don't have access to the EB, you don't have a real deal.",
+      "If your contact deflects or says \"I handle this\":\n\n\"That's great. Just so I understand your process—when was the last time you approved a {budget_range} investment without anyone else weighing in?\" \n\nIf they push back, try: \"I ask because most orgs have a formal approval layer for budgets over {threshold}. I want to make sure we're aligned on timing and process so nothing surprises either of us.\"\n\nYour contact might champion, but rarely controls the budget."
+    ]
+  },
+  {
+    "name": "understand_decision_criteria",
+    "stage": "Decision Criteria",
+    "sample_user_utterances": [
+      "What are their decision criteria?",
+      "How do they evaluate vendors?",
+      "What do they care about most?"
+    ],
+    "bot_behavior": "Surface the formal and informal criteria the organization will use to evaluate solutions.",
+    "response_templates": [
+      "Decision Criteria are the formal and informal factors used to evaluate vendors. Ask:\n\n\"What are the top 3–4 things you'll use to compare solutions?\" \n\"Are there any absolute must-haves or deal-breakers?\" \n\"How will you weight these criteria—are they all equal or is one more important?\" \n\"Have you already defined these, or are we figuring this out together?\"\n\nIf you help define the criteria, you can align them to your strengths.",
+      "To differentiate your solution through criteria:\n\n1. **Surface theirs first**: \"What criteria have you already identified?\" \n2. **Introduce yours second**: \"In our experience, teams also look at {unique_criteria}. Does that resonate?\" \n3. **Test for flexibility**: \"If a solution nailed {your_strength} but was weaker on {their_stated_criteria}, would that still be a fit?\"\n\nThe best reps shape the criteria before the formal evaluation begins."
+    ]
+  },
+  {
+    "name": "map_decision_process",
+    "stage": "Decision Process",
+    "sample_user_utterances": [
+      "What's their buying process?",
+      "How do deals get approved here?",
+      "Map the decision process"
+    ],
+    "bot_behavior": "Understand the formal steps, timeline, and stakeholders involved in getting to a signed contract.",
+    "response_templates": [
+      "The Decision Process is the sequence of events that leads to a purchase. Ask:\n\n\"Walk me through how a purchase like this typically moves from evaluation to contract.\" \n\"What are the formal steps—demo, eval, legal, procurement?\" \n\"Who needs to be involved at each stage?\" \n\"What could slow this down or cause it to stall?\" \n\"When do you need this in place, and what happens if that slips?\"\n\nIf you don't control the process, the process will control you.",
+      "To compress the timeline:\n\n\"You mentioned you need this by {date}. Let's work backwards:\n\n• Legal review: {duration} \n• Procurement approval: {duration} \n• Technical validation: {duration} \n• Stakeholder alignment: {duration}\n\nThat means we'd need to have {milestone} completed by {earlier_date}. Does that timeline still work, or do we need to adjust?\"\n\nMaking the process visible makes it manageable."
+    ]
+  },
+  {
+    "name": "identify_pain",
+    "stage": "Identify Pain",
+    "sample_user_utterances": [
+      "How do I uncover the real pain?",
+      "What's driving this initiative?",
+      "Find the compelling event"
+    ],
+    "bot_behavior": "Help the rep discover the business problem and personal pain that creates urgency for change.",
+    "response_templates": [
+      "In MEDDIC, Pain drives urgency. Without pain, you have interest—not a deal. Ask:\n\n\"What triggered you to look at this now?\" \n\"What's broken or underperforming today?\" \n\"What happens if you don't solve this in the next {timeframe}?\" \n\"How is this affecting you and your team personally?\" \n\"On a scale of 1–10, how painful is this, and what would make it a 10?\"\n\nReal pain has business impact + personal consequences.",
+      "To test if pain is real:\n\n\"You mentioned {stated_pain}. Help me understand: if we left this as-is for another 6 months, what actually breaks?\" \n\nIf they struggle to answer, the pain isn't compelling yet. \n\nFollow with: \"Who else is feeling this pain? What do they say about it?\"\n\nPain that only exists in one person's head doesn't fund deals."
+    ]
+  },
+  {
+    "name": "validate_champion",
+    "stage": "Champion",
+    "sample_user_utterances": [
+      "Do I have a real champion?",
+      "How do I test if they'll fight for me?",
+      "Is my champion strong enough?"
+    ],
+    "bot_behavior": "Assess whether the contact has power, credibility, and willingness to sell internally on the rep's behalf.",
+    "response_templates": [
+      "A Champion sells for you when you're not in the room. Test their strength:\n\n\"If you were pitching this to {economic_buyer}, how would you make the case?\" \n\"What objections do you think {skeptical_stakeholder} will raise?\" \n\"Have you championed a purchase like this before? How did it go?\" \n\"On a scale of 1–10, how confident are you that this gets approved?\"\n\nA weak champion is worse than no champion—they create false hope.",
+      "To develop a stronger champion:\n\n1. **Arm them with data**: \"Here's the ROI model you can use with finance.\" \n2. **Rehearse objections**: \"If they say {objection}, you can respond with {rebuttal}.\" \n3. **Test commitment**: \"Are you willing to schedule a call with {EB} this week to align on next steps?\"\n\nIf they won't introduce you to the Economic Buyer, they're not really a champion."
+    ]
+  },
+  {
+    "name": "handle_no_budget",
+    "stage": "Economic Buyer / Metrics",
+    "sample_user_utterances": [
+      "They said there's no budget",
+      "Budget isn't allocated yet",
+      "How do I create budget?"
+    ],
+    "bot_behavior": "Guide the rep to test whether 'no budget' is real or a deflection, and how to create budget through compelling metrics.",
+    "response_templates": [
+      "\"No budget\" often means \"not painful enough\" or \"talking to the wrong person.\" Ask:\n\n\"I understand budget isn't set aside yet. If we could prove this would save you {metric_value} annually, is there a path to reallocating funds, or is budget completely frozen?\" \n\"When budgets do open up, what's the process to get something added?\" \n\"Who would need to approve pulling budget from another area?\"\n\nReal pain finds budget. Weak pain waits for next year.",
+      "To build a business case that creates budget:\n\n1. **Quantify the cost of inaction**: \"What's the annual cost of {current_state}?\" \n2. **Show ROI in their terms**: \"If we reduce {cost} by {%}, that's {$} back in your P&L.\" \n3. **Compress the timeline**: \"What if this paid for itself in {timeframe}—does that change the conversation?\" \n4. **Escalate to the EB**: \"Would it make sense to run this by {EB} to see if they'd prioritize it?\"\n\nChampions find budget. Suspects hide behind it."
+    ]
+  },
+  {
+    "name": "competitor_positioning",
+    "stage": "Decision Criteria / Champion",
+    "sample_user_utterances": [
+      "They're looking at competitors",
+      "How do I position against {competitor}?",
+      "We're in a bake-off"
+    ],
+    "bot_behavior": "Help the rep understand the competitive landscape and position their solution using Decision Criteria.",
+    "response_templates": [
+      "In a competitive evaluation, control the criteria. Ask:\n\n\"Who else are you looking at?\" \n\"What do you like about {competitor} so far?\" \n\"If you went with them, what would you be giving up?\" \n\"Are there any capabilities you wish they had but don't?\" \n\"How are you planning to compare us—feature-by-feature, or based on business outcomes?\"\n\nThen introduce criteria where you win: \"One thing we've seen matter a lot is {your_differentiator}. How important is that to you?\"",
+      "To win in a crowded field:\n\n1. **Reframe the criteria**: \"Most teams evaluate on {common_criteria}, but the ones who succeed focus on {your_strength}. Does that resonate?\" \n2. **Test commitment**: \"If we come out ahead on {criteria}, are you prepared to move forward, or are there other factors?\" \n3. **Leverage your champion**: \"When you present the options to {EB}, how will you position the differences?\"\n\nThe rep who defines the scorecard usually wins the deal."
+    ]
+  },
+  {
+    "name": "meddic_deal_review",
+    "stage": "All Stages / Qualification",
+    "sample_user_utterances": [
+      "Is this deal real?",
+      "MEDDIC scorecard for this opportunity",
+      "How strong is my MEDDIC?"
+    ],
+    "bot_behavior": "Walk the rep through a full MEDDIC qualification to assess deal health and identify gaps.",
+    "response_templates": [
+      "Let's run through your MEDDIC:\n\n**Metrics**: Do you have a quantified business outcome they're trying to hit? \n**Economic Buyer**: Have you identified and spoken to the person who controls budget? \n**Decision Criteria**: Do you know the 3–5 factors they'll use to evaluate vendors? \n**Decision Process**: Can you map the steps from here to signed contract with dates? \n**Identify Pain**: Is there a compelling business + personal reason to change now? \n**Champion**: Do you have someone with power and credibility selling for you internally?\n\nScore each 0–10. Anything below 7 is a gap you need to close.",
+      "**Red flags in MEDDIC**:\n\n• Metrics are vague (\"improve efficiency\") instead of quantified (\"reduce time-to-close by 30%\") \n• You haven't met the Economic Buyer or don't know who they are \n• Decision Criteria are unclear or defined by the competition \n• Decision Process is \"TBD\" or lacks specific dates and owners \n• Pain is theoretical (\"we should do this\") instead of urgent (\"this is costing us $X/month\") \n• Champion won't introduce you to stakeholders or avoids internal conflict\n\nA deal with multiple red flags isn't a deal—it's hope."
+    ]
+  }
+]

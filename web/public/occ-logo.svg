@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 690 160" role="img" aria-labelledby="title desc">
+  <title id="title">One Click Coaching logo</title>
+  <desc id="desc">One Click Coaching wordmark with concentric target icon.</desc>
+  <rect width="690" height="160" fill="#241a14"/>
+  <g transform="translate(92 80)">
+    <circle r="30" fill="none" stroke="#fff8ed" stroke-width="3"/>
+    <circle r="21" fill="none" stroke="#fff8ed" stroke-width="3"/>
+    <circle r="11" fill="none" stroke="#fff8ed" stroke-width="3"/>
+    <circle r="4.5" fill="#b5583e"/>
+    <path d="M0 -30v8M0 22v8M-30 0h8M22 0h8" stroke="#fff8ed" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+  <text
+    x="150"
+    y="91"
+    fill="#fff8ed"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="42"
+    font-weight="700"
+    letter-spacing="0"
+  >One Click</text>
+  <text
+    x="348"
+    y="91"
+    fill="#d86b48"
+    font-family="Georgia, 'Times New Roman', serif"
+    font-size="42"
+    font-style="italic"
+    font-weight="700"
+    letter-spacing="0"
+  >Coaching</text>
+</svg>

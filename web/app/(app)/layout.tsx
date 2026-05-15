@@ -5,6 +5,7 @@ import TopBar from './components/TopBar'
 import BrandProvider from './components/BrandProvider'
 import SubscriptionBanner from './components/SubscriptionBanner'
 import BillingAccessGate from './components/BillingAccessGate'
+import CopilotChat from '@/components/CopilotChat'
 
 export default async function AppLayout({
   children,
@@ -43,7 +44,7 @@ export default async function AppLayout({
   }
 
   // Get subscription status for banner
-  let subscriptionStatus = 'trialing'
+  let subscriptionStatus = 'incomplete'
   let trialEndsAt: string | null = null
   let billingGraceEndsAt: string | null = null
 
@@ -86,6 +87,9 @@ export default async function AppLayout({
           </main>
         </div>
       </div>
+
+      {/* Sandler Coaching Copilot - floating widget available on all pages */}
+      <CopilotChat />
     </BrandProvider>
   )
 }

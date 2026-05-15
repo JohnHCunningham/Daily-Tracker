@@ -260,7 +260,7 @@ serve(async (req) => {
     const body = await req.json();
     const use_rag = body.use_rag !== false;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-    const auth = await getAuthorizedAccountContext(req);
+    const auth = await getAuthorizedAccountContext(req, body);
     if ("error" in auth) {
       return new Response(
         JSON.stringify({ error: auth.error }),

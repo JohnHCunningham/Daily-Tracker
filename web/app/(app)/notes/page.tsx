@@ -55,7 +55,9 @@ export default function NotesPage() {
     setLoading(true)
     setError(null)
 
-    const response = await fetch(`/api/notes${selectedRep ? `?rep=${encodeURIComponent(selectedRep)}` : ''}`)
+    const response = await fetch(`/api/notes${selectedRep ? `?rep=${encodeURIComponent(selectedRep)}` : ''}`, {
+      cache: 'no-store',
+    })
     const data = await response.json().catch(() => null)
 
     if (!response.ok) {

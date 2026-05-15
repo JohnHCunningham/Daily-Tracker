@@ -1,0 +1,152 @@
+[
+  {
+    "name": "qualify_metrics",
+    "stage": "Metrics",
+    "sample_user_utterances": [
+      "How do I identify their metrics?",
+      "What metric should they track?",
+      "Help me quantify success",
+      "They don't have a clear metric"
+    ],
+    "bot_behavior": "Guide the rep to identify and quantify measurable business outcomes that justify the investment.",
+    "response_templates": [
+      "**Metrics Questions:**\n\n• \"What metric will you use to measure success for this initiative?\"\n• \"What's the current baseline for [metric] today?\"\n• \"What's the goal, and by when?\"\n• \"Who tracks this metric, and how often is it reviewed?\"\n• \"If we hit this number in [timeframe], what does that unlock for your business?\"\n\n**Good Metrics Are:**\n✅ Specific (not \"improve efficiency\")\n✅ Measurable (quantified baseline → goal)\n✅ Owned (someone tracks it)\n✅ Time-bound (deadline)\n\n**Example:**\n❌ \"Improve close rates\"\n✅ \"Increase close rate from 15% to 22% by Q3, tracked monthly by VP Sales\"\n\nWhat specific, measurable metric are they trying to hit?",
+      "**If They Don't Have a Metric:**\n\n\"Most teams we work with measure success by [relevant metrics]. Which of these matters most to you?\"\n\nThen anchor to ONE metric:\n\"Okay, so if we focus on [metric], what's the current baseline and where do you need to get to?\"\n\n**Why Metrics Matter:**\nNo metric = No business case = No budget justification\n\n**Test:** \"If you hit this metric, what does that unlock for you personally?\"\nIf they can't answer, the metric isn't real to them.\n\nWhat metric would justify this investment?"
+    ]
+  },
+  {
+    "name": "identify_economic_buyer",
+    "stage": "Economic Buyer",
+    "sample_user_utterances": [
+      "How do I find the economic buyer?",
+      "Who really controls the budget?",
+      "Help me get to the decision maker",
+      "My contact says they're the buyer but I'm not sure"
+    ],
+    "bot_behavior": "Help the rep identify the true Economic Buyer (person with budget authority) and get access to them.",
+    "response_templates": [
+      "**Economic Buyer Questions:**\n\n• \"Who ultimately signs off on budget decisions like this?\"\n• \"If everyone else says yes, is there anyone who could still say no?\"\n• \"Walk me through the approval process for a purchase of this size.\"\n• \"When was the last time you bought something similar? Who approved it?\"\n\n**EB Characteristics:**\n• Controls P&L for this initiative\n• Can reallocate budget without permission\n• Often (not always) C-level or VP-level\n• **Authority matters, not title**\n\n**Test for EB:**\n\"In your organization, can [contact] approve a $[budget] purchase without anyone else signing off?\"\n\nIf NO → They're not the EB. You need to meet the real one.\n\nWho has unilateral budget authority here?",
+      "**How to Get EB Access:**\n\n**Through Your Champion:**\n\"Can you introduce me to [EB] so we can align on metrics and timeline?\"\n\n**Direct:**\n\"It sounds like [EB] will need to sign off. Would it make sense for me to meet them early to ensure we're aligned?\"\n\n**Why Access Matters:**\nResearch shows **not engaging with the EB decreases win rate by 233% in Enterprise**.\n\n**MEDDPICC Rule:** If you haven't met the EB by mid-deal, pull it from your forecast.\n\nHave you met the Economic Buyer? If not, how do you get access?"
+    ]
+  },
+  {
+    "name": "shape_decision_criteria",
+    "stage": "Decision Criteria",
+    "sample_user_utterances": [
+      "What are their decision criteria?",
+      "How do they evaluate vendors?",
+      "Help me shape the criteria",
+      "I'm late - they already have criteria"
+    ],
+    "bot_behavior": "Help the rep surface and shape Decision Criteria before formal evaluation begins.",
+    "response_templates": [
+      "**Decision Criteria Questions:**\n\n• \"What are the top 3-5 criteria you'll use to compare solutions?\"\n• \"Are there any must-haves or deal-breakers?\"\n• \"How will you weight these—are they all equal, or is one more important?\"\n• \"Have you already defined these criteria, or are we figuring this out together?\"\n\n**How to Shape Criteria (If Early):**\n\n1. **Surface theirs first:** \"What criteria have you already identified?\"\n2. **Introduce yours second:** \"Teams also look at [your strength]. Does that resonate?\"\n3. **Test flexibility:** \"If a solution nailed [your strength] but was weaker on [their criteria], would that still work?\"\n\n**The Best Reps SHAPE Criteria Before Formal Evaluation.**\n\nWhat criteria would favor your solution?",
+      "**If You're Late (Criteria Already Set):**\n\n**1. Surface Them:**\n\"Walk me through how you'll compare vendors. What's the scorecard?\"\n\n**2. Test for Flex:**\n\"Is that scorecard set in stone, or are you open to adjusting based on what you learn?\"\n\n**3. Add Context:**\n\"In our experience, teams that succeed also evaluate [your differentiator]. Worth adding to the list?\"\n\n**Warning:** If criteria favor your competitor and won't budge, you're in a losing battle.\n\n**Better to know early and walk away than chase a rigged eval.**\n\nAre the criteria shaped yet, and do they favor you?"
+    ]
+  },
+  {
+    "name": "map_decision_process",
+    "stage": "Decision Process",
+    "sample_user_utterances": [
+      "What's their decision process?",
+      "Help me map the steps to close",
+      "How do deals get approved here?",
+      "I need a timeline with dates"
+    ],
+    "bot_behavior": "Help the rep map the formal Decision Process with steps, stakeholders, dates, and owners.",
+    "response_templates": [
+      "**Decision Process Questions:**\n\n• \"Walk me through how a purchase like this typically moves from eval to contract.\"\n• \"What are the formal steps? Demo, eval, legal, procurement, board approval?\"\n• \"Who needs to be involved at each stage, and in what order?\"\n• \"What could slow this down or cause it to stall?\"\n• \"When do you need this in place? What happens if that slips?\"\n\n**Map It Backwards from Deadline:**\n\n\"You need this by [date]. Let's work backwards:\n• Legal review: [2 weeks]\n• Procurement: [1 week]\n• Technical eval: [3 weeks]\n• Stakeholder alignment: [2 weeks]\n\nThat means we need [milestone] completed by [earlier date]. Does that work?\"\n\n**No dates/owners = No real process.**\n\nWhat are the specific steps, and who owns each?",
+      "**Red Flags in Decision Process:**\n\n❌ \"We'll figure it out\"\n❌ Timeline is \"TBD\" or \"when we're ready\"\n❌ Steps are vague (\"get internal buy-in\")\n❌ No dates, no owners\n\n✅ **Good Process:**\n• Demo: 6/15 (your contact + VP Sales)\n• Eval: 6/22-6/29 (technical team)\n• Legal review: 6/30-7/6 (legal + procurement)\n• EB approval: 7/7 (CFO meeting)\n• Contract: 7/10\n\n**Every step has: date, owner, deliverable.**\n\nIf they won't commit to a process, they're not serious. What's missing from their process?"
+    ]
+  },
+  {
+    "name": "understand_paper_process",
+    "stage": "Paper Process",
+    "sample_user_utterances": [
+      "What's the paper process?",
+      "Help me understand legal/procurement",
+      "How long does contracting take?",
+      "I didn't account for paper process"
+    ],
+    "bot_behavior": "Ensure the rep maps legal, procurement, security, compliance steps (enterprise-specific) early.",
+    "response_templates": [
+      "**Paper Process Questions:**\n\n• \"What does legal need to see before they'll approve this?\"\n• \"Do you have a standard vendor approval process?\"\n• \"Are there security or compliance reviews required?\"\n• \"How long does procurement typically take?\"\n• \"Have you bought from new vendors before? What did that process look like?\"\n\n**Common Paper Process Steps:**\n• Security questionnaire (SOC 2, compliance)\n• Legal contract review (redlines)\n• Procurement vendor approval\n• Insurance/indemnification review\n• Finance approval\n\n**Paper Process Can Add Weeks/Months—Map It Early.**\n\nWhat legal/procurement steps haven't you accounted for?",
+      "**Paper Process Warning:**\n\nMost reps forget about Paper Process until contract stage, then get blindsided.\n\n**Example:**\nRep: \"We'll close by end of month!\"\nReality: Legal review = 2 weeks, Procurement = 1 week, Security review = 1 week\nActual close: 4 weeks late\n\n**Ask About Paper Process in Your FIRST Call with EB:**\n\"Walk me through what happens after we agree on terms. What does legal/procurement need?\"\n\nAdd that time to your forecast. When is the earliest you could realistically have a signed contract?"
+    ]
+  },
+  {
+    "name": "test_champion_strength",
+    "stage": "Champion",
+    "sample_user_utterances": [
+      "Is my champion strong enough?",
+      "How do I test champion strength?",
+      "I think I have a champion but not sure",
+      "Coach vs champion - which do I have?"
+    ],
+    "bot_behavior": "Test Champion strength through specific actions: EB introduction, objection rehearsal, track record.",
+    "response_templates": [
+      "**Champion Strength Tests:**\n\n**Test 1: EB Introduction**\n\"Can you introduce me to [Economic Buyer] so we can align on metrics and timeline?\"\n• If YES + they do it: Strong signal\n• If NO or deflect: Not a champion\n\n**Test 2: Objection Rehearsal**\n\"What objections do you think [skeptical stakeholder] will raise? How would you handle them?\"\n• If they know objections + have answers: Champion thinking\n• If they say \"I don't know\" or \"shouldn't be any\": Not a champion\n\n**Test 3: Track Record**\n\"Have you championed a purchase like this before? How did it go?\"\n• If yes + it worked: They know what it takes\n• If no: They're learning on your deal (risky)\n\n**Test 4: Internal Selling**\n\"If you were pitching this to [EB] without me, how would you make the case?\"\n• If confident answer: Champion-level commitment\n• If vague: Coach, not champion\n\nHow does your contact score on these tests?",
+      "**Coach vs Champion:**\n\n**COACH (Helpful but Passive):**\n• Answers your questions\n• Likes your solution\n• \"I'll take this to the team\"\n• Won't introduce you to EB\n• Doesn't rehearse objections\n\n**CHAMPION (Active Advocate):**\n• Sells for you internally\n• Puts their credibility on the line\n• Introduces you to EB\n• Rehearses objections with you\n• Has successfully championed before\n\n**35% of MEDDPICC failures = Champion confusion.**\n\nReps mistake Coaches for Champions, build strategy around them, then wonder why deals die.\n\nDo you have a Coach or a Champion?"
+    ]
+  },
+  {
+    "name": "competitive_intel",
+    "stage": "Competition",
+    "sample_user_utterances": [
+      "Who are they looking at?",
+      "How do I position against competitors?",
+      "I don't know the competition",
+      "We're in a bake-off"
+    ],
+    "bot_behavior": "Help the rep understand the competitive landscape and position strategically.",
+    "response_templates": [
+      "**Competition Questions:**\n\n• \"Who else are you looking at?\"\n• \"What do you like about [competitor] so far?\"\n• \"If you went with them, what would you be giving up?\"\n• \"Are there capabilities you wish they had but don't?\"\n• \"How are you planning to compare us—feature-by-feature or based on business outcomes?\"\n\n**Competitive Positioning:**\n\n**1. Reframe the Criteria:**\n\"Most teams evaluate on [common criteria], but the ones who succeed focus on [your strength]. Does that resonate?\"\n\n**2. Highlight Tradeoffs:**\n\"Vendor A is great at [their strength], but they struggle with [your strength]. Which matters more?\"\n\n**3. Leverage Your Champion:**\n\"When you present options to [EB], how will you position the differences?\"\n\nWhat's your unique strength that changes the scorecard?",
+      "**If You Don't Know the Competition:**\n\nAssuming you're the only option in Enterprise is naive. Ask directly:\n\n\"In our experience, most companies evaluate 2-3 vendors for decisions like this. Who else is in the mix?\"\n\nIf they say \"just you\":\n\"That's great, but help me understand—what's your plan B if we're not a fit? There's always a plan B (status quo, competitor, internal build).\"\n\n**Knowing the competition lets you position. Not knowing = flying blind.**\n\nWho's your real competition (vendors + status quo)?"
+    ]
+  },
+  {
+    "name": "run_meddpicc_audit",
+    "stage": "Qualification",
+    "sample_user_utterances": [
+      "Run a MEDDPICC audit on this deal",
+      "Is this deal real?",
+      "Score my MEDDPICC",
+      "What am I missing?"
+    ],
+    "bot_behavior": "Walk the rep through all 8 MEDDPICC elements and score each 0-10. Anything <7 is a gap.",
+    "response_templates": [
+      "**MEDDPICC Audit:**\n\nScore each element 0-10 (7+ = Green, 4-6 = Yellow, 0-3 = Red):\n\n**M - Metrics:** Do you have a quantified, tracked, owned metric? (Score: __/10)\n**E - Economic Buyer:** Have you met the person with budget authority? (Score: __/10)\n**D - Decision Criteria:** Do you know the 3-5 criteria and are they aligned to your strengths? (Score: __/10)\n**D - Decision Process:** Is the process mapped with dates, steps, owners? (Score: __/10)\n**P - Paper Process:** Do you know legal/procurement steps and timeline? (Score: __/10)\n**I - Pain:** Is there quantified, urgent, personal pain? (Score: __/10)\n**C - Champion:** Do you have a true Champion (not Coach) who can introduce you to EB? (Score: __/10)\n**C - Competition:** Do you know who else they're evaluating and how you're positioned? (Score: __/10)\n\n**If 3+ elements are <7, this deal isn't real.**\n\nWhat's your score on each element?",
+      "**MEDDPICC Red Flags:**\n\n❌ **Metrics:** Vague (\"improve efficiency\")\n❌ **EB:** Haven't met them by mid-deal\n❌ **Decision Criteria:** Unknown or shaped by competitor\n❌ **Decision Process:** \"TBD\" or no dates\n❌ **Paper Process:** Not discussed\n❌ **Pain:** Theoretical (\"nice to have\")\n❌ **Champion:** Coach, not Champion (won't introduce you to EB)\n❌ **Competition:** Don't know who else is in the mix\n\n**If you have multiple red flags, either close the gaps in 2 weeks or pull it from forecast.**\n\nHow many red flags do you have?"
+    ]
+  },
+  {
+    "name": "develop_champion",
+    "stage": "Champion",
+    "sample_user_utterances": [
+      "How do I make my champion stronger?",
+      "They like us but won't champion",
+      "Help me develop my contact",
+      "I need to arm my champion"
+    ],
+    "bot_behavior": "Provide tactics to develop a stronger Champion: arm with data, rehearse objections, test commitment.",
+    "response_templates": [
+      "**How to Develop a Stronger Champion:**\n\n**1. Arm Them with Data:**\n\"Here's the ROI model you can use when you pitch this to [EB/finance]. It shows [metric improvement] worth [$X].\"\n\n**2. Rehearse Objections:**\n\"If [skeptical stakeholder] says [common objection], you can respond with: '[rebuttal]'. Want to practice?\"\n\n**3. Test Commitment:**\n\"Are you willing to schedule a call with [EB] this week to align on next steps?\"\n• If YES: Champion-level commitment\n• If NO/deflect: Not ready yet\n\n**4. Share Success Stories:**\n\"Here's how [similar company] made the internal case. Their champion led with [approach].\"\n\n**Goal:** Move them from passive supporter → active internal seller.\n\nWhat would strengthen your champion?",
+      "**If They Won't Champion:**\n\nSome contacts will never champion—they're helpful but not advocates. Options:\n\n**Option 1: Find a Stronger Champion**\n\"Who else in your organization has successfully led initiatives like this before?\"\n\n**Option 2: Test Their Willingness**\n\"I need your help. For this to move forward, [EB] needs to hear from you why this matters. Are you comfortable making that case?\"\n• If NO: They're a coach, not a champion. Find someone else.\n\n**Option 3: Disqualify**\nIf you can't develop a champion or find a new one, the deal will stall. Pull it from forecast.\n\nCan you develop this contact into a champion, or do you need to find a new one?"
+    ]
+  },
+  {
+    "name": "forecast_accuracy",
+    "stage": "Pipeline Management",
+    "sample_user_utterances": [
+      "Should I forecast this deal?",
+      "When can I commit to close date?",
+      "Is my pipeline accurate?",
+      "Help me clean my forecast"
+    ],
+    "bot_behavior": "Use MEDDPICC scoring to determine if a deal is forecast-able. If <7 on any element, it's not real.",
+    "response_templates": [
+      "**Forecast Rules:**\n\n**Commit to Forecast ONLY if:**\n✅ All 8 MEDDPICC elements score 7+ (Green)\n✅ You've met the Economic Buyer\n✅ Champion can introduce you to EB and rehearse objections\n✅ Decision Process has dates and owners\n✅ Paper Process timeline is mapped\n\n**Pull from Forecast if:**\n❌ 3+ elements score <7\n❌ No EB access by mid-deal\n❌ Champion is really a Coach\n❌ Decision Process is \"TBD\"\n\n**Research:** Orgs that fully adopt MEDDPICC see **nearly 100% forecast accuracy** sustained for 8+ consecutive quarters.\n\nBased on your MEDDPICC score, should this be in your forecast?",
+      "**Clean Your Pipeline:**\n\nRun MEDDPICC audit on every deal. For each:\n\n**Score 7-10 on all elements:** Keep in forecast, high confidence\n**Score 4-6 on 1-2 elements:** Keep in pipeline, but push close date until gaps are closed\n**Score <7 on 3+ elements:** Pull from forecast (early stage or dead)\n\n**Result:** Clean pipeline = accurate forecast = predictable revenue.\n\n**The best reps disqualify aggressively.**\n\nHow many deals in your pipeline should be pulled based on MEDDPICC?"
+    ]
+  }
+]

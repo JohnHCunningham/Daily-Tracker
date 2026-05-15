@@ -1,0 +1,117 @@
+[
+  {
+    "name": "build_commercial_insight",
+    "stage": "Teach",
+    "sample_user_utterances": [
+      "How do I build a commercial insight?",
+      "What should I teach them about their business?",
+      "Help me reframe their thinking",
+      "I need a contrarian angle"
+    ],
+    "bot_behavior": "Help the rep craft a teaching moment that challenges the customer's current belief with data, observation, or contrarian insight.",
+    "response_templates": [
+      "Let's build a commercial insight using the Challenger framework:\n\n**1. Current Belief (Warmer):** \"Most [role] believe that [assumption]...\"\n**2. Contrarian Data (Reframe):** \"But what we see across [market/customers] is [surprising insight]...\"\n**3. Cost of Status Quo (Rational Drowning):** \"That gap is costing companies like yours [quantified impact]...\"\n**4. Personal Impact (Emotional):** \"Which means [personal consequence for them]...\"\n**5. New Way:** \"A better approach is [your perspective]...\"\n\nBased on what you know about their business, what assumption could you challenge?",
+      "Great commercial insights come from pattern recognition. Think about:\n\n• **Industry shifts** they haven't noticed yet\n• **Hidden costs** in how they operate today\n• **Competitor moves** that will affect them\n• **Benchmarks** that show they're behind\n\nWhat data or observation do you have that would surprise them about their own business?"
+    ]
+  },
+  {
+    "name": "tailor_to_stakeholder",
+    "stage": "Tailor",
+    "sample_user_utterances": [
+      "How do I tailor this message for the CFO?",
+      "What does the VP Sales care about?",
+      "I need to adjust my pitch for different stakeholders",
+      "Help me translate this for different roles"
+    ],
+    "bot_behavior": "Help the rep translate the same core insight into stakeholder-specific language based on their role, metrics, and incentives.",
+    "response_templates": [
+      "Let's tailor your insight for different stakeholders:\n\n**For CFO:**\nReframe in terms of: Risk, ROI, predictability, cost control, financial metrics\n\"This approach reduces [financial risk] and improves [predictable outcome] by [%].\"\n\n**For COO:**\nReframe in terms of: Efficiency, operational risk, scalability, resource allocation\n\"This eliminates [operational bottleneck] and frees up [X hours/resources] for higher-value work.\"\n\n**For VP Sales:**\nReframe in terms of: Win rates, cycle time, rep productivity, quota attainment\n\"Teams using this approach see [X%] faster cycles and [Y%] higher close rates.\"\n\n**For End User:**\nReframe in terms of: Ease of work, fewer headaches, tangible daily benefits\n\"This means you spend less time on [painful task] and more time on [valuable work].\"\n\nWho are you talking to, and what's their top metric?",
+      "Challenger isn't one message for everyone—it's one insight, framed differently:\n\n**Same Core Insight:**\n\"Current forecasting approaches miss [X], costing companies [Y].\"\n\n**Tailored Versions:**\n• CFO: \"That forecast error costs you [Z] in misallocated capital\"\n• COO: \"That unpredictability creates [operational chaos]\"\n• VP Sales: \"That means your team is flying blind on [pipeline reality]\"\n• Rep: \"That means you're spending [X hours] on manual work instead of selling\"\n\nWhat's your core insight, and who needs to hear it?"
+    ]
+  },
+  {
+    "name": "take_control_of_process",
+    "stage": "Take Control",
+    "sample_user_utterances": [
+      "How do I take control without being pushy?",
+      "They keep stalling",
+      "Help me guide the next steps",
+      "I need to create constructive tension"
+    ],
+    "bot_behavior": "Coach the rep to assert control over the sales process through clear agendas, direct questions, and firm guidance on next steps.",
+    "response_templates": [
+      "Challenger reps guide the process—they don't wait for buyers. Here's how to take control:\n\n**1. Set Clear Agendas:**\n\"For our next call, I'd like to cover [X, Y, Z]. At the end, we should both know whether this is worth pursuing. Sound fair?\"\n\n**2. Ask the Hard Questions:**\n• \"What happens if you change nothing?\"\n• \"Who else needs to be on board for this to move forward?\"\n• \"How will you fund this, specifically?\"\n\n**3. Propose Specific Next Steps:**\n❌ \"Let me know when you're ready to talk again\"\n✅ \"Let's put 30 minutes on the calendar with you and [stakeholder] to either move forward or call it a no. Does [date/time] work?\"\n\nWhat's the hard question you're avoiding asking them?",
+      "When they stall with \"we need to think about it,\" use constructive tension:\n\n\"That's totally fair. In my experience, when people say that, it usually means one of three things:\n\n1. **You're leaning no** but don't want to say it directly\n2. **Something didn't land** in what we discussed\n3. **This just isn't a priority** right now\n\nWhich one is closest to what's really going on?\"\n\nThis removes ambiguity and surfaces the real issue. What's your version of this based on their situation?"
+    ]
+  },
+  {
+    "name": "handle_price_objection",
+    "stage": "Take Control",
+    "sample_user_utterances": [
+      "They said we're too expensive",
+      "Price is higher than competitors",
+      "How do I justify the cost?"
+    ],
+    "bot_behavior": "Use Challenger approach to reframe price objections by reinforcing the insight and connecting cost to value.",
+    "response_templates": [
+      "Price objections in Challenger are handled by reconnecting to the insight:\n\n\"I hear you. Sometimes when people say that, it means the problem we discussed—[pain]—isn't painful enough to justify changing right now. Is that what's happening, or have we not connected the dots between [problem] and [impact]?\"\n\nThen reframe the cost:\n\n\"Let me put it in perspective: You said [problem] is costing you [quantified impact] annually. Our solution is [price]. If we can reduce that cost by even [conservative %], you're net positive by [ROI] in [timeframe]. Does that math work for you?\"\n\nWhat's the quantified cost of their problem vs your price?",
+      "Don't defend price—reinforce value through your commercial insight:\n\n**Bad Response:**\n\"Well, we offer more features than [competitor]...\"\n\n**Challenger Response:**\n\"Fair question. Most companies focus on [surface metric], but what we showed you is that [deeper insight]. The companies that invest in solving [root cause] see [outcome], while those that go with cheaper options end up with [consequence]. Which path makes more sense for you?\"\n\nUse your teaching to justify the investment. What insight did you share that makes price irrelevant?"
+    ]
+  },
+  {
+    "name": "competitive_positioning",
+    "stage": "Teach / Tailor",
+    "sample_user_utterances": [
+      "How do I position against competitors?",
+      "They're comparing us to [competitor]",
+      "I need a competitive angle"
+    ],
+    "bot_behavior": "Help the rep use commercial insight to differentiate, not feature comparison.",
+    "response_templates": [
+      "Challenger doesn't win on features—it wins on insight. Position yourself by reframing what matters:\n\n**1. Acknowledge Competitor Strength:**\n\"[Competitor] is great at [their strength]. If [their focus area] is your top priority, they might be a better fit.\"\n\n**2. Introduce New Criteria:**\n\"But here's what we're seeing in the market: companies that focus only on [their strength] miss [your insight]. That ends up costing them [consequence].\"\n\n**3. Let Them Choose:**\n\"So the question is: do you want [their strength] or [your differentiated outcome]? Both are valid—it depends on what matters most to you.\"\n\nWhat's your unique insight that changes the buying criteria?",
+      "In competitive situations, Challengers shape the criteria before the eval starts:\n\n\"Most teams compare vendors on [common criteria: price, features, ease]. But the teams that actually succeed with this focus on [your differentiator: strategic impact, long-term scalability, etc.]. Does that resonate with how you're thinking about this?\"\n\nIf you introduce the criteria early, you can align the scorecard to your strengths. What criteria would favor your solution?"
+    ]
+  },
+  {
+    "name": "qualification_through_teaching",
+    "stage": "Teach",
+    "sample_user_utterances": [
+      "How do I know if they're serious?",
+      "Are they just kicking tires?",
+      "Should I keep investing time here?"
+    ],
+    "bot_behavior": "Use the teaching framework to qualify: engaged buyers lean in when challenged; tire-kickers disengage.",
+    "response_templates": [
+      "Challenger qualification happens through the teach moment itself:\n\n**Engaged Buyer (Qualified):**\n• Asks follow-up questions about your insight\n• Challenges back (constructive debate)\n• Wants to bring others into the conversation\n• Says things like \"I hadn't thought about it that way\"\n\n**Tire-Kicker (Disqualified):**\n• Passively listens but doesn't engage\n• Deflects with \"interesting, send me info\"\n• Won't schedule follow-up with specific stakeholders\n• Shows no curiosity about your insight\n\nAfter you taught them something, how did they respond? That's your qualification signal.",
+      "If you're unsure whether to invest more time, test it with a direct challenge:\n\n\"Based on what we've discussed, it sounds like [problem] is significant. But I'm not sure if this is actually a priority for you right now, or if you're just exploring. Which is it?\"\n\nChallenger reps don't chase—they qualify or disqualify. What response would tell you this is real?"
+    ]
+  },
+  {
+    "name": "create_urgency",
+    "stage": "Take Control",
+    "sample_user_utterances": [
+      "They don't feel urgency",
+      "How do I create a compelling event?",
+      "They said 'maybe next quarter'"
+    ],
+    "bot_behavior": "Use insight to create urgency by showing cost of waiting, not arbitrary deadlines.",
+    "response_templates": [
+      "Challenger urgency comes from insight, not pressure:\n\n**Don't Say:**\n\"We have a deal ending soon—can you commit this quarter?\"\n\n**Do Say:**\n\"Help me understand: you mentioned [problem] is costing you [X] per month. If we wait until next quarter to address this, that's [X × 3] in continued cost. What would have to be true for that to feel acceptable?\"\n\nThe insight creates the urgency: Cost of inaction > Cost of change. What's the monthly/quarterly cost of their problem?",
+      "If they say \"maybe next quarter,\" challenge the logic:\n\n\"I hear you. Let me make sure I understand: You said [problem] is affecting [outcome], and waiting another quarter means [quantified impact]. Help me reconcile that—if it's not urgent enough to address now, is it actually a problem worth solving at all?\"\n\nThis isn't pushy—it's logical. Either the problem is real (act now) or it's not (disqualify). Which is it?"
+    ]
+  },
+  {
+    "name": "rehearse_stakeholder_pitch",
+    "stage": "Tailor",
+    "sample_user_utterances": [
+      "They need to pitch this internally",
+      "How should my champion present this?",
+      "Help me prep them to sell internally"
+    ],
+    "bot_behavior": "Arm the champion with insight and stakeholder-specific language to sell when you're not in the room.",
+    "response_templates": [
+      "Great champions need ammunition. Help them pitch with insight:\n\n**1. Give Them the Insight:**\n\"When you talk to [EB/stakeholder], lead with: 'Here's what I learned that surprised me—most companies focus on [X], but the data shows [Y]...'"\n\n**2. Tailor to Stakeholder:**\n\"For [CFO], frame it as [financial impact]. For [COO], frame it as [operational benefit].\"\n\n**3. Prep for Objections:**\n\"If they say [objection], you can respond with: '[insight-based rebuttal]'\"\n\n**4. Test Their Readiness:**\n\"Walk me through how you'll pitch this. What will you say first?\"\n\nWhat insight can they lead with when you're not in the room?",
+      "If your champion is weak, strengthen them:\n\n\"Let's practice. Pretend I'm [skeptical stakeholder]. Pitch me on why we should do this.\"\n\nListen for:\n• Do they lead with insight or features?\n• Do they connect to stakeholder priorities?\n• Do they handle objections confidently?\n\nIf they can't pitch it well, they're not a champion yet—they're a coach. Either develop them or find a stronger advocate."
+    ]
+  }
+]

@@ -19,11 +19,23 @@ export async function POST(request: NextRequest) {
     }
 
     // Get the user's account
-    const { data: userData } = await supabase
+    let { data: userData } = await supabase
       .from('Users')
       .select('account_id, role')
       .eq('auth_id', user.id)
       .single()
+
+    if (!userData?.account_id) {
+      await supabase.rpc('ensure_user_has_account')
+
+      const { data: repairedUserData } = await supabase
+        .from('Users')
+        .select('account_id, role')
+        .eq('auth_id', user.id)
+        .single()
+
+      userData = repairedUserData
+    }
 
     if (!userData?.account_id) {
       return NextResponse.json({ error: 'Account not found' }, { status: 404 })

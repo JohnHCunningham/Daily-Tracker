@@ -1,9 +1,33 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-export async function getAuthorizedAccountContext(req: Request) {
+export async function getAuthorizedAccountContext(req: Request, body?: Record<string, unknown>) {
   const authHeader = req.headers.get("Authorization");
   if (!authHeader) {
     return { error: "Missing authorization header", status: 401 as const };
+  }
+
+  const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (serviceRoleKey && authHeader === `Bearer ${serviceRoleKey}`) {
+    let requestBody = body;
+
+    if (!requestBody) {
+      try {
+        requestBody = await req.clone().json();
+      } catch {
+        requestBody = {};
+      }
+    }
+
+    const accountId = requestBody?.account_id;
+    if (!accountId || typeof accountId !== "string") {
+      return { error: "account_id is required for internal requests", status: 400 as const };
+    }
+
+    return {
+      internal: true as const,
+      accountId,
+      role: "service_role",
+    };
   }
 
   const supabase = createClient(
@@ -36,6 +60,7 @@ export async function getAuthorizedAccountContext(req: Request) {
   }
 
   return {
+    internal: false as const,
     supabase,
     user,
     accountId: userData.account_id as string,

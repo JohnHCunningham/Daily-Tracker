@@ -87,7 +87,7 @@ export function useSubscription(): UseSubscriptionReturn {
 
       if (account) {
         setSubscription({
-          subscriptionStatus: account.subscription_status || 'trialing',
+          subscriptionStatus: account.subscription_status || 'incomplete',
           billingCycle: account.billing_cycle || 'monthly',
           repCount: account.rep_count || 1,
           trialEndsAt: account.trial_ends_at,

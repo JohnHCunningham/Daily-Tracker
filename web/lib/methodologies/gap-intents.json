@@ -1,0 +1,152 @@
+[
+  {
+    "name": "diagnose_current_state",
+    "stage": "Current State",
+    "sample_user_utterances": [
+      "Help me understand their current state",
+      "What questions diagnose where they are today?",
+      "I need to map their current situation",
+      "Walk me through current state discovery"
+    ],
+    "bot_behavior": "Provide diagnostic questions to uncover all 5 elements of Current State: Environment, Problem, Impact, Root Cause, Emotion.",
+    "response_templates": [
+      "**The 5 Elements of Current State:**\n\n**1. Environment (Context)**\n• \"What's your tech stack for [domain]?\"\n• \"How is your team structured?\"\n• \"Walk me through your current process for [X].\"\n\n**2. Problem (Issue/Symptom)**\n• \"What's not working the way you need it to?\"\n• \"Where does your current approach fall short?\"\n\n**3. Impact (Business Consequences)**\n• \"What's the cost of this problem? Time? Money? Deals lost?\"\n• \"How does this affect [key metric]?\"\n\n**4. Root Cause (Why It Exists)**\n• \"What's causing this to happen?\"\n• \"Why hasn't this been fixed already?\"\n\n**5. Emotion (Personal Feelings)**\n• \"How does this affect you personally?\"\n• \"What's it like dealing with this every day?\"\n\n**Most reps only get #1 and #2.** You need all 5. Which elements are you missing?",
+      "**Current State Diagnostic Flow:**\n\nStart broad, then go deep:\n\n**Environment:** \"Walk me through your current sales process from first touch to close.\"\n\n**Problem:** \"Where in that process do things break down or take longer than they should?\"\n\n**Impact:** \"When [problem] happens, what does it cost you? How many hours? How many deals?\"\n\n**Root Cause:** \"What's causing [problem] to happen in the first place?\"\n\n**Emotion:** \"How does it feel when [problem] occurs? What's the stress level?\"\n\nYou're diagnosing—be thorough. What's your first diagnostic question?"
+    ]
+  },
+  {
+    "name": "quantify_impact",
+    "stage": "Impact",
+    "sample_user_utterances": [
+      "How do I quantify the problem?",
+      "They said 'it's inefficient' - what now?",
+      "Help me get them to give me numbers",
+      "I need to calculate the cost"
+    ],
+    "bot_behavior": "Push for specific, quantified impact. No vague answers allowed. Convert vague problems into dollar/time/deal costs.",
+    "response_templates": [
+      "**Vague problems don't justify investment. Make them quantify:**\n\n**Vague:** \"We're not growing fast enough\"\n**Your Response:** \"Help me understand what that means specifically. What growth rate are you at today, and where do you need to be?\"\n\n**Vague:** \"It's inefficient\"\n**Your Response:** \"Let's quantify that. How many hours per week does this inefficiency cost? What could you do with those hours if they were freed up?\"\n\n**Vague:** \"Reps waste time\"\n**Your Response:** \"How much time exactly? If I asked 10 reps, how many hours per week would they say they spend on [non-selling activity]?\"\n\n**Formula:** Vague statement → \"What's the number?\" → Get specific quantification.\n\nWhat vague answer did they give that needs quantification?",
+      "**Quantification Questions:**\n\n• \"How many hours per week/month does this take?\"\n• \"What's the dollar cost of [problem]?\"\n• \"How many deals are you losing because of this?\"\n• \"If this doesn't change, what's the annual impact?\"\n• \"If we converted that time to dollars at $[hourly rate], what's the cost?\"\n\n**Make it annual:** \"10 hours/week = 520 hours/year = $52K at $100/hour\"\n\n**Make it personal:** \"That's two full-time employees' worth of capacity you're losing.\"\n\nNow the problem has weight. What's the quantified annual cost of their problem?"
+    ]
+  },
+  {
+    "name": "identify_root_cause",
+    "stage": "Root Cause",
+    "sample_user_utterances": [
+      "How do I find the root cause?",
+      "What's causing this problem?",
+      "They're telling me symptoms - how do I dig deeper?",
+      "Help me use the 5 Whys"
+    ],
+    "bot_behavior": "Teach the 5 Whys technique to move from symptoms to root causes. Don't accept surface-level answers.",
+    "response_templates": [
+      "**Symptoms vs Root Causes:**\n\n**Symptom:** What you see/hear (\"Low morale,\" \"Slow process,\" \"High turnover\")\n**Root Cause:** Why it exists (\"Reps lack tools to hit quota,\" \"No automation,\" \"Poor onboarding\")\n\n**Use the 5 Whys:**\n\n1. **Symptom:** \"Our reps aren't hitting quota.\"\n   **Ask:** \"Why aren't they hitting quota?\"\n\n2. **Answer:** \"They're not doing enough activity.\"\n   **Ask:** \"Why aren't they doing enough activity?\"\n\n3. **Answer:** \"They spend half their time on admin work.\"\n   **Ask:** \"What's causing them to spend so much time on admin?\"\n\n4. **Answer:** \"Our CRM doesn't automate data entry.\"\n   **Ask:** \"Why doesn't it automate?\"\n\n5. **Answer:** \"We're on an old system without those capabilities.\"\n   **ROOT CAUSE FOUND:** Legacy CRM → manual admin → low activity → missed quotas.\n\nWhat's the symptom they mentioned, and what's your first \"why\" question?",
+      "**Test for Root Cause:**\n\n\"If we fixed [root cause], would [symptom] go away permanently?\"\n\n**Example:**\n• Fix: \"Automate CRM data entry\"\n• Result: \"Admin time drops → Activity increases → Quotas improve\"\n• Test: \"If we automated, would quota attainment improve?\" → YES = Root Cause confirmed\n\n**If fixing it doesn't eliminate the symptom, you're still at surface level.**\n\nWhat root cause are you testing, and does fixing it eliminate the problem?"
+    ]
+  },
+  {
+    "name": "build_impact_table",
+    "stage": "Diagnosis",
+    "sample_user_utterances": [
+      "Help me build an impact table",
+      "What's the impact table framework?",
+      "I need to organize their problems",
+      "How do I structure their pain points?"
+    ],
+    "bot_behavior": "Walk the rep through building an Impact Table: Problem → Impact → Root Cause.",
+    "response_templates": [
+      "**The Impact Table Framework:**\n\n| **PROBLEM** | **IMPACT (if not fixed)** | **ROOT CAUSE (why it exists)** |\n|-------------|---------------------------|--------------------------------|\n| Low close rates | $500K/year lost revenue | Reps skip discovery, pitch too early |\n| Manual forecasting | 10 hours/week wasted | No automated CRM workflow |\n| Long sales cycles | 30% fewer deals closed/year | No qualification framework |\n\n**How to Build:**\n\n1. **List the Problem:** \"What specific problem does your product solve?\"\n2. **Quantify Impact:** \"If they don't fix this, what does it cost them?\"\n3. **Identify Root Cause:** \"Why does this problem exist?\"\n\n**Use this in every deal.** Let's build one for your prospect. What's the primary problem they're facing?",
+      "**Building the Impact Table with Your Prospect:**\n\n**Step 1 - Problem:**\n\"You mentioned [problem]. Let's be specific—what exactly is happening?\"\n\n**Step 2 - Impact:**\n\"If that problem continues, what does it cost you? Time? Money? Deals? Customers?\"\n\n**Step 3 - Root Cause:**\n\"What's causing that problem to exist? Why hasn't it been fixed already?\"\n\n**Result:** A one-row Impact Table that makes the gap undeniable.\n\n| Problem | Impact | Root Cause |\n|---------|--------|------------|\n| [Specific issue] | [$X/year, Y hours/week] | [Underlying cause] |\n\nNow fill in the blanks for your deal."
+    ]
+  },
+  {
+    "name": "define_future_state",
+    "stage": "Future State",
+    "sample_user_utterances": [
+      "How do I understand their future state?",
+      "What's their goal?",
+      "Where do they need to be?",
+      "Help me define success"
+    ],
+    "bot_behavior": "Guide the rep to define specific, measurable Future State (where buyer needs to be) before positioning solution.",
+    "response_templates": [
+      "**Future State must be specific and measurable:**\n\n**Vague (Bad):**\n• \"Be more efficient\"\n• \"Improve performance\"\n• \"Get better results\"\n\n**Specific (Good):**\n• \"Reps spend 70% of time selling, 30% on admin (vs 50/50 today)\"\n• \"Forecast accuracy improves from 60% to 85%+\"\n• \"Sales cycle averages 6 months (vs 9 months today)\"\n\n**Future State Questions:**\n• \"Where do you need to be to consider this solved?\"\n• \"What does success look like in measurable terms?\"\n• \"If we checked back in 6 months, what would be different?\"\n• \"What's the goal state vs where you are today?\"\n\nWhat's the measurable outcome they're trying to achieve?",
+      "**Current State → Future State = The Gap**\n\n**Current State:** \"Reps spend 40% of time on admin work\"\n**Future State:** \"Reps spend 15% of time on admin work\"\n**Gap:** 25 percentage points = [X hours/week] = [$Y saved annually]\n\n**Without a clear Future State, you can't quantify the gap.**\n\n**Ask:**\n\"You said [current state]. Where would you need to get to for this to feel solved?\"\n\nWhat's their Current State, and what's the Future State they need to reach?"
+    ]
+  },
+  {
+    "name": "refuse_premature_solutions",
+    "stage": "Discipline",
+    "sample_user_utterances": [
+      "Can I show them my solution now?",
+      "Should I present the demo?",
+      "They're asking about my product",
+      "When can I talk about what I do?"
+    ],
+    "bot_behavior": "Stop reps from presenting solutions before diagnosis is complete. Hold the boundary firmly.",
+    "response_templates": [
+      "**STOP. Not yet.**\n\nBefore you present anything, answer these:\n\n✅ Do you understand their Current State (all 5 elements)?\n✅ Have you quantified the Impact (real numbers, not \"it's a problem\")?\n✅ Do you know the Root Cause (not just symptoms)?\n✅ Is Future State defined (measurable goal)?\n✅ Have you calculated the Gap Value (cost of current vs future)?\n\n**If any ❌:** Your diagnosis is incomplete. Presenting now is guessing at what matters.\n\n**Gap Selling Rule:** Diagnose before you prescribe. Would a doctor give you medication after hearing one symptom? No.\n\nWhat's missing from your diagnostic?",
+      "**If they ask about your product before diagnosis:**\n\n\"I can definitely share that, but I want to make sure what I show you is actually relevant to your situation. Most of what we do might not even apply to you. Can I ask you a few more questions about [diagnostic area] first? Then I'll show you exactly how this would work for you—or tell you if it's not a fit.\"\n\n**This isn't stalling—it's respecting their time.**\n\nYou're the doctor. You control the diagnostic. How would you hold that boundary?"
+    ]
+  },
+  {
+    "name": "four_question_types",
+    "stage": "Execution",
+    "sample_user_utterances": [
+      "What types of questions should I ask?",
+      "Give me the Gap Selling question framework",
+      "How do I structure my discovery?",
+      "What's the questioning approach?"
+    ],
+    "bot_behavior": "Teach the four Gap Selling question types: Probing, Process, Provoking, Validating.",
+    "response_templates": [
+      "**The Four Gap Selling Question Types:**\n\n**1. Probing (Open-ended, detail-focused):**\n• \"Tell me about your current process for [X].\"\n• \"Help me understand how [Y] works today.\"\n• \"Walk me through what happens when [Z] occurs.\"\n→ Use for: Current State discovery\n\n**2. Process (How they do what they do):**\n• \"How do you currently handle [task]?\"\n• \"What are the steps involved in [workflow]?\"\n• \"Who is involved at each stage?\"\n→ Use for: Understanding workflow and systems\n\n**3. Provoking (Reframe their thinking):**\n• \"What if you looked at it this way...\"\n• \"Have you considered that [X] might be causing [Y]?\"\n• \"Most companies think [assumption]—is that true for you?\"\n→ Use for: Surfacing root causes\n\n**4. Validating (Confirm alignment):**\n• \"Is this an issue you're trying to solve now?\"\n• \"Does that sound like your situation?\"\n• \"Am I understanding this correctly?\"\n→ Use for: Testing hypotheses\n\nWhich question type would uncover the Root Cause here?",
+      "**Question Type Selection:**\n\n**Discovering Current State:** Probing + Process\n• \"Walk me through your current sales cycle from first touch to close.\"\n• \"How do you handle lead routing today?\"\n\n**Finding Root Cause:** Provoking\n• \"Most teams assume [X] is the problem, but what if it's actually [Y]?\"\n\n**Quantifying Impact:** Probing\n• \"How much time/money does this cost you?\"\n\n**Confirming Diagnosis:** Validating\n• \"So if I'm hearing you right, [problem] is costing you [impact] because of [root cause]. Is that accurate?\"\n\nWhat question type do you need for the next phase of your diagnostic?"
+    ]
+  },
+  {
+    "name": "calculate_gap_value",
+    "stage": "Gap Analysis",
+    "sample_user_utterances": [
+      "How do I calculate the gap value?",
+      "What's the gap worth?",
+      "Help me quantify the opportunity",
+      "How do I show ROI?"
+    ],
+    "bot_behavior": "Help the rep calculate the dollar value of closing the gap (Current State cost → Future State benefit).",
+    "response_templates": [
+      "**Gap Value Formula:**\n\n**Gap Value = Cost of Current State - Cost of Future State**\n\n**Example:**\n\n**Current State:** Reps spend 40% of time on admin (16 hours/week)\n• 10 reps × 16 hours × 50 weeks × $100/hour = **$800K/year** in lost productivity\n\n**Future State:** Reps spend 15% of time on admin (6 hours/week)\n• 10 reps × 6 hours × 50 weeks × $100/hour = **$300K/year** in admin time\n\n**Gap Value:** $800K - $300K = **$500K/year savings**\n\n**If your solution costs $100K/year, the ROI is 5:1.**\n\nWhat's the quantified cost of their Current State vs Future State?",
+      "**Make the Gap Visual:**\n\n```\nCURRENT STATE              FUTURE STATE\n$800K lost annually    →   $300K lost annually\n     ↓                          ↓\n        GAP VALUE = $500K/year\n```\n\n**Your Solution = The Bridge Across the Gap**\n\n**Questions to Calculate:**\n• \"What's the annual cost of staying in Current State?\"\n• \"If you reached Future State, what would you save/gain annually?\"\n• \"What's the difference—that's the Gap Value.\"\n\nNow position your solution as the way to close that $500K gap. What's the Gap Value in your deal?"
+    ]
+  },
+  {
+    "name": "handle_vague_responses",
+    "stage": "Execution",
+    "sample_user_utterances": [
+      "They're giving vague answers",
+      "How do I push for specifics?",
+      "They said 'it's a challenge' - what now?",
+      "They won't quantify"
+    ],
+    "bot_behavior": "Teach the rep to stop vague answers immediately and push for specific, quantifiable details.",
+    "response_templates": [
+      "**Vague answers kill Gap Selling. Stop them immediately:**\n\n**They say:** \"We're not growing fast enough.\"\n**You say:** \"Help me understand what that means specifically. What's your growth rate today, and where do you need it to be?\"\n\n**They say:** \"It's inefficient.\"\n**You say:** \"Let's quantify 'inefficient.' How many hours does this inefficiency cost per week? What's the dollar impact?\"\n\n**They say:** \"We have some challenges.\"\n**You say:** \"I want to make sure I understand the specific challenges. Can you describe what's actually happening?\"\n\n**Rule:** Every vague statement gets a follow-up question that forces specificity.\n\nWhat vague answer did they give, and what's your follow-up question?",
+      "**Script for Pushing Back on Vagueness:**\n\n\"I appreciate you sharing that, but I want to make sure I really understand. When you say [vague term], what does that look like specifically? Can you give me an example of when this happened recently?\"\n\n**Example:**\n• Vague: \"Our process is broken\"\n• Push: \"When you say 'broken,' what specifically happens? Walk me through a recent example.\"\n• Specific: \"Last week, a $200K deal stalled because we couldn't get approval in time\"\n\n**Now you have something to diagnose.**\n\nHow would you push back on their vague response?"
+    ]
+  },
+  {
+    "name": "position_solution",
+    "stage": "Presentation",
+    "sample_user_utterances": [
+      "How do I present my solution now?",
+      "They're ready - how do I position?",
+      "Help me connect my product to the gap",
+      "What's the best way to present?"
+    ],
+    "bot_behavior": "Position the solution as the bridge that closes the gap between Current State and Future State, using their language.",
+    "response_templates": [
+      "**Gap Selling Presentation Structure:**\n\n**1. Summarize the Diagnosis:**\n\"Based on our conversation, here's what I understand:\n• **Current State:** [Their situation today]\n• **Impact:** [Quantified cost]\n• **Root Cause:** [Why it exists]\n• **Future State:** [Where they need to be]\n• **Gap Value:** [Dollar cost of the gap]\"\n\n**2. Position Your Solution:**\n\"Our solution closes that gap by [how you address root cause]. Here's how...\"\n\n**3. Show the Bridge:**\n\"Instead of [Current State], you'll [Future State]. That $500K gap we identified? This is how we close it.\"\n\n**Key:** Use their language, their numbers, their gap. You're not pitching—you're prescribing.\n\nHow would you summarize their diagnosis before positioning?",
+      "**Don't Start Fresh—Reference the Diagnostic:**\n\n❌ **Bad:** \"Let me show you what we do... [generic demo]\"\n\n✅ **Good:** \"You mentioned [problem] is costing you [impact] because of [root cause]. What I want to show you is how we eliminate [root cause] so you can move from [current state] to [future state]. Sound fair?\"\n\n**Your solution = The gap-closer**\n\nTie every feature back to:\n• The root cause it addresses\n• The impact it reduces\n• The gap it closes\n\nWhat's your opening line that connects your solution to their gap?"
+    ]
+  }
+]

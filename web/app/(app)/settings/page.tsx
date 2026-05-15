@@ -20,6 +20,7 @@ interface AccountInfo {
   unique_customer_profile: string | null
   competitor_context: string | null
   email_from_name: string | null
+  methodology: string | null
 }
 
 interface CurrentUser {
@@ -57,6 +58,7 @@ export default function SettingsPage() {
     unique_customer_profile: '',
     competitor_context: '',
     email_from_name: 'One Click Coaching',
+    methodology: 'sandler',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -102,7 +104,7 @@ export default function SettingsPage() {
 
     const { data: accountData } = await supabase
       .from('Accounts')
-      .select('id, name, admin_designation, logo_url, primary_color, accent_color, company_name, unique_customer_profile, competitor_context, email_from_name')
+      .select('id, name, admin_designation, logo_url, primary_color, accent_color, company_name, unique_customer_profile, competitor_context, email_from_name, methodology')
       .eq('id', currentUser.account_id)
       .single()
 
@@ -117,6 +119,7 @@ export default function SettingsPage() {
         unique_customer_profile: accountData.unique_customer_profile || '',
         competitor_context: accountData.competitor_context || '',
         email_from_name: accountData.email_from_name || 'One Click Coaching',
+        methodology: accountData.methodology || 'sandler',
       })
     }
     setLoading(false)
@@ -190,6 +193,7 @@ export default function SettingsPage() {
         unique_customer_profile: form.unique_customer_profile,
         competitor_context: form.competitor_context,
         email_from_name: form.email_from_name,
+        methodology: form.methodology,
       })
       .eq('id', account.id)
 
@@ -248,29 +252,37 @@ export default function SettingsPage() {
   }
 
   async function handleSubscriptionAction(action: 'cancel' | 'reactivate') {
-    if (!subscription?.stripeSubscriptionId) return
+    if (!subscription?.stripeSubscriptionId) {
+      toast.error('No active Stripe subscription found')
+      return
+    }
     if (!currentUser || !['admin', 'manager'].includes(currentUser.role)) {
       toast.error('Only admins and managers can update billing')
       return
     }
 
     setSubscriptionActionLoading(true)
+    const toastId = toast.loading(
+      action === 'cancel' ? 'Setting subscription to cancel...' : 'Reactivating subscription...'
+    )
     try {
       const response = await fetch('/api/stripe/manage-subscription', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action }),
       })
-      const data = await response.json()
+      const data = await response.json().catch(() => null)
 
-      if (data.success) {
-        toast.success(action === 'cancel' ? 'Subscription set to cancel at period end' : 'Subscription reactivated')
-        refetch()
+      if (response.ok && data?.success) {
+        await refetch()
+        toast.success(action === 'cancel' ? 'Subscription set to cancel at period end' : 'Subscription reactivated', {
+          id: toastId,
+        })
       } else {
-        toast.error(data.error || 'Failed to update subscription')
+        toast.error(data?.error || 'Failed to update subscription', { id: toastId })
       }
     } catch {
-      toast.error('Failed to update subscription')
+      toast.error('Failed to update subscription', { id: toastId })
     } finally {
       setSubscriptionActionLoading(false)
     }
@@ -554,6 +566,7 @@ export default function SettingsPage() {
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
                     <button
+                      type="button"
                       onClick={() => setNewRepCount(Math.max(1, (newRepCount || 1) - 1))}
                       disabled={!newRepCount || newRepCount <= 1}
                       className="w-10 h-10 bg-white border border-terracotta/20 rounded-lg text-espresso font-bold hover:border-teal/40 disabled:opacity-30 disabled:cursor-not-allowed"
@@ -569,6 +582,7 @@ export default function SettingsPage() {
                       className="w-20 h-10 bg-white border border-terracotta/20 rounded-lg text-espresso text-center font-bold focus:outline-none focus:border-terracotta"
                     />
                     <button
+                      type="button"
                       onClick={() => setNewRepCount((newRepCount || 1) + 1)}
                       className="w-10 h-10 bg-white border border-terracotta/20 rounded-lg text-espresso font-bold hover:border-teal/40"
                     >
@@ -586,6 +600,7 @@ export default function SettingsPage() {
                 </div>
                 {newRepCount && newRepCount !== subscription.repCount && (
                   <button
+                    type="button"
                     onClick={handleUpdatePlan}
                     disabled={updatingPlan}
                     className="mt-4 w-full bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-2.5 px-4 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
@@ -597,6 +612,7 @@ export default function SettingsPage() {
                 )}
                 {newRepCount === subscription.repCount && selectedBillingCycle !== subscription.billingCycle && (
                   <button
+                    type="button"
                     onClick={handleUpdatePlan}
                     disabled={updatingPlan}
                     className="mt-4 w-full bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-2.5 px-4 rounded-lg hover:shadow-lg transition-all disabled:opacity-50"
@@ -643,6 +659,7 @@ export default function SettingsPage() {
               {subscription.stripeCustomerId && (
                 <div className="space-y-3">
                   <button
+                    type="button"
                     onClick={async () => {
                       setBillingLoading(true)
                       try {
@@ -669,7 +686,8 @@ export default function SettingsPage() {
 
                   {subscription.subscriptionStatus !== 'canceled' && (
                     <button
-                      onClick={() => handleSubscriptionAction(subscription.cancelAtPeriodEnd ? 'reactivate' : 'cancel')}
+                      type="button"
+                      onClick={() => void handleSubscriptionAction(subscription.cancelAtPeriodEnd ? 'reactivate' : 'cancel')}
                       disabled={subscriptionActionLoading || !stripeConfig?.configured}
                       className={`w-full font-semibold py-3 px-4 rounded-lg border transition-colors disabled:opacity-50 ${
                         subscription.cancelAtPeriodEnd
@@ -824,13 +842,54 @@ export default function SettingsPage() {
 
         {/* Methodology */}
         <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
-          <h2 className="text-lg font-bold text-espresso mb-4">Methodology</h2>
-          <div className="flex items-center gap-3 p-3 bg-terracotta/10 border border-terracotta/20 rounded-lg">
-            <div className="w-10 h-10 bg-terracotta/20 rounded-full flex items-center justify-center text-terracotta font-bold">S</div>
-            <div>
-              <p className="font-semibold text-espresso text-sm">Sandler Selling System</p>
-              <p className="text-xs text-stone-light">Active methodology for all coaching analysis</p>
-            </div>
+          <h2 className="text-lg font-bold text-espresso mb-4">Sales Methodology</h2>
+          <p className="text-sm text-stone-light mb-4">
+            Select the sales methodology your team uses. This determines how coaching analysis is performed.
+          </p>
+          <div className="space-y-3">
+            {[
+              { id: 'sandler', name: 'Sandler Selling System', initial: 'S', description: 'Qualify early, control the process, focus on pain' },
+              { id: 'meddic', name: 'MEDDIC', initial: 'M', description: 'Metrics, Economic Buyer, Decision Criteria, Decision Process, Identify Pain, Champion' },
+              { id: 'challenger', name: 'Challenger Sale', initial: 'C', description: 'Teach, tailor, take control of the sale' },
+              { id: 'spin', name: 'SPIN Selling', initial: 'SP', description: 'Situation, Problem, Implication, Need-Payoff questions' },
+              { id: 'gap', name: 'Gap Selling', initial: 'G', description: 'Problem-centric selling focused on closing the gap' },
+            ].map((methodology) => (
+              <button
+                key={methodology.id}
+                type="button"
+                onClick={() => setForm({ ...form, methodology: methodology.id })}
+                className={`w-full flex items-center gap-3 p-3 rounded-lg border transition-all ${
+                  form.methodology === methodology.id
+                    ? 'bg-terracotta/10 border-terracotta/30 shadow-sm'
+                    : 'bg-white border-bone-dark hover:border-terracotta/20'
+                }`}
+              >
+                <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-xs ${
+                  form.methodology === methodology.id
+                    ? 'bg-terracotta/20 text-terracotta'
+                    : 'bg-bone text-stone-light'
+                }`}>
+                  {methodology.initial}
+                </div>
+                <div className="flex-1 text-left">
+                  <p className={`font-semibold text-sm ${
+                    form.methodology === methodology.id ? 'text-espresso' : 'text-stone-light'
+                  }`}>
+                    {methodology.name}
+                  </p>
+                  <p className="text-xs text-stone-light">
+                    {methodology.description}
+                  </p>
+                </div>
+                {form.methodology === methodology.id && (
+                  <div className="w-5 h-5 bg-terracotta rounded-full flex items-center justify-center">
+                    <svg className="w-3 h-3 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                    </svg>
+                  </div>
+                )}
+              </button>
+            ))}
           </div>
         </div>
 

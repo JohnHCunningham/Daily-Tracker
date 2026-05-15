@@ -1,0 +1,136 @@
+[
+  {
+    "name": "situation_questions",
+    "stage": "Situation",
+    "sample_user_utterances": [
+      "What situation questions should I ask?",
+      "How do I gather context?",
+      "Help me understand their current state",
+      "I need background questions"
+    ],
+    "bot_behavior": "Provide 3-5 Situation questions to gather facts about current state, but warn against over-asking.",
+    "response_templates": [
+      "Situation questions gather context, but keep them to **3-5 max**—more feels like an interrogation.\n\n**For a sales team:**\n1. \"How many reps do you have?\"\n2. \"What's your current tech stack for [sales/CRM/forecasting]?\"\n3. \"Walk me through your typical sales cycle from first touch to close.\"\n4. \"What does your team use today for [relevant process]?\"\n\n**Then move to Problem questions**—Situation sets the stage, but it's not where value lives in SPIN.\n\nWhat context do you need to understand their world?",
+      "**Situation Question Rules:**\n\n✅ **Do:** Ask about structure, process, systems, baseline metrics\n✅ **Do:** Keep it brief (3-5 questions)\n✅ **Do:** Use answers to inform your Problem and Implication questions\n\n❌ **Don't:** Interrogate for 20 minutes\n❌ **Don't:** Ask questions you could've researched (LinkedIn, website)\n❌ **Don't:** Stay here—Problem and Implication are where deals are made\n\nWhat 3 Situation questions would set you up to ask great Problem questions?"
+    ]
+  },
+  {
+    "name": "problem_questions",
+    "stage": "Problem",
+    "sample_user_utterances": [
+      "What problem questions should I ask?",
+      "How do I uncover dissatisfaction?",
+      "Help me find their pain points",
+      "They seem satisfied—how do I probe?"
+    ],
+    "bot_behavior": "Provide Problem questions that uncover dissatisfaction with current state (implied needs).",
+    "response_templates": [
+      "Problem questions surface dissatisfaction—these are **implied needs** (\"it would be nice if...\").\n\n**Examples:**\n• \"Are you satisfied with your current [process/system]?\"\n• \"What challenges do you face with [situation you learned]?\"\n• \"Where does your current approach fall short?\"\n• \"What's not working the way you'd like it to?\"\n• \"When [process] breaks down, what happens?\"\n\n**Key:** You're looking for problems, not yet making them urgent. That's what Implication questions do next.\n\nBased on what you know about their situation, what problems might they be experiencing?",
+      "Problem questions move from facts (Situation) to dissatisfaction:\n\n**Situation:** \"How many hours per week does your team spend on forecasting?\"\n**Answer:** \"About 10 hours.\"\n\n**Problem:** \"Are you satisfied with that, or does it feel like too much time?\"\n**Answer:** \"Yeah, it's more than we'd like.\"\n\n**Now you have an implied need**—they're dissatisfied. Next step: Implication questions to make this problem bigger.\n\nWhat aspect of their current state might be causing dissatisfaction?"
+    ]
+  },
+  {
+    "name": "implication_questions",
+    "stage": "Implication",
+    "sample_user_utterances": [
+      "Give me implication questions",
+      "How do I make this problem bigger?",
+      "They see the problem but don't feel urgency",
+      "Help me build urgency"
+    ],
+    "bot_behavior": "This is the POWER layer of SPIN. Provide 3-5 Implication questions that connect problems to business impact and build urgency.",
+    "response_templates": [
+      "**Implication questions are the most powerful tool in SPIN**—they make small problems BIG by exploring consequences.\n\n**Problem:** \"Manual forecasting takes too long\"\n\n**Implication Sequence:**\n1. **Consequence:** \"What effect does that manual process have on forecast accuracy?\"\n2. **Ripple effect:** \"If forecasts are off, how does that affect your ability to plan for next quarter?\"\n3. **Magnitude:** \"How much time could your team save if this were automated?\"\n4. **Opportunity cost:** \"What could they be doing with those 10 saved hours—coaching reps? Working deals?\"\n5. **Strategic impact:** \"If your forecast is off by 20% because data is stale, how does that affect headcount planning?\"\n\n**Now the problem is URGENT**—not just annoying.\n\nWhat's the problem they mentioned, and what consequences haven't they connected yet?",
+      "Most reps skip Implication—this is WHY deals stall. Without Implication, need stays **implied** (weak) instead of **explicit** (strong).\n\n**Implication Formula:**\n• \"What effect does [problem] have on [metric/stakeholder]?\"\n• \"Who else is impacted when [problem] occurs?\"\n• \"If [problem] continues for [timeframe], what happens to [goal]?\"\n• \"How does [problem] affect your ability to [strategic objective]?\"\n\n**Research shows:** In large sales, only Implication and Need-Payoff predict success—not Situation or Problem.\n\nWhat Implication question would make their problem undeniable?"
+    ]
+  },
+  {
+    "name": "need_payoff_questions",
+    "stage": "Need-Payoff",
+    "sample_user_utterances": [
+      "Give me need-payoff questions",
+      "How do I get them to articulate value?",
+      "I want them to sell themselves",
+      "Help me close the need development"
+    ],
+    "bot_behavior": "Provide Need-Payoff questions that get the buyer to articulate the value of solving the problem (buyer sells themselves).",
+    "response_templates": [
+      "Need-Payoff questions are the final step—get the **buyer** to articulate value, not you.\n\n**Examples:**\n• \"What would it mean for your team if you could solve that?\"\n• \"How would fixing [problem] change your ability to [goal]?\"\n• \"If we could address [problem], what would that make possible?\"\n• \"Who benefits most if you get this right?\"\n• \"What would be different for you if [problem] went away?\"\n\n**Why this works:** When buyers articulate value in their own words, they're selling themselves. It's more powerful than any pitch you could give.\n\nBased on the Implication work you did, what Need-Payoff question would have them describe the transformation?",
+      "**Need-Payoff Timing:**\n\n❌ **Too Early:** If you ask Need-Payoff before Implication, the buyer will give generic answers (\"it would be nice\")\n✅ **Right Time:** After Implication has made the problem urgent and costly\n\n**Example Flow:**\n• **Problem:** \"Manual process takes too long\"\n• **Implication:** \"That's costing you 10 hours/week, missing forecast accuracy, affecting headcount planning\"\n• **Need-Payoff:** \"If you could automate that process, what would those 10 hours mean for your team's ability to hit goals?\"\n\nNow they're painting the picture of success. What question gets them to do that?"
+    ]
+  },
+  {
+    "name": "diagnose_buyer_stage",
+    "stage": "Discovery",
+    "sample_user_utterances": [
+      "What stage is this buyer in?",
+      "Are they ready for my solution?",
+      "Should I present now or wait?",
+      "How do I know if need is explicit?"
+    ],
+    "bot_behavior": "Help the rep assess buyer readiness stage and whether need is implied or explicit.",
+    "response_templates": [
+      "**Buyer Readiness Stages in SPIN:**\n\n**Stage 1: No Problem Recognized**\n→ Use Problem questions to surface dissatisfaction\n→ Don't present solutions yet\n\n**Stage 2: Problem Recognized, No Urgency**\n→ Use Implication questions to build urgency\n→ Still too early for solutions\n\n**Stage 3: Urgency Established (Explicit Need)**\n→ Use Need-Payoff questions to have them articulate value\n→ NOW you can present solutions\n\n**Stage 4: Evaluating Vendors**\n→ SPIN less relevant here (use MEDDPICC)\n\n**Where is your buyer?** If they see the problem but aren't urgent, you're at Stage 2—more Implication needed.",
+      "**Is Need Implied or Explicit?**\n\n**Implied Need (Weak):**\n• \"It would be nice to improve efficiency\"\n• \"Yeah, that's a bit annoying\"\n• \"We should probably upgrade at some point\"\n\n**Explicit Need (Strong):**\n• \"We need to fix this by end of quarter or we miss the year\"\n• \"This is costing us $50K/month\"\n• \"If we don't solve this, we'll lose our biggest customer\"\n\n**Your job:** Use Implication questions to convert Implied → Explicit.\n\nBased on what they've said, is their need implied or explicit?"
+    ]
+  },
+  {
+    "name": "prevent_interrogation",
+    "stage": "Execution",
+    "sample_user_utterances": [
+      "Am I asking too many questions?",
+      "This feels like an interrogation",
+      "How do I make this more conversational?",
+      "They seem annoyed by my questions"
+    ],
+    "bot_behavior": "Teach responsive questioning: listen to answers and build on them, don't run through a script.",
+    "response_templates": [
+      "**SPIN is responsive, not scripted.** If it feels like interrogation, you're not listening—you're just running through a checklist.\n\n**Bad (Interrogation):**\n• Ask Situation question\n• Ignore answer, ask next Situation question\n• Ask 10+ questions in a row without reacting\n\n**Good (Responsive):**\n• Ask Situation question\n• **Listen to answer**\n• **Build on what they said:** \"You mentioned [X]—tell me more about that\"\n• Let conversation flow naturally through S→P→I→N\n\n**Key:** Every question should build on the last answer. SPIN is a framework, not a script.\n\nWhat did they just tell you that you could dig deeper on?",
+      "**Signs You're Interrogating:**\n• You're asking 8+ Situation questions\n• You planned your next question before they finished answering\n• They sound annoyed or giving short answers\n• You're reading from a list\n\n**Fix:**\n• Keep Situation to 3-5 questions\n• **Listen actively** and respond to what they say\n• Ask \"why\" or \"tell me more\" to go deeper\n• Make it a conversation, not an interview\n\nSPIN is a thinking tool, not a script. What would responsive questioning sound like here?"
+    ]
+  },
+  {
+    "name": "move_to_solution",
+    "stage": "Presentation",
+    "sample_user_utterances": [
+      "When should I present my solution?",
+      "Are they ready for a demo?",
+      "Can I pitch now?",
+      "How do I transition to talking about my product?"
+    ],
+    "bot_behavior": "Ensure need is explicit before presenting solutions. If need is still implied, more Implication work is needed.",
+    "response_templates": [
+      "**Don't present until need is EXPLICIT.**\n\n**Check:**\n• Have you built urgency through Implication questions? (✅ or ❌)\n• Can the buyer articulate why solving this matters? (✅ or ❌)\n• Is there a quantified cost of inaction? (✅ or ❌)\n\n**If all ✅:** Go ahead—present your solution as the answer to their explicit need.\n\n**If any ❌:** Don't present yet. Go back to Implication questions to make the need stronger.\n\n**Why:** Presenting to implied needs feels like every other vendor. Presenting to explicit needs feels inevitable.\n\nBased on your discovery so far, is their need explicit enough to move forward?",
+      "**Transition to Solution (after explicit need):**\n\n\"Based on what you've shared—[summarize problem and impact]—it sounds like solving this would [buyer's own words from Need-Payoff]. Is that right?\"\n\n[They confirm]\n\n\"Great. Let me show you how we've helped teams like yours address exactly that...\"\n\n**Key:** Tie your solution directly to the explicit need you built. Don't start from scratch—reference their own language.\n\nWhat's the explicit need you've uncovered that your solution addresses?"
+    ]
+  },
+  {
+    "name": "handle_pushback",
+    "stage": "Objection Handling",
+    "sample_user_utterances": [
+      "They're pushing back on the questions",
+      "They said 'just tell me what you do'",
+      "They're impatient with discovery",
+      "How do I justify asking so many questions?"
+    ],
+    "bot_behavior": "Justify discovery by explaining why questions help both parties avoid wasting time on bad-fit solutions.",
+    "response_templates": [
+      "If they push back on questions, reframe why discovery matters:\n\n\"I totally get that you want to see what we do. Here's why I'm asking: I could show you a generic demo right now, but it might not be relevant to your situation. If I can understand [specific area] first, I can show you exactly how this would work for you—and we'll both know faster if it's even a fit. Does that make sense?\"\n\n**This isn't delay—it's respect for their time.**\n\nHow would you explain why discovery helps them, not just you?",
+      "**When they say \"just tell me what you do\":**\n\n\"Fair request. We [brief one-sentence description]. But honestly, whether that matters to you depends on [key factor you need to understand]. Can I ask you two quick questions first, and then I'll show you exactly how this applies to your situation?\"\n\n**Key:** Promise brevity (2 questions), explain benefit (relevance), then deliver.\n\nWhat's the key factor you need to understand to make your solution relevant to them?"
+    ]
+  },
+  {
+    "name": "spin_question_balance",
+    "stage": "Execution",
+    "sample_user_utterances": [
+      "What's the right ratio of question types?",
+      "How many of each question should I ask?",
+      "Am I spending too much time on Situation?"
+    ],
+    "bot_behavior": "Coach optimal question balance based on Rackham's research: minimal Situation, heavy on Problem/Implication, close with Need-Payoff.",
+    "response_templates": [
+      "**Optimal SPIN Question Balance:**\n\n• **Situation:** 3-5 questions (establish context, then move on)\n• **Problem:** 5-8 questions (uncover dissatisfaction)\n• **Implication:** 8-12 questions (**this is where value lives**)\n• **Need-Payoff:** 2-3 questions (buyer articulates value)\n\n**Red Flag:** If Situation > Implication, you're spending time on low-value questions.\n\n**Research shows:** In large sales, Implication questions are the #1 predictor of success.\n\nHow many Implication questions have you asked so far?",
+      "**Time Allocation in Discovery Call:**\n\n• **10%:** Situation (context)\n• **20%:** Problem (dissatisfaction)\n• **50%:** Implication (urgency building) ← **MOST IMPORTANT**\n• **20%:** Need-Payoff (buyer articulates value)\n\n**Most reps do:** 40% Situation, 30% Problem, 10% Implication, 20% Need-Payoff\n\n**Result:** No urgency, implied needs only, deal stalls.\n\nWhat would it look like to spend 50% of your discovery on Implication?"
+    ]
+  }
+]

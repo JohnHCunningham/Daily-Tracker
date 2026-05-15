@@ -1004,7 +1004,7 @@ export default function DashboardPage() {
           ) : (
             <div className="bg-bone-light/50 rounded-2xl border border-bone-dark p-6 shadow-sm">
               <p className="text-stone text-sm">
-                No team members yet. <Link href="/team/invite" className="text-terracotta hover:text-terracotta-bright">Invite your first rep</Link>
+                No team members yet. <Link href="/team" className="text-terracotta hover:text-terracotta-bright">Invite your first rep</Link>
               </p>
             </div>
           )}

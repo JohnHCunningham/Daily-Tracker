@@ -22,17 +22,18 @@ CREATE TABLE IF NOT EXISTS "Copilot_Feedback" (
 );
 
 -- Indexes for performance
-CREATE INDEX idx_copilot_interactions_account ON "Copilot_Interactions"(account_id);
-CREATE INDEX idx_copilot_interactions_user ON "Copilot_Interactions"(user_id);
-CREATE INDEX idx_copilot_interactions_created ON "Copilot_Interactions"(created_at DESC);
-CREATE INDEX idx_copilot_feedback_interaction ON "Copilot_Feedback"(interaction_id);
-CREATE INDEX idx_copilot_feedback_user ON "Copilot_Feedback"(user_id);
+CREATE INDEX IF NOT EXISTS idx_copilot_interactions_account ON "Copilot_Interactions"(account_id);
+CREATE INDEX IF NOT EXISTS idx_copilot_interactions_user ON "Copilot_Interactions"(user_id);
+CREATE INDEX IF NOT EXISTS idx_copilot_interactions_created ON "Copilot_Interactions"(created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_copilot_feedback_interaction ON "Copilot_Feedback"(interaction_id);
+CREATE INDEX IF NOT EXISTS idx_copilot_feedback_user ON "Copilot_Feedback"(user_id);
 
 -- Row Level Security
 ALTER TABLE "Copilot_Interactions" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Copilot_Feedback" ENABLE ROW LEVEL SECURITY;
 
 -- Users can only see their own account's interactions
+DROP POLICY IF EXISTS "Users can view copilot interactions for their account" ON "Copilot_Interactions";
 CREATE POLICY "Users can view copilot interactions for their account"
   ON "Copilot_Interactions" FOR SELECT
   USING (
@@ -41,6 +42,7 @@ CREATE POLICY "Users can view copilot interactions for their account"
     )
   );
 
+DROP POLICY IF EXISTS "Users can insert copilot interactions for their account" ON "Copilot_Interactions";
 CREATE POLICY "Users can insert copilot interactions for their account"
   ON "Copilot_Interactions" FOR INSERT
   WITH CHECK (
@@ -49,6 +51,7 @@ CREATE POLICY "Users can insert copilot interactions for their account"
     )
   );
 
+DROP POLICY IF EXISTS "Users can view feedback for their account" ON "Copilot_Feedback";
 CREATE POLICY "Users can view feedback for their account"
   ON "Copilot_Feedback" FOR SELECT
   USING (
@@ -57,6 +60,7 @@ CREATE POLICY "Users can view feedback for their account"
     )
   );
 
+DROP POLICY IF EXISTS "Users can insert their own feedback" ON "Copilot_Feedback";
 CREATE POLICY "Users can insert their own feedback"
   ON "Copilot_Feedback" FOR INSERT
   WITH CHECK (

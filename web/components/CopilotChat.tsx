@@ -37,12 +37,12 @@ export default function CopilotChat() {
       setMessages([{
         id: 'welcome',
         role: 'assistant',
-        content: `**Hi! I'm your Sandler coaching assistant.**
+        content: `**Hi! I'm your methodology coaching assistant.**
 
-Ask me anything about Sandler methodology:
-• "Give me pain funnel questions"
-• "They asked for pricing early"
-• "How do I handle 'think it over'?"
+Ask me anything about your selected sales methodology:
+• "Help me prepare for this call"
+• "What questions should I ask next?"
+• "How do I handle this objection?"
 
 Or type "help" to see all topics I can help with.`
       }])
@@ -124,7 +124,7 @@ Or type "help" to see all topics I can help with.`
           className="fixed bottom-6 right-6 z-50 flex items-center gap-2 bg-gradient-to-r from-terracotta to-terracotta-bright text-white px-5 py-3 rounded-full shadow-lg hover:shadow-xl transition-all hover:scale-105 font-semibold"
         >
           <HiLightningBolt className="text-xl" />
-          <span className="hidden sm:inline">Sandler Coach</span>
+          <span className="hidden sm:inline">Sales Coach</span>
         </button>
       )}
 
@@ -139,7 +139,7 @@ Or type "help" to see all topics I can help with.`
                   <HiLightningBolt className="text-xl" />
                 </div>
                 <div>
-                  <h3 className="font-bold text-lg">Sandler Coach</h3>
+                  <h3 className="font-bold text-lg">Sales Coach</h3>
                   <p className="text-xs text-white/80">Real-time methodology help</p>
                 </div>
               </div>
@@ -233,7 +233,7 @@ Or type "help" to see all topics I can help with.`
                   type="text"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Ask about Sandler methodology..."
+                  placeholder="Ask about your methodology..."
                   className="flex-1 px-4 py-2.5 rounded-lg border border-bone-dark focus:outline-none focus:ring-2 focus:ring-terracotta/50 focus:border-terracotta text-sm"
                   disabled={isLoading}
                 />

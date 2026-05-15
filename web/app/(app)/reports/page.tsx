@@ -229,7 +229,7 @@ export default function ReportsPage() {
           <HiDocumentReport className="text-terracotta text-5xl mx-auto mb-4 opacity-40" />
           <h2 className="text-xl font-bold text-espresso mb-2">Ready to Generate Your Report</h2>
           <p className="text-stone-light text-sm max-w-md mx-auto mb-6">
-            Select a time period and click Generate. The report analyses your team's Sandler methodology trends, identifies systemic weaknesses, and produces AI-powered coaching recommendations.
+            Select a time period and click Generate. The report analyses your team's methodology trends, identifies systemic weaknesses, and produces AI-powered coaching recommendations.
           </p>
           <button
             onClick={generateReport}
@@ -262,7 +262,7 @@ export default function ReportsPage() {
                     {report.summary.teamOverall}
                     <span className="text-lg font-normal text-stone-light">/10</span>
                   </div>
-                  <p className="text-xs text-stone-light">Team Sandler Score</p>
+                  <p className="text-xs text-stone-light">Team Methodology Score</p>
                 </div>
                 <div className="bg-bone/50 rounded-xl p-4 text-center print:bg-gray-50">
                   <div className="text-3xl font-bold text-espresso mb-1">{report.summary.totalCalls}</div>
@@ -382,7 +382,7 @@ export default function ReportsPage() {
           {/* ── Section 2: Methodology Component Scores ── */}
           {Object.keys(report.componentAverages).length > 0 && (
             <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 print:border print:border-gray-200">
-              <h2 className="text-lg font-bold text-espresso mb-1 print:text-black">Sandler Methodology Scores</h2>
+              <h2 className="text-lg font-bold text-espresso mb-1 print:text-black">Methodology Scores</h2>
               <p className="text-xs text-stone-light mb-4">Team averages across all analysed calls this period</p>
               <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
                 {Object.entries(COMPONENT_LABELS).map(([key, label]) => {

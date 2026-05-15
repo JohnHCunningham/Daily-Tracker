@@ -276,9 +276,9 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
 
       {/* Performance Section */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-        {/* Sandler Breakdown */}
+        {/* Methodology Breakdown */}
         <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
-          <h2 className="text-xl font-bold text-espresso mb-4">Sandler Breakdown</h2>
+          <h2 className="text-xl font-bold text-espresso mb-4">Methodology Breakdown</h2>
           {avgScores ? (
             <SandlerBreakdown scores={avgScores} />
           ) : (

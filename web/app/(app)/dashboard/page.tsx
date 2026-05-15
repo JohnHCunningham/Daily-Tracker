@@ -1010,11 +1010,11 @@ export default function DashboardPage() {
           )}
         </div>
 
-        {/* Bottom Row: Sandler Breakdown + Coaching + Attention */}
+        {/* Bottom Row: Methodology Breakdown + Coaching + Attention */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          {/* Team Sandler Breakdown */}
+          {/* Team Methodology Breakdown */}
           <div className="bg-white rounded-2xl border-l-4 border-l-clay border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
-            <h2 className="text-lg font-bold text-espresso mb-4 pb-2 border-b-2 border-clay/20">Team Sandler Breakdown</h2>
+            <h2 className="text-lg font-bold text-espresso mb-4 pb-2 border-b-2 border-clay/20">Team Methodology Breakdown</h2>
             {teamSandlerScores && Object.keys(teamSandlerScores).length > 0 ? (
               <SandlerBreakdown scores={teamSandlerScores} />
             ) : (
@@ -1243,13 +1243,13 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Hero: Sandler Score */}
+      {/* Hero: Methodology Score */}
       <div className="bg-gradient-to-br from-white via-bone-light/20 to-terracotta/5 rounded-2xl border-t-4 border-t-terracotta border-l border-r border-b border-bone-dark/50 p-6 mb-8 flex flex-col items-center shadow-md">
         <ScoreRadial
           score={repOverallScore ?? 0}
           maxScore={10}
           size={160}
-          label="Sandler Score"
+          label="Methodology Score"
           sublabel="/10"
         />
       </div>
@@ -1294,7 +1294,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Coaching Feed + Sandler Breakdown */}
+      {/* Coaching Feed + Methodology Breakdown */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
         <div className="bg-white rounded-2xl border-l-4 border-l-terracotta/60 border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
           <div className="flex items-center justify-between mb-4 pb-2 border-b-2 border-terracotta/10">
@@ -1321,7 +1321,7 @@ export default function DashboardPage() {
         </div>
 
         <div className="bg-white rounded-2xl border-l-4 border-l-clay border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
-          <h2 className="text-lg font-bold text-espresso mb-4 pb-2 border-b-2 border-clay/20">Sandler Breakdown</h2>
+          <h2 className="text-lg font-bold text-espresso mb-4 pb-2 border-b-2 border-clay/20">Methodology Breakdown</h2>
           {repScores ? (
             <SandlerBreakdown scores={repScores} />
           ) : (

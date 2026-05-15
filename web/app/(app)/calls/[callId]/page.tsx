@@ -187,14 +187,14 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
           </div>
         </div>
 
-        {/* Right: Sandler Scores */}
+        {/* Right: Methodology Scores */}
         <div className="space-y-6">
           {/* Analyze Button */}
           {!call.analyzed_at && currentUser?.role !== 'rep' && (
             <div className="bg-white rounded-2xl border border-clay/30 p-6">
               <h2 className="text-lg font-bold text-espresso mb-2">Ready to Analyze</h2>
               <p className="text-sm text-stone-light mb-4">
-                Run Sandler methodology analysis on this call.
+                Run methodology analysis on this call.
               </p>
               <button
                 onClick={handleAnalyze}
@@ -207,10 +207,10 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
             </div>
           )}
 
-          {/* Sandler Breakdown */}
+          {/* Methodology Breakdown */}
           {scores && (
             <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
-              <h2 className="text-xl font-bold text-espresso mb-4">Sandler Scores</h2>
+              <h2 className="text-xl font-bold text-espresso mb-4">Methodology Scores</h2>
               <div className="space-y-3">
                 {Object.entries(scores).map(([component, score]) => (
                   <div key={component} className="flex items-center justify-between">

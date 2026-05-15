@@ -1,9 +1,16 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { analyzeTranscript, generateCoachingFromAnalysis, SANDLER_COMPONENTS } from "./sandler-methodology.ts";
+import { analyzeTranscript as analyzeSandlerTranscript, generateCoachingFromAnalysis as generateSandlerCoachingFromAnalysis } from "./sandler-methodology.ts";
+import {
+  buildMethodologySystemPrompt,
+  componentNameByKey,
+  fallbackAnalyzeTranscript,
+  generateMethodologyCoachingFromAnalysis,
+  getMethodologyConfig,
+  type MethodologyConfig,
+} from "./methodology-scoring.ts";
 import {
   ragSearch,
-  buildCoachingContext,
   normalizeComponentName,
 } from "../_shared/rag-utils.ts";
 import { getAuthorizedAccountContext } from "../_shared/auth.ts";
@@ -67,7 +74,8 @@ async function analyzeWithGPT4(
   transcript: string,
   priorSuggestions: string[],
   lens: CoachingLens,
-  escalationTier: number
+  escalationTier: number,
+  methodologyConfig: MethodologyConfig,
 ): Promise<{
   scores: Record<string, { score: number; evidence: string; status: string }>;
   done_well: string[];
@@ -89,6 +97,13 @@ async function analyzeWithGPT4(
   const lensInstruction = `\n\nCOACHING STYLE FOR THIS SESSION:\n${LENS_INSTRUCTIONS[lens]}`;
   const escalationInstruction = `\n\nTONE CALIBRATION:\n${ESCALATION_INSTRUCTIONS[escalationTier]}`;
 
+  const systemPrompt = buildMethodologySystemPrompt(
+    methodologyConfig,
+    lensInstruction,
+    escalationInstruction,
+    priorContext,
+  );
+
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
     headers: {
@@ -102,47 +117,7 @@ async function analyzeWithGPT4(
       messages: [
         {
           role: "system",
-          content: `You are a Sandler Selling System expert coach. Analyze sales call transcripts and score them against the 8 Sandler components. Be specific, cite evidence from the transcript, and provide actionable coaching.
-
-Score each component 1-10 where:
-- 1-3: Component was absent or poorly executed
-- 4-6: Partially present, needs significant improvement
-- 7-8: Solid execution with minor gaps
-- 9-10: Masterful execution
-
-Components to score:
-1. Bonding & Rapport - Genuine connection before business
-2. Upfront Contract - Clear expectations for the conversation
-3. Pain Funnel - Deep emotional/business pain uncovered
-4. Budget Step - Honest money conversation before solution
-5. Decision Step - Mapped decision process, stakeholders, timeline
-6. Fulfillment - Solution tied to stated pain, not feature dumping
-7. Post-Sell - Prevented buyer's remorse, clear next steps
-8. No Free Consulting - Protected expertise, maintained boundaries
-
-Return JSON with this exact structure:
-{
-  "scores": {
-    "bonding_rapport": { "score": N, "evidence": "quote or observation from transcript", "status": "strong|weak|missing" },
-    "upfront_contract": { ... },
-    "pain_funnel": { ... },
-    "budget_step": { ... },
-    "decision_step": { ... },
-    "fulfillment": { ... },
-    "post_sell": { ... },
-    "no_free_consulting": { ... }
-  },
-  "done_well": ["specific thing with evidence", ...],
-  "missing": ["specific step skipped with consequence", ...],
-  "weak": ["attempted but poorly executed with why", ...],
-  "suggestions": ["specific, actionable coaching point", ...],
-  "scripts": ["exact words to say in a specific situation", ...],
-  "commitments": ["specific action item as imperative sentence", ...]
-}
-
-Also extract 2-4 specific, concrete ACTION ITEMS the rep should complete before their next call. Each must be something they can DO — not a mindset shift. Format as imperative sentences (e.g. "Practice the Pain Funnel opening on your next 3 calls").
-
-Be direct. No platitudes. Every suggestion must be specific enough to use on the next call.${lensInstruction}${escalationInstruction}${priorContext}`
+          content: systemPrompt,
         },
         {
           role: "user",
@@ -342,6 +317,14 @@ serve(async (req) => {
       );
     }
 
+    const { data: account } = await supabase
+      .from("Accounts")
+      .select("methodology")
+      .eq("id", call.account_id)
+      .single();
+
+    const methodologyConfig = getMethodologyConfig(account?.methodology);
+
     // Find the rep user ID for non-repetition
     let repUserId: string | null = null;
     if (call.rep_email) {
@@ -373,25 +356,18 @@ serve(async (req) => {
 
     // Try GPT-4 deep analysis first, fall back to keyword analysis
     let gptAnalysis: any = null;
-    let keywordAnalysis = analyzeTranscript(transcript, call.ai_summary || "");
+    let keywordAnalysis = methodologyConfig.id === "sandler"
+      ? analyzeSandlerTranscript(transcript, call.ai_summary || "")
+      : fallbackAnalyzeTranscript(methodologyConfig, transcript, call.ai_summary || "");
     let coaching: string;
     let methodologyScores: Record<string, number> = {};
 
     if (OPENAI_API_KEY) {
       try {
-        gptAnalysis = await analyzeWithGPT4(transcript, prior.texts, nextLens, escalationTier);
+        gptAnalysis = await analyzeWithGPT4(transcript, prior.texts, nextLens, escalationTier, methodologyConfig);
 
         // Build methodology_scores from GPT-4 output
-        const componentNameMap: Record<string, string> = {
-          bonding_rapport: "Bonding & Rapport",
-          upfront_contract: "Upfront Contract",
-          pain_funnel: "Pain Funnel",
-          budget_step: "Budget Step",
-          decision_step: "Decision Step",
-          fulfillment: "Fulfillment",
-          post_sell: "Post-Sell",
-          no_free_consulting: "No Free Consulting",
-        };
+        const componentNameMap = componentNameByKey(methodologyConfig);
 
         for (const [key, data] of Object.entries(gptAnalysis.scores)) {
           const name = componentNameMap[key] || key;
@@ -407,7 +383,7 @@ serve(async (req) => {
           contrast: "Side-by-Side Contrast",
         }[nextLens];
 
-        coaching = `📊 SANDLER ANALYSIS\n\n`;
+        coaching = `📊 ${methodologyConfig.label.toUpperCase()} ANALYSIS\n\n`;
 
         // Done well
         if (gptAnalysis.done_well.length > 0) {
@@ -491,7 +467,9 @@ serve(async (req) => {
       });
       const repName = call.rep_email?.split("@")[0].replace(/[._]/g, " ") || "Rep";
       const callDate = new Date(call.call_date).toLocaleDateString();
-      coaching = generateCoachingFromAnalysis(keywordAnalysis, repName, callDate);
+      coaching = methodologyConfig.id === "sandler"
+        ? generateSandlerCoachingFromAnalysis(keywordAnalysis as any, repName, callDate)
+        : generateMethodologyCoachingFromAnalysis(methodologyConfig, keywordAnalysis as any);
     }
 
     // RAG enhancement for weak areas
@@ -502,7 +480,7 @@ serve(async (req) => {
       .slice(0, 3)
       .map(([name]) => name);
 
-    if (use_rag && OPENAI_API_KEY && weakAreas.length > 0) {
+    if (methodologyConfig.id === "sandler" && use_rag && OPENAI_API_KEY && weakAreas.length > 0) {
       try {
         const weakestComponent = weakAreas[0];
         const scriptResults = await ragSearch(supabase, OPENAI_API_KEY, {
@@ -564,12 +542,12 @@ serve(async (req) => {
       account_id: call.account_id,
       call_id,
       coaching_lens: nextLens,
-      subject: `Sandler Analysis: ${callDate} (Score: ${overallScore}/10)`,
+      subject: `${methodologyConfig.label} Analysis: ${callDate} (Score: ${overallScore}/10)`,
       message_body: coaching!,
       rep_email: call.rep_email,
       manager_email: manager?.email || null,
       coaching_content: coaching!,
-      methodology: "Sandler",
+      methodology: methodologyConfig.label,
       status: "generated",
       generated_at: new Date().toISOString(),
     }).select('id').single();
@@ -593,6 +571,7 @@ serve(async (req) => {
         coaching: coaching!,
         gpt4_powered: !!gptAnalysis,
         rag_enhanced: ragScripts.length > 0,
+        methodology: methodologyConfig.label,
         coaching_lens: nextLens,
         escalation_tier: escalationTier,
         call_id,

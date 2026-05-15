@@ -40,12 +40,13 @@ export async function GET(
 
   if (provider === 'fathom') {
     const clientId = process.env.FATHOM_CLIENT_ID
+    const authorizationUrl = process.env.FATHOM_AUTHORIZATION_URL || 'https://fathom.video/external/v1/oauth2/authorize'
 
-    if (!clientId || !process.env.FATHOM_AUTHORIZATION_URL) {
+    if (!clientId) {
       return NextResponse.json({ error: 'Fathom OAuth is not configured' }, { status: 500 })
     }
 
-    authUrl = new URL(process.env.FATHOM_AUTHORIZATION_URL)
+    authUrl = new URL(authorizationUrl)
     authUrl.searchParams.set('client_id', clientId)
     authUrl.searchParams.set('redirect_uri', redirectUri)
     authUrl.searchParams.set('scope', 'public_api')

@@ -35,6 +35,7 @@ export async function GET(
     authUrl.searchParams.set('redirect_uri', redirectUri)
     authUrl.searchParams.set('scope', scopes)
     authUrl.searchParams.set('state', state)
+    authUrl.searchParams.set('response_type', 'code')
   }
 
   if (provider === 'fathom') {
@@ -49,6 +50,7 @@ export async function GET(
     authUrl.searchParams.set('redirect_uri', redirectUri)
     authUrl.searchParams.set('scope', 'public_api')
     authUrl.searchParams.set('state', state)
+    authUrl.searchParams.set('response_type', 'code')
   }
 
   const response = NextResponse.redirect(authUrl!)

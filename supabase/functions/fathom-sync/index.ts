@@ -10,6 +10,8 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const FATHOM_API_BASE = "https://api.fathom.ai/external/v1";
+const FATHOM_CLIENT_ID = Deno.env.get("FATHOM_CLIENT_ID");
+const FATHOM_CLIENT_SECRET = Deno.env.get("FATHOM_CLIENT_SECRET");
 
 interface FathomMeeting {
   recording_id: number;
@@ -26,11 +28,58 @@ interface FathomMeeting {
   recording_end_time?: string;
 }
 
+async function refreshFathomToken(supabase: any, connection: any): Promise<{ token: string; type: "oauth" } | null> {
+  if (!FATHOM_CLIENT_ID || !FATHOM_CLIENT_SECRET || !connection.refresh_token) {
+    return null;
+  }
+
+  const response = await fetch(`${FATHOM_API_BASE}/oauth2/token`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: connection.refresh_token,
+      client_id: FATHOM_CLIENT_ID,
+      client_secret: FATHOM_CLIENT_SECRET,
+    }),
+  });
+
+  if (!response.ok) {
+    const body = await response.text();
+    await supabase
+      .from("API_Connections")
+      .update({
+        connection_status: "error",
+        last_error: `Fathom token refresh failed: ${body.substring(0, 500)}`,
+        last_error_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", connection.id);
+    return null;
+  }
+
+  const tokens = await response.json();
+  await supabase
+    .from("API_Connections")
+    .update({
+      access_token: tokens.access_token,
+      refresh_token: tokens.refresh_token || connection.refresh_token,
+      token_expires_at: new Date(Date.now() + (tokens.expires_in || 3600) * 1000).toISOString(),
+      connection_status: "active",
+      last_error: null,
+      last_error_at: null,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", connection.id);
+
+  return { token: tokens.access_token, type: "oauth" };
+}
+
 // Get Fathom credentials from database. OAuth access_token is preferred; api_key is kept for old connections.
 async function getFathomCredential(supabase: any, account_id: string): Promise<{ token: string; type: "oauth" | "api_key" } | null> {
   const { data, error } = await supabase
     .from("API_Connections")
-    .select("access_token, api_key, connection_status")
+    .select("id, access_token, refresh_token, token_expires_at, api_key, connection_status")
     .eq("account_id", account_id)
     .eq("provider", "fathom")
     .eq("connection_status", "active")
@@ -42,6 +91,9 @@ async function getFathomCredential(supabase: any, account_id: string): Promise<{
   }
 
   if (data.access_token) {
+    if (data.token_expires_at && new Date(data.token_expires_at).getTime() < Date.now() + 60_000) {
+      return await refreshFathomToken(supabase, data);
+    }
     return { token: data.access_token, type: "oauth" };
   }
 
@@ -132,6 +184,9 @@ async function updateSyncStatus(supabase: any, conversationsSynced: number, acco
     .from("API_Connections")
     .update({
       last_successful_sync: new Date().toISOString(),
+      connection_status: "active",
+      last_error: null,
+      last_error_at: null,
       updated_at: new Date().toISOString(),
     })
     .eq("account_id", account_id)

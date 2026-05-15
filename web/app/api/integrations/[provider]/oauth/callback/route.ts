@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+import { createClient } from '@/lib/supabase/server'
 import {
   getAppOrigin,
   getCurrentIntegrationUser,
@@ -87,12 +87,9 @@ export async function GET(
 
   try {
     const tokens = await exchangeOAuthCode(provider, code, getOAuthRedirectUri(request, provider))
-    const supabaseAdmin = createSupabaseClient(
-      getRequiredEnv('NEXT_PUBLIC_SUPABASE_URL'),
-      getRequiredEnv('SUPABASE_SERVICE_ROLE_KEY')
-    )
+    const supabase = await createClient()
 
-    const { error } = await supabaseAdmin
+    const { error } = await supabase
       .from('API_Connections')
       .upsert({
         account_id: current.user.accountId,
@@ -119,4 +116,3 @@ export async function GET(
     return NextResponse.redirect(`${origin}${redirectToIntegration(provider, 'error', 'token_exchange_failed')}`)
   }
 }
-

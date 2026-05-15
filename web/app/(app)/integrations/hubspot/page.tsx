@@ -69,7 +69,7 @@ export default function HubSpotPage() {
     })
 
     if (error) {
-      setMessage({ type: 'error', text: 'Sync failed. Check your API key and try again.' })
+      setMessage({ type: 'error', text: 'Sync failed. Check the OAuth connection and try again.' })
     } else {
       setMessage({ type: 'success', text: 'Sync completed successfully.' })
       void loadConnection()

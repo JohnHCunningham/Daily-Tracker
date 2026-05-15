@@ -850,6 +850,7 @@ export default function SettingsPage() {
             {[
               { id: 'sandler', name: 'Sandler Selling System', initial: 'S', description: 'Qualify early, control the process, focus on pain' },
               { id: 'meddic', name: 'MEDDIC', initial: 'M', description: 'Metrics, Economic Buyer, Decision Criteria, Decision Process, Identify Pain, Champion' },
+              { id: 'meddpicc', name: 'MEDDPICC', initial: 'MP', description: 'MEDDIC plus Paper Process and Competition for enterprise deals' },
               { id: 'challenger', name: 'Challenger Sale', initial: 'C', description: 'Teach, tailor, take control of the sale' },
               { id: 'spin', name: 'SPIN Selling', initial: 'SP', description: 'Situation, Problem, Implication, Need-Payoff questions' },
               { id: 'gap', name: 'Gap Selling', initial: 'G', description: 'Problem-centric selling focused on closing the gap' },

@@ -555,11 +555,11 @@ Response: "I'm the ANTI-tool. I make the tools you already paid for more valuabl
 Key points:
 - Zero additional work for reps
 - Integration layer, not another standalone tool
-- Reps keep using Fathom/HubSpot/Aircall
+- Reps keep using Fathom and HubSpot
 - They just receive better coaching from data those tools already capture
 
 What happens WITHOUT your product:
-1. Make call on Zoom/Aircall
+1. Make call on Zoom/Fathom
 2. Manually log call in CRM
 3. Type notes
 4. Wait for Friday 1:1
@@ -706,7 +706,7 @@ const BEST_PRACTICE_CHUNKS: Chunk[] = [
     chunk_title: "Daily Coaching Loop Best Practice",
     chunk_text: `The Coaching Accountability Loop:
 
-1. Make calls as normal (Aircall, Zoom, etc.)
+1. Make calls as normal (Zoom/Fathom and HubSpot activity logging)
 2. System automatically syncs calls overnight
 3. AI analyzes using Sandler methodology
 4. AI generates coaching draft
@@ -789,7 +789,7 @@ Most tools (Gong, Chorus, Fathom) only capture Zoom calls = ~20% of sales conver
 
 Full coverage captures:
 - Zoom calls (Fathom API)
-- Phone calls (Aircall/RingCentral API)
+- Video calls and CRM activity (Fathom/HubSpot)
 - In-person meetings (voice note summaries)
 - SMS quick logs (text-based logging)
 = 90%+ of all sales conversations

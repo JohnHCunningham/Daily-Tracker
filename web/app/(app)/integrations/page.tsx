@@ -67,14 +67,6 @@ export default function IntegrationsPage() {
       icon: 'F',
       color: 'bg-purple-500/20 text-purple-400 border-purple-500/30',
     },
-    {
-      id: 'aircall',
-      name: 'Aircall',
-      description: 'Sync phone call recordings and metadata from Aircall.',
-      href: '/integrations/aircall',
-      icon: 'A',
-      color: 'bg-green-500/20 text-green-400 border-green-500/30',
-    },
   ]
 
   if (loading) {

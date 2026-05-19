@@ -17,7 +17,7 @@ A standalone Sandler sales coaching management tool for Sandler consultants to r
 ### Infrastructure
 1. **White-label foundation** — Migration 056 adds branding fields to Accounts table. BrandProvider React context injects CSS vars. Sidebar shows custom logo/company name.
 2. **RAG Knowledge Base** — `Sandler_Knowledge_Base` table (migration 034) with pgvector embeddings. `rag-search` edge function with semantic search. `scripts/seed-knowledge-base.ts` ready to run — seeds all 8 Sandler components, objection handling, best practices with OpenAI embeddings.
-3. **Daily Cron Pipeline** — Migration 059 creates pg_cron jobs at 8am EST Mon-Fri. Chains: hubspot-sync → fathom-sync → aircall-sync → analyze-call → notify leaders. Includes `Pipeline_Runs` tracking table.
+3. **Daily Cron Pipeline** — Chains: hubspot-sync → fathom-sync → analyze-call → notify leaders. Aircall removed from the current product scope. Includes `Pipeline_Runs` tracking table.
 4. **Non-Repetition Engine** — Migration 058 creates Coaching_Suggestions_Log table. GPT-4 is instructed to not repeat prior suggestions per rep. Escalates recurring weaknesses.
 
 ### Frontend Pages (All Compiled)
@@ -28,7 +28,7 @@ A standalone Sandler sales coaching management tool for Sandler consultants to r
 5. **Team Page** (`/team`) — Team roster, invite modal with role selection, member profiles.
 6. **Celebrations Page** (`/celebrations`) — Badges, wins feed, 5 badge types.
 7. **Calls Page** (`/calls`, `/calls/[callId]`) — Call history with Sandler scores, individual call analysis.
-8. **Integrations Page** (`/integrations`) — HubSpot, Fathom, and Aircall with connect/disconnect/sync UI.
+8. **Integrations Page** (`/integrations`) — HubSpot and Fathom with connect/disconnect/sync UI.
 9. **Landing Page** (`/`) — Trimmed, clean marketing page.
 10. **Blog** (`/blog`) — Markdown-based, 9 posts.
 
@@ -36,7 +36,6 @@ A standalone Sandler sales coaching management tool for Sandler consultants to r
 - `analyze-call` — GPT-4o structured Sandler analysis with RAG, fallback to keyword scoring
 - `hubspot-sync` — OAuth-based sync of calls, emails, meetings, tasks
 - `fathom-sync` — API key-based sync of video call transcripts
-- `aircall-sync` — Basic Auth sync of phone call recordings
 - `send-coaching-email` — Resend-based email with HTML template, reply tokens
 - `coaching-reply` — Handle email replies to coaching
 - `rag-search` — Semantic search, scripts-for-weakness, coaching-context modes
@@ -60,13 +59,12 @@ A standalone Sandler sales coaching management tool for Sandler consultants to r
 - [ ] Deploy edge functions: `supabase functions deploy --all`
 - [ ] Configure Resend API key: `supabase secrets set RESEND_API_KEY=...`
 - [ ] Run knowledge base seeder: `SUPABASE_URL=... SUPABASE_SERVICE_ROLE_KEY=... OPENAI_API_KEY=... npx ts-node scripts/seed-knowledge-base.ts`
-- [ ] Seed demo data or connect live HubSpot/Fathom/Aircall
+- [ ] Seed demo data or connect live HubSpot/Fathom
 - [ ] Git push to trigger Vercel deploy
 
 ### Testing After Deploy
 - [ ] Test email delivery end-to-end (Resend)
 - [ ] Verify coaching-reply endpoint works for rep responses
-- [ ] Test Aircall sync with Aircall API sandbox
 - [ ] Verify RAG search returns relevant results after seeding
 - [ ] Test daily cron fires correctly at 8am EST
 
@@ -89,8 +87,7 @@ oneclickcoaching.com/coaching           → Review/approve/send coaching (tabbed
 oneclickcoaching.com/planning           → Benchmarks & quota tracking
 oneclickcoaching.com/celebrations       → Team wins & badges
 oneclickcoaching.com/team               → Team management
-oneclickcoaching.com/integrations       → HubSpot, Fathom, Aircall setup
-oneclickcoaching.com/integrations/aircall → Aircall connect/sync
+oneclickcoaching.com/integrations       → HubSpot, Fathom setup
 oneclickcoaching.com/integrations/fathom  → Fathom connect/sync
 oneclickcoaching.com/integrations/hubspot → HubSpot connect/sync
 oneclickcoaching.com/settings           → Branding, account, email config
@@ -117,7 +114,6 @@ oneclickcoaching.com/settings           → Branding, account, email config
 - `landing-page/app/(app)/planning/page.tsx` — Benchmarks
 - `landing-page/app/(app)/coaching/page.tsx` — Coaching approval flow
 - `landing-page/app/(app)/settings/page.tsx` — White-label settings
-- `landing-page/app/(app)/integrations/aircall/page.tsx` — Aircall integration
 - `landing-page/app/(app)/components/ScoreRadial.tsx` — Radial KPI component
 - `landing-page/app/(app)/components/BrandProvider.tsx` — White-label context
 - `landing-page/app/(app)/components/Sidebar.tsx` — Navigation

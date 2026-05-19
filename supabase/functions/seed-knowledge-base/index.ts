@@ -533,7 +533,7 @@ Response: "I'm the ANTI-tool. I make the tools you already paid for more valuabl
 Key points:
 - Zero additional work for reps
 - Integration layer, not another standalone tool
-- Reps keep using Fathom/HubSpot/Aircall
+- Reps keep using Fathom and HubSpot
 - They just receive better coaching from data those tools already capture`,
     situation_tags: ["objection_handling", "tools"],
     weakness_tags: [],
@@ -587,7 +587,7 @@ const BEST_PRACTICE_CHUNKS: Chunk[] = [
     chunk_title: "Daily Coaching Loop Best Practice",
     chunk_text: `The Coaching Accountability Loop:
 
-1. Make calls as normal (Aircall, Zoom, etc.)
+1. Make calls as normal (Zoom/Fathom and HubSpot activity logging)
 2. System automatically syncs calls overnight
 3. AI analyzes using Sandler methodology
 4. AI generates coaching draft

@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { HiCheckCircle, HiBolt, HiCircleStack, HiMicrophone, HiPhone } from 'react-icons/hi2'
+import { HiCheckCircle, HiBolt, HiCircleStack, HiMicrophone } from 'react-icons/hi2'
 
 const SandlerFrictionlessCoaching = () => {
     return (
@@ -44,16 +44,6 @@ const SandlerFrictionlessCoaching = () => {
                                 <div>
                                     <h3 className="text-lg font-bold mb-1">Fathom</h3>
                                     <p className="text-light-muted text-sm italic">Online meeting recordings and transcripts</p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-start gap-4">
-                                <div className="w-12 h-12 rounded-xl bg-green-500/10 flex items-center justify-center flex-shrink-0 border border-green-500/20">
-                                    <HiPhone className="text-green-500 text-2xl" />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold mb-1">Aircall</h3>
-                                    <p className="text-light-muted text-sm italic">Phone conversations and call data</p>
                                 </div>
                             </div>
                         </div>

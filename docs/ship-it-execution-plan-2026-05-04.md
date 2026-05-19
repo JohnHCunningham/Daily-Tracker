@@ -100,9 +100,7 @@ Fathom:
 - UI and sync are closer, but production OAuth/API-key story must be verified.
 
 Aircall:
-- UI saves base64 `apiId:apiToken` into `api_key`.
-- Sync function expects `api_key` and `api_secret`, then base64-encodes again.
-- Needs schema/UI/function alignment.
+- Removed from current product scope on 2026-05-19. Do not spend launch time fixing or smoke-testing Aircall.
 
 First engineering target:
 1. Choose auth method per provider.
@@ -139,7 +137,7 @@ Goal: remove obvious cross-rep/cross-account query gaps.
 Goal: service-role functions stop trusting request body account ids.
 
 - Add shared auth/account helper for Edge Functions.
-- Patch `hubspot-sync`, `fathom-sync`, `aircall-sync`, `analyze-call`.
+- Patch `hubspot-sync`, `fathom-sync`, `analyze-call`.
 - Preserve cron/service invocation path separately.
 
 ### Session 4 — Stripe Decision + Gating
@@ -157,7 +155,7 @@ Goal: make billing behavior coherent.
 Goal: make provider flows internally consistent before production credentials are tested.
 
 - HubSpot: OAuth or API key, not both.
-- Aircall: split `api_id`/`api_token` or store one encoded credential consistently.
+- Aircall: removed from current product scope.
 - Fathom: verify expected credential shape.
 
 ## What I Need From You

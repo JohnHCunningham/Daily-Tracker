@@ -705,7 +705,6 @@ export default function DashboardPage() {
       await Promise.allSettled([
         supabase.functions.invoke('hubspot-sync'),
         supabase.functions.invoke('fathom-sync'),
-        supabase.functions.invoke('aircall-sync'),
       ])
       await loadDashboard()
     } finally {
@@ -802,7 +801,7 @@ export default function DashboardPage() {
       {
         key: 'integrations',
         title: 'Integrations',
-        description: 'Connect HubSpot, Fathom, or Aircall once the team structure is in place.',
+        description: 'Connect HubSpot or Fathom once the team structure is in place.',
         href: '/integrations',
         cta: 'Connect Tools',
         complete: integrationsComplete,

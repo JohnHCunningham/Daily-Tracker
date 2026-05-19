@@ -131,11 +131,26 @@ Local changes:
 
 Deployment note: local removal is not the same as production removal. Production still needs an approved deploy/migration pass; if the old `aircall-sync` function remains deployed, it should be deleted from Supabase during that pass.
 
+## Deployment Status
+
+**Ready to deploy:**
+- ✅ Aircall removed (committed: 9ee70da)
+- ✅ Auth hardening complete (committed: 9a48266)
+- ✅ Migrations 095, 096, 097 ready
+- ✅ Build passes (42 routes)
+
+**Deployment blockers:**
+- ❌ OPENAI_API_KEY missing from Vercel production
+- ❌ SUPABASE_SERVICE_ROLE_KEY missing from Vercel production
+- ❌ DNS: app.oneclickcoaching.com not configured
+
+**See:** `/docs/DEPLOYMENT-READINESS.md` for full checklist and sequence.
+
+**Estimated time:** 3-4 hours for deployment + smoke tests (if config is correct)
+
 ## Useful Hermes Requests
 
-- `what is outstanding from the OCC audit?`
-- `continue Fathom integration debugging`
-- `inspect the Fathom code path`
+- `show deployment readiness status`
+- `what are the deployment blockers?`
+- `continue with smoke tests` (after deployment)
 - `check what is built vs deployed vs proven`
-- `make a launch-blocker list`
-- `turn this audit into next actions`

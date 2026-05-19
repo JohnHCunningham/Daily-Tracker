@@ -519,7 +519,8 @@ serve(async (req) => {
         analyzed_at: new Date().toISOString(),
         coaching_generated: true,
       })
-      .eq("id", call_id);
+      .eq("id", call_id)
+      .eq("account_id", auth.accountId);
 
     // Auto-generate coaching message for leader approval
     const overallScore = Object.values(methodologyScores).length > 0

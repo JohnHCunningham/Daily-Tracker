@@ -19,6 +19,10 @@ export function getAppOrigin(request: NextRequest) {
 }
 
 export function getOAuthRedirectUri(request: NextRequest, provider: OAuthProvider) {
+  if (provider === 'fathom' && process.env.FATHOM_REDIRECT_URI) {
+    return process.env.FATHOM_REDIRECT_URI
+  }
+
   return `${getAppOrigin(request)}/api/integrations/${provider}/oauth/callback`
 }
 
@@ -64,4 +68,3 @@ export function redirectToIntegration(provider: OAuthProvider, status: 'connecte
   if (message) params.set('message', message)
   return `/integrations/${provider}?${params.toString()}`
 }
-

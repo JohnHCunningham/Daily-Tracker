@@ -19,6 +19,15 @@ interface OAuthTokenResponse {
   hub_id?: number
 }
 
+class OAuthExchangeError extends Error {
+  constructor(
+    message: string,
+    public readonly providerMessage: string
+  ) {
+    super(message)
+  }
+}
+
 function getRequiredEnv(name: string) {
   const value = process.env[name]
   if (!value) throw new Error(`${name} is not configured`)
@@ -28,7 +37,7 @@ function getRequiredEnv(name: string) {
 async function exchangeOAuthCode(provider: OAuthProvider, code: string, redirectUri: string): Promise<OAuthTokenResponse> {
   const tokenUrl = provider === 'hubspot'
     ? 'https://api.hubapi.com/oauth/v3/token'
-    : 'https://api.fathom.ai/external/v1/oauth2/token'
+    : 'https://fathom.video/external/v1/oauth2/token'
 
   const clientId = getRequiredEnv(provider === 'hubspot' ? 'HUBSPOT_CLIENT_ID' : 'FATHOM_CLIENT_ID')
   const clientSecret = getRequiredEnv(provider === 'hubspot' ? 'HUBSPOT_CLIENT_SECRET' : 'FATHOM_CLIENT_SECRET')
@@ -46,8 +55,12 @@ async function exchangeOAuthCode(provider: OAuthProvider, code: string, redirect
   })
 
   if (!response.ok) {
-    console.error(`${provider} OAuth token exchange failed:`, await response.text())
-    throw new Error(`${provider} token exchange failed`)
+    const responseText = await response.text()
+    console.error(`${provider} OAuth token exchange failed:`, {
+      status: response.status,
+      response: responseText,
+    })
+    throw new OAuthExchangeError(`${provider} token exchange failed`, `token_exchange_failed_${response.status}`)
   }
 
   return response.json()
@@ -113,6 +126,7 @@ export async function GET(
     return response
   } catch (error) {
     console.error(`${provider} OAuth callback error:`, error)
-    return NextResponse.redirect(`${origin}${redirectToIntegration(provider, 'error', 'token_exchange_failed')}`)
+    const message = error instanceof OAuthExchangeError ? error.providerMessage : 'token_exchange_failed'
+    return NextResponse.redirect(`${origin}${redirectToIntegration(provider, 'error', message)}`)
   }
 }

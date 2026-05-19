@@ -13,11 +13,20 @@ interface FathomConnection {
   last_error: string | null
 }
 
+interface FathomSyncResult {
+  results?: {
+    meetings_fetched?: number
+    meetings_synced?: number
+    transcripts_synced?: number
+  }
+}
+
 export default function FathomPage() {
   const [connection, setConnection] = useState<FathomConnection | null>(null)
   const [accountId, setAccountId] = useState<string | null>(null)
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
+  const [lastSyncResult, setLastSyncResult] = useState<FathomSyncResult | null>(null)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const supabase = createClient()
 
@@ -52,10 +61,24 @@ export default function FathomPage() {
   useEffect(() => {
     void loadConnection()
     const params = new URLSearchParams(window.location.search)
-    if (params.get('oauth') === 'connected') {
+    const oauthStatus = params.get('oauth')
+    const oauthMessage = params.get('message')
+
+    if (oauthStatus === 'connected') {
       setMessage({ type: 'success', text: 'Fathom connected successfully.' })
-    } else if (params.get('oauth') === 'error') {
-      setMessage({ type: 'error', text: 'Fathom OAuth failed. Check the app credentials and redirect URL.' })
+    } else if (oauthStatus === 'error') {
+      const errorMessages: Record<string, string> = {
+        invalid_state: 'Fathom OAuth failed because the session check did not match. Start the connection from the production OCC page and keep the same browser tab.',
+        unauthorized: 'Fathom OAuth failed because OCC could not confirm your signed-in admin or manager session.',
+        token_exchange_failed: 'Fathom OAuth failed while exchanging the authorization code. Check the Fathom client secret and exact redirect URL.',
+        token_exchange_failed_400: 'Fathom rejected the authorization code exchange. Check that the Fathom client ID, client secret, and redirect URL all belong to the same Fathom app.',
+        token_exchange_failed_401: 'Fathom rejected the app credentials. The client secret in OCC likely does not match this Fathom app.',
+        token_exchange_failed_403: 'Fathom denied the token exchange. Check the app scope and whether this Fathom app is allowed to use OAuth.',
+      }
+      setMessage({
+        type: 'error',
+        text: errorMessages[oauthMessage || ''] || 'Fathom OAuth failed. Check the app credentials and redirect URL.',
+      })
     }
   }, [loadConnection])
 
@@ -64,14 +87,18 @@ export default function FathomPage() {
     setSyncing(true)
     setMessage(null)
 
-    const { error } = await supabase.functions.invoke('fathom-sync', {
+    const { data, error } = await supabase.functions.invoke('fathom-sync', {
       body: {},
     })
 
     if (error) {
       setMessage({ type: 'error', text: 'Sync failed. Check the OAuth connection and try again.' })
     } else {
-      setMessage({ type: 'success', text: 'Sync completed successfully.' })
+      const syncResult = (data || null) as FathomSyncResult | null
+      const meetings = syncResult?.results?.meetings_synced ?? 0
+      const transcripts = syncResult?.results?.transcripts_synced ?? 0
+      setLastSyncResult(syncResult)
+      setMessage({ type: 'success', text: `Sync completed. ${meetings} meeting${meetings === 1 ? '' : 's'} synced, ${transcripts} transcript${transcripts === 1 ? '' : 's'} captured.` })
       void loadConnection()
     }
     setSyncing(false)
@@ -114,7 +141,7 @@ export default function FathomPage() {
           </div>
           <div>
             <h1 className="text-3xl font-bold text-espresso">Fathom</h1>
-            <p className="text-stone-light">Import video call transcripts and AI summaries</p>
+            <p className="text-stone-light">Import call transcripts as the source for OCC coaching</p>
           </div>
         </div>
 
@@ -157,6 +184,9 @@ export default function FathomPage() {
         {!isConnected ? (
           <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6 mb-6">
             <h2 className="text-xl font-bold text-espresso mb-4">Connect Fathom</h2>
+            <p className="text-sm text-stone-light mb-4">
+              Fathom supplies the recording transcript. OCC uses that transcript as the primary source for methodology coaching.
+            </p>
             <a
               href="/api/integrations/fathom/oauth/start"
               className="inline-flex items-center gap-2 bg-gradient-to-r from-terracotta to-terracotta-bright text-white font-bold py-2.5 px-6 rounded-lg hover:shadow-lg transition-all"
@@ -173,6 +203,22 @@ export default function FathomPage() {
                 <p className="text-sm text-stone-light mb-4">
                   Last synced: {new Date(connection.last_successful_sync).toLocaleString()}
                 </p>
+              )}
+              {lastSyncResult?.results && (
+                <div className="mb-4 grid gap-2 rounded-lg border border-bone-dark bg-bone/30 p-3 text-xs text-stone-light sm:grid-cols-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Meetings found</span>
+                    <span className="font-medium text-espresso">{lastSyncResult.results.meetings_fetched ?? 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Meetings synced</span>
+                    <span className="font-medium text-espresso">{lastSyncResult.results.meetings_synced ?? 0}</span>
+                  </div>
+                  <div className="flex items-center justify-between gap-3">
+                    <span>Transcripts</span>
+                    <span className="font-medium text-espresso">{lastSyncResult.results.transcripts_synced ?? 0}</span>
+                  </div>
+                </div>
               )}
               <button
                 onClick={handleSync}

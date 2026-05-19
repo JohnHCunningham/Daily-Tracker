@@ -24,7 +24,7 @@ export async function GET(
 
   if (provider === 'hubspot') {
     const clientId = process.env.HUBSPOT_CLIENT_ID
-    const scopes = process.env.HUBSPOT_SCOPES || 'oauth crm.objects.owners.read crm.objects.contacts.read sales-email-read'
+    const scopes = process.env.HUBSPOT_SCOPES || 'oauth crm.objects.owners.read crm.objects.contacts.read crm.objects.companies.read crm.objects.deals.read'
 
     if (!clientId) {
       return NextResponse.json({ error: 'HubSpot OAuth is not configured' }, { status: 500 })

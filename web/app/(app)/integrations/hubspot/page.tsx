@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { HiArrowLeft, HiCheckCircle, HiExclamationCircle, HiRefresh } from 'react-icons/hi'
+import { HiArrowLeft, HiCheckCircle, HiExclamationCircle, HiRefresh, HiUserGroup } from 'react-icons/hi'
 
 interface HubSpotConnection {
   connection_status: string
@@ -13,11 +13,43 @@ interface HubSpotConnection {
   last_error: string | null
 }
 
+interface HubSpotOwnerMapping {
+  id: string
+  provider_user_id: string
+  provider_email: string | null
+  provider_name: string | null
+  occ_user_id: string | null
+  match_status: 'matched' | 'unmatched' | 'ignored'
+  confidence: number
+  last_seen_at: string | null
+}
+
+interface TeamMember {
+  id: string
+  full_name: string | null
+  email: string
+  role: string
+}
+
+interface SyncBucket {
+  fetched?: number
+  synced?: number
+}
+
+interface HubSpotSyncResult {
+  totalSynced?: number
+  results?: Record<string, SyncBucket>
+}
+
 export default function HubSpotPage() {
   const [connection, setConnection] = useState<HubSpotConnection | null>(null)
   const [accountId, setAccountId] = useState<string | null>(null)
+  const [mappings, setMappings] = useState<HubSpotOwnerMapping[]>([])
+  const [teamMembers, setTeamMembers] = useState<TeamMember[]>([])
   const [loading, setLoading] = useState(true)
   const [syncing, setSyncing] = useState(false)
+  const [lastSyncResult, setLastSyncResult] = useState<HubSpotSyncResult | null>(null)
+  const [savingMappingIds, setSavingMappingIds] = useState<string[]>([])
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
   const supabase = createClient()
 
@@ -46,6 +78,26 @@ export default function HubSpotPage() {
       .single()
 
     if (data) setConnection(data)
+
+    const [{ data: mappingData }, { data: memberData }] = await Promise.all([
+      supabase
+        .from('Integration_User_Mappings')
+        .select('id, provider_user_id, provider_email, provider_name, occ_user_id, match_status, confidence, last_seen_at')
+        .eq('account_id', userData.account_id)
+        .eq('provider', 'hubspot')
+        .order('match_status', { ascending: false })
+        .order('provider_email'),
+      supabase
+        .from('Users')
+        .select('id, full_name, email, role')
+        .eq('account_id', userData.account_id)
+        .in('role', ['rep', 'manager', 'admin', 'coach'])
+        .order('role')
+        .order('full_name'),
+    ])
+
+    if (mappingData) setMappings(mappingData)
+    if (memberData) setTeamMembers(memberData)
     setLoading(false)
   }, [supabase])
 
@@ -64,14 +116,17 @@ export default function HubSpotPage() {
     setSyncing(true)
     setMessage(null)
 
-    const { error } = await supabase.functions.invoke('hubspot-sync', {
+    const { data, error } = await supabase.functions.invoke('hubspot-sync', {
       body: {},
     })
 
     if (error) {
       setMessage({ type: 'error', text: 'Sync failed. Check the OAuth connection and try again.' })
     } else {
-      setMessage({ type: 'success', text: 'Sync completed successfully.' })
+      const syncResult = (data || null) as HubSpotSyncResult | null
+      setLastSyncResult(syncResult)
+      const totalSynced = syncResult?.totalSynced ?? 0
+      setMessage({ type: 'success', text: `Sync completed successfully. ${totalSynced} record${totalSynced === 1 ? '' : 's'} synced.` })
       void loadConnection()
     }
     setSyncing(false)
@@ -90,6 +145,36 @@ export default function HubSpotPage() {
       setConnection(null)
       setMessage({ type: 'success', text: 'HubSpot disconnected.' })
     }
+  }
+
+  async function handleMappingChange(mapping: HubSpotOwnerMapping, value: string) {
+    setSavingMappingIds((prev) => [...prev, mapping.id])
+    setMessage(null)
+
+    const update: Pick<HubSpotOwnerMapping, 'occ_user_id' | 'match_status' | 'confidence'> = value === 'ignored'
+      ? { occ_user_id: null, match_status: 'ignored', confidence: 0 }
+      : value
+        ? { occ_user_id: value, match_status: 'matched', confidence: 1 }
+        : { occ_user_id: null, match_status: 'unmatched', confidence: 0 }
+
+    const { error } = await supabase
+      .from('Integration_User_Mappings')
+      .update(update)
+      .eq('id', mapping.id)
+      .eq('account_id', accountId)
+
+    if (error) {
+      setMessage({ type: 'error', text: 'Could not save the HubSpot owner assignment.' })
+    } else {
+      setMappings((prev) => prev.map((item) => (
+        item.id === mapping.id
+          ? { ...item, ...update, occ_user_id: update.occ_user_id }
+          : item
+      )))
+      setMessage({ type: 'success', text: 'HubSpot owner assignment saved.' })
+    }
+
+    setSavingMappingIds((prev) => prev.filter((id) => id !== mapping.id))
   }
 
   if (loading) {
@@ -174,6 +259,18 @@ export default function HubSpotPage() {
                   Last synced: {new Date(connection.last_successful_sync).toLocaleString()}
                 </p>
               )}
+              {lastSyncResult?.results && (
+                <div className="mb-4 grid gap-2 rounded-lg border border-bone-dark bg-bone/30 p-3 text-xs text-stone-light sm:grid-cols-2">
+                  {Object.entries(lastSyncResult.results).map(([key, value]) => (
+                    <div key={key} className="flex items-center justify-between gap-3">
+                      <span className="capitalize">{key}</span>
+                      <span className="font-medium text-espresso">
+                        {value.synced ?? 0}/{value.fetched ?? 0}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
               <button
                 onClick={handleSync}
                 disabled={syncing}
@@ -182,6 +279,80 @@ export default function HubSpotPage() {
                 <HiRefresh className={syncing ? 'animate-spin' : ''} />
                 {syncing ? 'Syncing...' : 'Sync Now'}
               </button>
+            </div>
+
+            {/* Owner Mapping */}
+            <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
+              <div className="flex items-start gap-3 mb-5">
+                <HiUserGroup className="text-terracotta text-2xl mt-0.5" />
+                <div>
+                  <h2 className="text-xl font-bold text-espresso">Rep Allocation</h2>
+                  <p className="text-sm text-stone-light">
+                    Match HubSpot owners to OCC users so calls, notes, emails, meetings, and tasks land on the right rep dashboard.
+                  </p>
+                </div>
+              </div>
+
+              {mappings.length === 0 ? (
+                <div className="rounded-lg border border-bone-dark bg-bone/40 p-4 text-sm text-stone-light">
+                  Run a HubSpot sync to discover owners. OCC will auto-match owners by email when possible.
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {mappings.map((mapping) => {
+                    const isSaving = savingMappingIds.includes(mapping.id)
+                    const ownerLabel = mapping.provider_name || mapping.provider_email || `HubSpot owner ${mapping.provider_user_id}`
+
+                    return (
+                      <div
+                        key={mapping.id}
+                        className="grid gap-3 rounded-lg border border-bone-dark p-4 md:grid-cols-[1fr_240px]"
+                      >
+                        <div>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <p className="font-semibold text-espresso">{ownerLabel}</p>
+                            <span className={`rounded-full px-2 py-0.5 text-xs font-medium ${
+                              mapping.match_status === 'matched'
+                                ? 'bg-green-400/10 text-green-600'
+                                : mapping.match_status === 'ignored'
+                                  ? 'bg-bone text-stone-light'
+                                  : 'bg-pink/10 text-terracotta'
+                            }`}>
+                              {mapping.match_status}
+                            </span>
+                          </div>
+                          <p className="text-xs text-stone-light mt-1">
+                            {mapping.provider_email || 'No HubSpot email'} · Owner ID {mapping.provider_user_id}
+                          </p>
+                          {mapping.last_seen_at && (
+                            <p className="text-xs text-stone-light mt-1">
+                              Last seen {new Date(mapping.last_seen_at).toLocaleString()}
+                            </p>
+                          )}
+                        </div>
+
+                        <label className="text-sm">
+                          <span className="sr-only">Assign OCC user</span>
+                          <select
+                            value={mapping.match_status === 'ignored' ? 'ignored' : mapping.occ_user_id || ''}
+                            onChange={(event) => void handleMappingChange(mapping, event.target.value)}
+                            disabled={isSaving}
+                            className="w-full rounded-lg border border-bone-dark bg-white px-3 py-2 text-sm text-espresso disabled:opacity-60"
+                          >
+                            <option value="">Unassigned</option>
+                            {teamMembers.map((member) => (
+                              <option key={member.id} value={member.id}>
+                                {(member.full_name || member.email)} ({member.role})
+                              </option>
+                            ))}
+                            <option value="ignored">Ignore owner</option>
+                          </select>
+                        </label>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
             </div>
 
             {/* Disconnect */}

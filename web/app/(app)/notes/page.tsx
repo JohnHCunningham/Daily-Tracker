@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useSearchParams, useRouter } from 'next/navigation'
 import { HiChatAlt2, HiPaperAirplane, HiUserCircle } from 'react-icons/hi'
 
 interface CurrentUser {
@@ -36,6 +36,7 @@ interface ConversationBadge {
 const leaderRoles = new Set(['admin', 'manager', 'coach'])
 
 export default function NotesPage() {
+  const router = useRouter()
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [members, setMembers] = useState<TeamMember[]>([])
   const [messages, setMessages] = useState<DirectMessage[]>([])
@@ -155,7 +156,7 @@ export default function NotesPage() {
                 <button
                   key={member.id}
                   type="button"
-                  onClick={() => setSelectedEmail(member.email)}
+                  onClick={() => router.push(`/notes?rep=${encodeURIComponent(member.email)}`)}
                   className={`w-full flex items-center gap-3 px-5 py-4 text-left transition-colors ${
                     selectedEmail === member.email
                       ? 'bg-terracotta/10 text-espresso'

@@ -35,6 +35,7 @@ interface OnboardingContext {
   subscription_status: string | null
   stripe_subscription_id: string | null
   stripe_customer_id: string | null
+  created_at?: string
 }
 
 interface IntegrationConnection {
@@ -262,7 +263,7 @@ export default function DashboardPage() {
   const loadLeaderDashboard = useCallback(async (accountId: string) => {
     const { data: account } = await supabase
       .from('Accounts')
-      .select('company_name, unique_customer_profile, competitor_context, subscription_status, stripe_subscription_id, stripe_customer_id')
+      .select('company_name, unique_customer_profile, competitor_context, subscription_status, stripe_subscription_id, stripe_customer_id, created_at')
       .eq('id', accountId)
       .single()
 
@@ -274,6 +275,7 @@ export default function DashboardPage() {
         subscription_status: account.subscription_status,
         stripe_subscription_id: account.stripe_subscription_id,
         stripe_customer_id: account.stripe_customer_id,
+        created_at: account.created_at,
       })
     } else {
       setOnboardingContext(null)
@@ -827,6 +829,38 @@ export default function DashboardPage() {
             {syncing ? 'Syncing...' : 'Sync Now'}
           </button>
         </div>
+
+        {/* Trial Expiration Warning */}
+        {onboardingContext?.subscription_status === 'trialing' && onboardingContext.created_at && (() => {
+          const trialEnd = new Date(onboardingContext.created_at)
+          trialEnd.setDate(trialEnd.getDate() + 14)
+          const daysLeft = Math.ceil((trialEnd.getTime() - Date.now()) / (1000 * 60 * 60 * 24))
+          
+          if (daysLeft <= 7 && daysLeft >= 0) {
+            return (
+              <div className="mb-8 rounded-2xl border border-gold/30 bg-gradient-to-r from-white to-gold/10 p-5 shadow-sm">
+                <div className="flex items-start gap-4">
+                  <HiExclamationCircle className="text-gold text-3xl flex-shrink-0 mt-1" />
+                  <div className="flex-1">
+                    <h2 className="text-lg font-bold text-espresso">
+                      {daysLeft === 0 ? 'Trial ends today' : `Trial ends in ${daysLeft} ${daysLeft === 1 ? 'day' : 'days'}`}
+                    </h2>
+                    <p className="text-sm text-stone mt-1">
+                      Your 14-day trial expires on {trialEnd.toLocaleDateString()}. Add billing details to continue uninterrupted access.
+                    </p>
+                  </div>
+                  <Link
+                    href="/settings#billing"
+                    className="bg-gold text-white font-semibold px-4 py-2 rounded-lg hover:bg-gold-bright transition-colors text-sm whitespace-nowrap"
+                  >
+                    Add Payment
+                  </Link>
+                </div>
+              </div>
+            )
+          }
+          return null
+        })()}
 
         {billingSnapshot && (
           <div className={`mb-8 rounded-2xl border p-5 shadow-sm ${

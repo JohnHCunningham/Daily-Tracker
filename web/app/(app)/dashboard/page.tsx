@@ -883,10 +883,7 @@ export default function DashboardPage() {
               </p>
             )}
           </div>
-        )}
-
-        <ManagerOnboardingMap steps={onboardingSteps} />
-
+        )}\n\n        {isLeader && <ManagerOnboardingMap steps={onboardingSteps} />}\n
         {/* Pipeline Funnel */}
         {pipelineData.length > 0 && (
           <div className="bg-white rounded-2xl border-t-4 border-t-terracotta border-l border-r border-b border-bone-dark/50 p-6 mb-8 shadow-sm">

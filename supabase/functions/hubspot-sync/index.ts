@@ -38,6 +38,7 @@ interface OwnerMapping {
   providerEmail: string;
   providerName: string | null;
   occUserId: string | null;
+  occUserEmail: string | null;
   matchStatus: "matched" | "unmatched" | "ignored";
   confidence: number;
 }
@@ -186,6 +187,7 @@ async function resolveOwnerMapping(
       providerEmail: "unknown@example.com",
       providerName: null,
       occUserId: null,
+      occUserEmail: null,
       matchStatus: "unmatched",
       confidence: 0,
     };
@@ -209,22 +211,33 @@ async function resolveOwnerMapping(
     .maybeSingle();
 
   let occUserId = existing?.occ_user_id || null;
+  let occUserEmail: string | null = null;
   let matchStatus: OwnerMapping["matchStatus"] = existing?.match_status || "unmatched";
   let confidence = Number(existing?.confidence || 0);
 
   if (!existing && !occUserId && providerEmail !== "unknown@example.com") {
     const { data: matchedUser } = await supabase
       .from("Users")
-      .select("id")
+      .select("id, email")
       .eq("account_id", account_id)
       .ilike("email", providerEmail)
       .maybeSingle();
 
     if (matchedUser?.id) {
       occUserId = matchedUser.id;
+      occUserEmail = matchedUser.email;
       matchStatus = "matched";
       confidence = 1;
     }
+  } else if (occUserId) {
+    // Fetch email for existing mapped user
+    const { data: userData } = await supabase
+      .from("Users")
+      .select("email")
+      .eq("id", occUserId)
+      .maybeSingle();
+    
+    occUserEmail = userData?.email || null;
   }
 
   const mapping = {
@@ -232,6 +245,7 @@ async function resolveOwnerMapping(
     providerEmail,
     providerName,
     occUserId,
+    occUserEmail,
     matchStatus,
     confidence,
   };
@@ -327,7 +341,7 @@ async function syncActivities(
       account_id: account_id,
       user_id: ownerMapping.occUserId,
       occ_user_id: ownerMapping.occUserId,
-      rep_email: ownerMapping.providerEmail,
+      rep_email: ownerMapping.occUserEmail || ownerMapping.providerEmail,
       activity_date: activity.properties.hs_timestamp?.split("T")[0] || new Date().toISOString().split("T")[0],
       activity_type: activityType,
       count: 1,

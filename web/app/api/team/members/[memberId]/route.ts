@@ -215,9 +215,10 @@ export async function PATCH(
   try {
     const body = await request.json()
     const nextRole = body?.role
+    const fullName = body?.full_name
 
-    if (!nextRole || typeof nextRole !== 'string') {
-      return NextResponse.json({ error: 'Missing role' }, { status: 400 })
+    if (!nextRole && fullName === undefined) {
+      return NextResponse.json({ error: 'Missing role or full_name' }, { status: 400 })
     }
 
     const supabase = await createClient()
@@ -234,7 +235,7 @@ export async function PATCH(
       .single()
 
     if (!currentUser || !allowedRoles.has(currentUser.role)) {
-      return NextResponse.json({ error: 'Only admins and managers can change roles' }, { status: 403 })
+      return NextResponse.json({ error: 'Only admins and managers can update members' }, { status: 403 })
     }
 
     const { data: targetMember } = await supabase
@@ -248,16 +249,25 @@ export async function PATCH(
       return NextResponse.json({ error: 'Member not found' }, { status: 404 })
     }
 
-    if (!['rep', 'coach', 'manager', 'admin'].includes(nextRole)) {
-      return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+    const updates: { role?: string; full_name?: string } = {}
+    
+    if (nextRole) {
+      if (!['rep', 'coach', 'manager', 'admin'].includes(nextRole)) {
+        return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+      }
+      updates.role = nextRole
+    }
+    
+    if (fullName !== undefined) {
+      updates.full_name = fullName.trim() || null
     }
 
     const { data: updated, error } = await supabase
       .from('Users')
-      .update({ role: nextRole })
+      .update(updates)
       .eq('id', targetMember.id)
       .eq('account_id', currentUser.account_id)
-      .select('id, role')
+      .select('id, role, full_name')
       .single()
 
     if (error || !updated) {

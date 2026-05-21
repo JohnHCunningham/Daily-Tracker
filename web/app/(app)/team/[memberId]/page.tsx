@@ -58,6 +58,8 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
   const [selectedRole, setSelectedRole] = useState('')
   const [saving, setSaving] = useState(false)
+  const [editingName, setEditingName] = useState(false)
+  const [editedName, setEditedName] = useState('')
   const [callScores, setCallScores] = useState<CallScore[]>([])
   const [avgScores, setAvgScores] = useState<Record<string, number> | null>(null)
   const [pipelineProgress, setPipelineProgress] = useState<{ calls: number; discovery: number; proposals: number; sales: number }>({ calls: 0, discovery: 0, proposals: 0, sales: 0 })
@@ -78,6 +80,7 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
     setCurrentUser(data.currentUser)
     setMember(data.member)
     setSelectedRole(data.member.role)
+    setEditedName(data.member.full_name || '')
     setCallScores(data.callScores || [])
     setAvgScores(data.avgScores || null)
     setPipelineProgress(data.pipelineProgress || { calls: 0, discovery: 0, proposals: 0, sales: 0 })
@@ -105,6 +108,26 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
 
     if (response.ok) {
       setMember({ ...member, role: selectedRole })
+    }
+    setSaving(false)
+  }
+
+  async function handleSaveName() {
+    if (!member || !editedName.trim()) return
+    if (!currentUser || !['admin', 'manager'].includes(currentUser.role)) return
+    setSaving(true)
+
+    const response = await fetch(`/api/team/members/${member.id}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ full_name: editedName.trim() }),
+    })
+
+    if (response.ok) {
+      setMember({ ...member, full_name: editedName.trim() })
+      setEditingName(false)
     }
     setSaving(false)
   }
@@ -175,7 +198,45 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
             <HiUserCircle className="text-terracotta text-5xl" />
           </div>
           <div className="flex-1">
-            <h1 className="text-3xl font-bold text-espresso">{member.full_name || 'Unnamed'}</h1>
+            {editingName && currentUser && ['admin', 'manager'].includes(currentUser.role) ? (
+              <div className="flex items-center gap-2">
+                <input
+                  type="text"
+                  value={editedName}
+                  onChange={(e) => setEditedName(e.target.value)}
+                  className="text-2xl font-bold px-3 py-1 border border-terracotta/30 rounded bg-white text-espresso focus:outline-none focus:border-terracotta"
+                  autoFocus
+                />
+                <button
+                  onClick={handleSaveName}
+                  disabled={saving || !editedName.trim()}
+                  className="text-sm bg-terracotta text-white px-3 py-1 rounded hover:bg-terracotta-bright transition-colors disabled:opacity-50"
+                >
+                  Save
+                </button>
+                <button
+                  onClick={() => {
+                    setEditingName(false)
+                    setEditedName(member?.full_name || '')
+                  }}
+                  className="text-sm text-stone hover:text-espresso"
+                >
+                  Cancel
+                </button>
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <h1 className="text-3xl font-bold text-espresso">{member.full_name || 'Unnamed'}</h1>
+                {currentUser && ['admin', 'manager'].includes(currentUser.role) && (
+                  <button
+                    onClick={() => setEditingName(true)}
+                    className="text-sm text-terracotta hover:text-terracotta-bright"
+                  >
+                    Edit
+                  </button>
+                )}
+              </div>
+            )}
             <p className="text-stone-light">{member.email}</p>
             <p className="text-xs text-stone-light mt-1">
               Joined {new Date(member.created_at).toLocaleDateString()}

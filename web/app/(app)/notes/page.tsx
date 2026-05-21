@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
-import { HiChatAlt2, HiPaperAirplane, HiUserCircle } from 'react-icons/hi'
+import { HiChatAlt2, HiPaperAirplane, HiUserCircle, HiRefresh } from 'react-icons/hi'
 
 interface CurrentUser {
   account_id: string
@@ -130,6 +130,14 @@ export default function NotesPage() {
             Private manager-rep notes and coaching follow-up.
           </p>
         </div>
+        <button
+          onClick={() => loadNotes(selectedEmail || undefined)}
+          disabled={loading}
+          className="flex items-center gap-2 text-sm text-terracotta hover:text-terracotta-bright disabled:opacity-50 transition-colors"
+        >
+          <HiRefresh className={loading ? 'animate-spin' : ''} />
+          Refresh
+        </button>
       </div>
 
       {error && (

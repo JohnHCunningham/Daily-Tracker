@@ -13,6 +13,7 @@ type NotificationSummary = {
   latestCelebrationBadgeKey: string | null
   latestCoachName: string | null
   latestNoteSenderName: string | null
+  latestNoteSenderEmail: string | null
 }
 
 async function resolveName(
@@ -76,6 +77,7 @@ export async function GET() {
       latestCelebrationBadgeKey: null,
       latestCoachName: null,
       latestNoteSenderName: null,
+      latestNoteSenderEmail: null,
     }
 
     const { data: celebrations } = await db
@@ -131,6 +133,7 @@ export async function GET() {
           (adminSupabase && (await resolveName(adminSupabase, currentUser.account_id, latestUnreadNote.sender_email))) ||
           latestUnreadNote.sender_email ||
           'your team'
+        summary.latestNoteSenderEmail = latestUnreadNote.sender_email
       }
     } else {
       const { data: coaching } = await db
@@ -168,6 +171,7 @@ export async function GET() {
           (adminSupabase && (await resolveName(adminSupabase, currentUser.account_id, latestUnreadNote.sender_email))) ||
           latestUnreadNote.sender_email ||
           'your team'
+        summary.latestNoteSenderEmail = latestUnreadNote.sender_email
       }
     }
 

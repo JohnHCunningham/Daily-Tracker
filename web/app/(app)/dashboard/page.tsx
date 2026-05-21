@@ -1187,9 +1187,11 @@ export default function DashboardPage() {
                 </span>
               )}
               {notifications.notesUnread > 0 && (
-                <span className="inline-flex items-center gap-2 rounded-full border border-aqua/20 bg-aqua/5 px-3 py-1 text-xs font-semibold text-espresso">
-                  Notes unread {notifications.notesUnread}
-                </span>
+                <Link href="/notes">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-aqua/20 bg-aqua/5 px-3 py-1 text-xs font-semibold text-espresso hover:bg-aqua/10 hover:border-aqua/30 transition-colors cursor-pointer">
+                    Notes unread {notifications.notesUnread} →
+                  </span>
+                </Link>
               )}
             </div>
           </div>

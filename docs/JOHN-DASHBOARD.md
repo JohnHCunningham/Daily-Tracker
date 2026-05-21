@@ -131,22 +131,43 @@ Local changes:
 
 Deployment note: local removal is not the same as production removal. Production still needs an approved deploy/migration pass; if the old `aircall-sync` function remains deployed, it should be deleted from Supabase during that pass.
 
-## Deployment Status
+## Deployment Status — 2026-05-20
 
-**Ready to deploy:**
-- ✅ Aircall removed (committed: 9ee70da)
-- ✅ Auth hardening complete (committed: 9a48266)
-- ✅ Migrations 095, 096, 097 ready
-- ✅ Build passes (42 routes)
+**✅ DEPLOYED TO PRODUCTION:**
+- ✅ All critical env vars added (OPENAI_API_KEY, SUPABASE_SERVICE_ROLE_KEY)
+- ✅ Migration 097 applied (Aircall removed from pipeline)
+- ✅ Edge Functions deployed with auth hardening (fathom-sync, hubspot-sync, analyze-call)
+- ✅ aircall-sync deleted from Supabase
+- ✅ Next.js app deployed (42 routes, build passing)
+- ✅ DNS configured: app.oneclickcoaching.com resolving
+- ✅ Automated smoke tests passing:
+  - Login page loads
+  - Protected routes redirect to login
+  - Protected APIs return 401
+  - Edge Functions require auth
+  - aircall-sync confirmed deleted (404)
 
-**Deployment blockers:**
-- ❌ OPENAI_API_KEY missing from Vercel production
-- ❌ SUPABASE_SERVICE_ROLE_KEY missing from Vercel production
-- ❌ DNS: app.oneclickcoaching.com not configured
+**Current deployment URL:**
+- Production: https://oneclickcoaching-xeso.vercel.app
+- Custom domain: https://app.oneclickcoaching.com
 
-**See:** `/docs/DEPLOYMENT-READINESS.md` for full checklist and sequence.
+**❌ BLOCKED — Fathom OAuth:**
+- Fathom OAuth app registered with new credentials
+- Cannot locate app management page in Fathom developer portal to add/verify redirect URIs
+- Support ticket sent to Fathom: 2026-05-20
+- When resolved: update FATHOM_CLIENT_ID, FATHOM_CLIENT_SECRET, redeploy, test OAuth flow
 
-**Estimated time:** 3-4 hours for deployment + smoke tests (if config is correct)
+**⏳ PENDING MANUAL SMOKE TESTS:**
+- Manager login → dashboard
+- Send/accept rep invite (tenant isolation)
+- Notes CRUD (account scoped)
+- Team/call detail pages (account scoped)
+- Fathom OAuth + sync (blocked on above)
+- HubSpot OAuth + sync
+- Billing checkout + webhook
+- Email delivery
+
+**See:** `/docs/DEPLOYMENT-READINESS.md` for detailed sequence and `/docs/FATHOM-OAUTH-BLOCKER.md` for resolution steps.
 
 ## Useful Hermes Requests
 

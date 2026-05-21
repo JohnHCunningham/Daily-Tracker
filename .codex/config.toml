@@ -1,0 +1,6 @@
+[mcp_servers.buffer]
+args = ["/Users/johncunningham/.claude/mcp-servers/buffer/index.js"]
+command = "node"
+
+[mcp_servers.buffer.env]
+BUFFER_ACCESS_TOKEN = "wpnUwDhSeXOwpDRhA5VsMHwsiEy9CYRUy2psyuo1CRb"

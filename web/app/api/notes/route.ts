@@ -105,11 +105,27 @@ export async function GET(request: NextRequest) {
       )
     )
 
+    // Fetch account managers so reps can initiate conversations, not just reply
+    const { data: managers } = await supabase
+      .from('Users')
+      .select('email, full_name, role')
+      .eq('account_id', currentUser.account_id)
+      .in('role', ['admin', 'manager'])
+      .neq('email', currentUser.email)
+
+    const managerMap = new Map<string, { full_name: string | null; role: string }>()
+    for (const m of managers || []) {
+      managerMap.set(m.email, { full_name: m.full_name, role: m.role })
+      if (!participantEmails.includes(m.email)) {
+        participantEmails.push(m.email)
+      }
+    }
+
     const members = participantEmails.map((email) => ({
       id: email,
       email,
-      full_name: null,
-      role: 'manager',
+      full_name: managerMap.get(email)?.full_name || null,
+      role: managerMap.get(email)?.role || 'manager',
     }))
 
     return NextResponse.json({

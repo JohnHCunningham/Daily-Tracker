@@ -5,7 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
 import { HiUserGroup, HiPhone, HiAcademicCap, HiRefresh, HiExclamationCircle, HiCheckCircle, HiSparkles, HiChatAlt2, HiMail, HiClipboardCheck } from 'react-icons/hi'
 import dynamic from 'next/dynamic'
-import SandlerBreakdown from '../components/SandlerBreakdown'
+import ScoreBreakdown from '../components/ScoreBreakdown'
 import { getCelebrationBadgeConfig } from '@/lib/celebrations'
 import ManagerOnboardingMap, { type OnboardingStep } from '../components/ManagerOnboardingMap'
 
@@ -54,7 +54,7 @@ interface RepGoalProgress {
   discoveryPercent: number
   proposalsPercent: number
   salesPercent: number
-  sandlerScore: number | null
+  methodologyScore: number | null
 }
 
 interface CoachingPreview {
@@ -159,7 +159,7 @@ export default function DashboardPage() {
   const [trendLabels, setTrendLabels] = useState<string[]>([])
   const [trendScores, setTrendScores] = useState<number[]>([])
   const [pipelineData, setPipelineData] = useState<PipelineStage[]>([])
-  const [teamSandlerScores, setTeamSandlerScores] = useState<Record<string, number> | null>(null)
+  const [teamMethodologyScores, setTeamMethodologyScores] = useState<Record<string, number> | null>(null)
   const [recentCelebrations, setRecentCelebrations] = useState<CelebrationPreview[]>([])
   const [billingSnapshot, setBillingSnapshot] = useState<BillingSnapshot | null>(null)
   const [onboardingContext, setOnboardingContext] = useState<OnboardingContext | null>(null)
@@ -408,8 +408,8 @@ export default function DashboardPage() {
           teamGoalAgg.sales.target += sTarget
         }
 
-        // Per-rep Sandler score from calls
-        let repSandler: number | null = null
+        // Per-rep methodology score from calls
+        let repMethodology: number | null = null
         if (recentCalls) {
           const repCalls = recentCalls.filter((c) => c.rep_email === m.email && c.methodology_scores)
           if (repCalls.length > 0) {
@@ -417,7 +417,7 @@ export default function DashboardPage() {
               const vals = Object.values(c.methodology_scores!) as number[]
               return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0
             })
-            repSandler = Math.round(allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length * 10) / 10
+            repMethodology = Math.round(allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length * 10) / 10
           }
         }
 
@@ -426,7 +426,7 @@ export default function DashboardPage() {
           discoveryPercent: getProgressPercent(dCurrent, dTarget),
           proposalsPercent: getProgressPercent(pCurrent, pTarget),
           salesPercent: getProgressPercent(sCurrent, sTarget),
-          sandlerScore: repSandler,
+          methodologyScore: repMethodology,
         }
       })
 
@@ -466,7 +466,7 @@ export default function DashboardPage() {
         repAgg[rep].sum += avg
         repAgg[rep].count += 1
 
-        // Aggregate per component for team Sandler breakdown
+        // Aggregate per component for team methodology breakdown
         Object.entries(call.methodology_scores).forEach(([comp, score]) => {
           if (!componentAgg[comp]) componentAgg[comp] = { sum: 0, count: 0 }
           componentAgg[comp].sum += score as number
@@ -486,12 +486,12 @@ export default function DashboardPage() {
         setTeamAvgScore(Math.round(allAvgs.reduce((a, b) => a + b, 0) / allAvgs.length * 10) / 10)
       }
 
-      // Team Sandler breakdown
+      // Team methodology breakdown
       const teamScores: Record<string, number> = {}
       Object.entries(componentAgg).forEach(([comp, { sum, count }]) => {
         teamScores[comp] = Math.round((sum / count) * 10) / 10
       })
-      setTeamSandlerScores(teamScores)
+      setTeamMethodologyScores(teamScores)
 
       setNeedsAttention(attention.sort((a, b) => a.score - b.score).slice(0, 4))
 
@@ -817,7 +817,11 @@ export default function DashboardPage() {
         <div className="flex items-center justify-between mb-8 pb-4 border-b-2 border-terracotta/10">
           <div>
             <h1 className="text-2xl font-bold text-espresso">
-              Good morning, {userInfo.full_name || userInfo.email?.split('@')[0] || 'Manager'}
+              {(() => {
+                const hour = new Date().getHours()
+                const greeting = hour < 12 ? 'Good morning' : hour < 17 ? 'Good afternoon' : 'Good evening'
+                return `${greeting}, ${userInfo.full_name || userInfo.email?.split('@')[0] || 'Manager'}`
+              })()}
             </h1>
             <p className="text-stone text-sm mt-1">Here is your team at a glance.</p>
           </div>
@@ -918,7 +922,23 @@ export default function DashboardPage() {
               </p>
             )}
           </div>
-        )}\n\n        {isLeader && <ManagerOnboardingMap steps={onboardingSteps} />}\n
+        )}\n\n        {isLeader && <ManagerOnboardingMap steps={onboardingSteps} />}
+
+        {/* Rep walkthrough video */}
+        {!isLeader && (
+          <div className="mb-8 rounded-2xl border border-terracotta/20 bg-gradient-to-r from-white to-terracotta/5 p-6 shadow-sm">
+            <p className="text-xs font-semibold uppercase tracking-wider text-terracotta mb-4">Getting started</p>
+            <div className="rounded-xl overflow-hidden border border-bone-dark/50 shadow-sm">
+              <video controls playsInline preload="metadata" className="w-full max-w-2xl block bg-espresso" aria-label="Rep platform walkthrough">
+                <source src="/video/occ-rep-walkthrough-watermarked.mp4" type="video/mp4" />
+              </video>
+              <div className="bg-white px-4 py-2 text-xs text-stone-light flex items-center gap-2">
+                <span>🎬</span> 60-second walkthrough — Notes, Coaching, and your daily rhythm
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Pipeline Funnel */}
         {pipelineData.length > 0 && (
           <div className="bg-white rounded-2xl border-t-4 border-t-terracotta border-l border-r border-b border-bone-dark/50 p-6 mb-8 shadow-sm">
@@ -951,9 +971,10 @@ export default function DashboardPage() {
           <div className="bg-gradient-to-br from-white to-bone-light/30 rounded-2xl border-l-4 border-l-clay border-t border-r border-b border-bone-dark/50 p-5 flex flex-col items-center shadow-sm">
             <ScoreRadial
               score={totalCalls}
-              maxScore={Math.max(totalCalls, 50)}
+              maxScore={Math.max(totalCalls, 25)}
               size={120}
               label="Calls Analyzed"
+              sublabel={`${totalCalls} total`}
               showPercentage={false}
             />
           </div>
@@ -978,7 +999,7 @@ export default function DashboardPage() {
           {repMembers.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {repMembers.map((member) => {
-                const progress = repGoalMap[member.email] || { approachesPercent: 0, discoveryPercent: 0, proposalsPercent: 0, salesPercent: 0, sandlerScore: null }
+                const progress = repGoalMap[member.email] || { approachesPercent: 0, discoveryPercent: 0, proposalsPercent: 0, salesPercent: 0, methodologyScore: null }
                 return (
                   <Link
                     key={member.id}
@@ -1021,9 +1042,9 @@ export default function DashboardPage() {
                         <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-terracotta/10 text-terracotta uppercase tracking-wider">
                           {member.role}
                         </span>
-                        {progress.sandlerScore !== null && (
+                        {progress.methodologyScore !== null && (
                           <span className="text-xs text-stone-light">
-                            Avg: {progress.sandlerScore}/10
+                            Avg: {progress.methodologyScore}/10
                           </span>
                         )}
                       </div>
@@ -1046,8 +1067,8 @@ export default function DashboardPage() {
           {/* Team Methodology Breakdown */}
           <div className="bg-white rounded-2xl border-l-4 border-l-clay border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
             <h2 className="text-lg font-bold text-espresso mb-4 pb-2 border-b-2 border-clay/20">Team Methodology Breakdown</h2>
-            {teamSandlerScores && Object.keys(teamSandlerScores).length > 0 ? (
-              <SandlerBreakdown scores={teamSandlerScores} />
+            {teamMethodologyScores && Object.keys(teamMethodologyScores).length > 0 ? (
+              <ScoreBreakdown scores={teamMethodologyScores} />
             ) : (
               <p className="text-stone-light text-sm">Breakdown appears after calls are analyzed.</p>
             )}
@@ -1356,7 +1377,7 @@ export default function DashboardPage() {
         <div className="bg-white rounded-2xl border-l-4 border-l-clay border-t border-r border-b border-bone-dark/50 p-6 shadow-sm">
           <h2 className="text-lg font-bold text-espresso mb-4 pb-2 border-b-2 border-clay/20">Methodology Breakdown</h2>
           {repScores ? (
-            <SandlerBreakdown scores={repScores} />
+            <ScoreBreakdown scores={repScores} />
           ) : (
             <p className="text-stone-light text-sm">Scores appear after your first call is analyzed.</p>
           )}

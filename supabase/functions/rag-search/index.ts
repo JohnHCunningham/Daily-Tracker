@@ -22,7 +22,8 @@ const corsHeaders = {
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
-const INTERNAL_BEARER = `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
+const INTERNAL_API_KEY = Deno.env.get("INTERNAL_API_KEY") || SUPABASE_SERVICE_ROLE_KEY;
+const INTERNAL_BEARER = `Bearer ${INTERNAL_API_KEY}`;
 
 interface SearchRequest {
   query: string;
@@ -33,16 +34,20 @@ interface SearchRequest {
   matchThreshold?: number;
   matchCount?: number;
   includeContext?: boolean;
+  methodology?: string;
 }
 
 interface WeaknessScriptsRequest {
   component: string;
   limit?: number;
+  methodology?: string;
 }
 
 interface CoachingContextRequest {
   weakAreas: string[];
   transcript?: string;
+  methodology?: string;
+  methodologyLabel?: string;
 }
 
 serve(async (req) => {
@@ -126,6 +131,7 @@ async function handleSearch(
     matchThreshold = 0.5,
     matchCount = 5,
     includeContext = false,
+    methodology,
   } = body;
 
   if (!query) {
@@ -146,6 +152,7 @@ async function handleSearch(
     situationTags,
     matchThreshold,
     matchCount,
+    methodology,
   });
 
   const response: {
@@ -176,7 +183,7 @@ async function handleScriptsForWeakness(
   body: WeaknessScriptsRequest,
   supabase: ReturnType<typeof createClient>
 ): Promise<Response> {
-  const { component, limit = 3 } = body;
+  const { component, limit = 3, methodology } = body;
 
   if (!component) {
     return new Response(
@@ -188,7 +195,7 @@ async function handleScriptsForWeakness(
     );
   }
 
-  const scripts = await findScriptsForWeakness(supabase, component, limit);
+  const scripts = await findScriptsForWeakness(supabase, component, limit, methodology);
 
   return new Response(
     JSON.stringify({
@@ -210,7 +217,7 @@ async function handleCoachingContext(
   body: CoachingContextRequest,
   supabase: ReturnType<typeof createClient>
 ): Promise<Response> {
-  const { weakAreas, transcript } = body;
+  const { weakAreas, transcript, methodology, methodologyLabel } = body;
 
   if (!weakAreas || !Array.isArray(weakAreas) || weakAreas.length === 0) {
     return new Response(
@@ -228,7 +235,9 @@ async function handleCoachingContext(
     supabase,
     OPENAI_API_KEY,
     weakAreas,
-    transcript
+    transcript,
+    methodology,
+    methodologyLabel
   );
 
   return new Response(

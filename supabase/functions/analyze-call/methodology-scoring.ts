@@ -233,21 +233,6 @@ export const METHODOLOGY_CONFIGS: Record<string, MethodologyConfig> = {
       },
     ],
   },
-  meddic: {
-    id: "meddic",
-    label: "MEDDIC",
-    expertRole: "MEDDIC enterprise sales coach",
-    coachingPrinciples:
-      "Score the deal qualification evidence for Metrics, Economic Buyer, Decision Criteria, Decision Process, Identify Pain, and Champion.",
-    components: [
-      { key: "metrics", name: "Metrics", description: "Quantified business outcomes and success measures.", strongSignals: ["metric", "roi", "increase", "reduce", "percent", "revenue", "cost"], weakSignals: ["no metric", "soft value", "unquantified"] },
-      { key: "economic_buyer", name: "Economic Buyer", description: "Access to the person with budget authority.", strongSignals: ["economic buyer", "budget owner", "cfo", "ceo", "sign off", "approve"], weakSignals: ["no EB", "blocked", "unknown buyer"] },
-      { key: "decision_criteria", name: "Decision Criteria", description: "Known technical, business, and vendor selection criteria.", strongSignals: ["criteria", "requirements", "must have", "evaluate", "scorecard"], weakSignals: ["unknown criteria", "not ranked", "vague fit"] },
-      { key: "decision_process", name: "Decision Process", description: "Known steps, stakeholders, and timeline for approval.", strongSignals: ["process", "timeline", "steps", "committee", "approval", "procurement"], weakSignals: ["unknown process", "no timeline", "single-threaded"] },
-      { key: "identify_pain", name: "Identify Pain", description: "Clear business pain with urgency and consequence.", strongSignals: ["pain", "problem", "impact", "urgent", "risk", "cost"], weakSignals: ["weak pain", "nice to have", "no urgency"] },
-      { key: "champion", name: "Champion", description: "A person with influence who sells for you internally.", strongSignals: ["champion", "advocate", "sponsor", "will introduce", "sell internally"], weakSignals: ["coach only", "no power", "no internal seller"] },
-    ],
-  },
   meddpicc: {
     id: "meddpicc",
     label: "MEDDPICC",
@@ -294,6 +279,64 @@ export function buildMethodologySystemPrompt(
 
 Methodology principles:
 ${config.coachingPrinciples}
+
+Score each component 1-10 where:
+- 1-3: Component was absent or poorly executed
+- 4-6: Partially present, needs significant improvement
+- 7-8: Solid execution with minor gaps
+- 9-10: Masterful execution
+
+Components to score:
+${componentLines}
+
+Return JSON with this exact structure:
+{
+  "scores": {
+${scoreShape}
+  },
+  "done_well": ["specific thing with evidence", ...],
+  "missing": ["specific step skipped with consequence", ...],
+  "weak": ["attempted but poorly executed with why", ...],
+  "suggestions": ["specific, actionable coaching point", ...],
+  "scripts": ["exact words to say in a specific situation", ...],
+  "commitments": ["specific action item as imperative sentence", ...]
+}
+
+Also extract 2-4 specific, concrete ACTION ITEMS the rep should complete before their next call. Each must be something they can DO, not a mindset shift.
+
+Be direct. No platitudes. Every suggestion must be specific enough to use on the next call.${lensInstruction}${escalationInstruction}${priorContext}`;
+}
+
+/**
+ * Build a RAG-enhanced system prompt by injecting accumulated coaching knowledge
+ * into the prompt BEFORE GPT-4 analyzes the call. The RAG becomes the lens through
+ * which the AI evaluates the transcript — not an appendix added after.
+ */
+export function buildRAGEnhancedSystemPrompt(
+  config: MethodologyConfig,
+  lensInstruction: string,
+  escalationInstruction: string,
+  priorContext: string,
+  ragKnowledge: string,
+): string {
+  const componentLines = config.components
+    .map((component, index) =>
+      `${index + 1}. ${component.name} (${component.key}) - ${component.description}`
+    )
+    .join("\n");
+
+  const scoreShape = config.components
+    .map((component) =>
+      `    "${component.key}": { "score": N, "evidence": "quote or observation from transcript", "status": "strong|weak|missing" }`
+    )
+    .join(",\n");
+
+  return `You are a ${config.expertRole}. Analyze sales call transcripts and score them against ${config.label}.
+
+COACHING KNOWLEDGE — accumulated experience from hundreds of calls:
+${ragKnowledge}
+
+Use the knowledge above as your lens. When you see patterns that match known pitfalls, call them out by name. When the rep does something aligned with best practices, reinforce it. The knowledge base represents real patterns — use it to make your analysis sharper and more specific.
 
 Score each component 1-10 where:
 - 1-3: Component was absent or poorly executed

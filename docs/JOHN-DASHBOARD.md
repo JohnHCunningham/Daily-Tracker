@@ -2,6 +2,29 @@
 
 This file is a chat-readable product dashboard for the One Click Coaching app.
 
+## 🔴 ACTIVE: App Lockdown — COMPLETE June 21
+
+**3 blockers. CLEARED.** See `docs/APP-LOCKDOWN-JUNE19.md` for full step-by-step.
+
+| Day | Item | Status |
+|---|---|---|
+| Tue Jun 17 | Fathom real-call test (record → sync → analyze) | ✅ Proven (10 calls Jun 20) |
+| Wed Jun 18 | Coaching email deploy + end-to-end test | ✅ |
+| Wed Jun 18 | Stripe webhook real transaction test | ✅ Live (webhook configured Jun 21) |
+| Thu Jun 19 | Regression smoke + launch | ✅ Production |
+
+**Cleared:** Fathom OAuth working. Stripe test subscription confirmed (Harry Smith, $1). Webhook endpoint live with updated secret. Sync Now route created and deployed.
+
+## Design Standards (Power Design — apply to all UI work)
+
+All app UI must follow these rules from the Power Design system:
+- **Type:** Inter (display 600, body 400). JetBrains Mono for metrics/scores. 4 sizes max per view, 1.333 scale. Body ≥24px screen, line-height 1.5.
+- **Color:** Dominant #FAFAF8, secondary #0F1B2D, accent #C8501E (one use per view — the number that hurts). WCAG 4.5:1 minimum.
+- **Spacing:** 8-pt grid exclusively. {4,8,16,24,32,48,64,96,128}px.
+- **Precedence:** Accessibility > brand tokens > aesthetics.
+- **No:** Gradients, multiple accents, stock imagery, motivational language, emojis.
+- Full spec: `power-design` skill (thresholds.json + verify.js)
+
 ## Primary Docs
 
 - System audit: `docs/system-audit-2026-05-04.md`
@@ -21,20 +44,57 @@ For each integration, track four states separately:
 
 ## Fathom Checklist
 
-- UI connect page exists
-- OAuth start/callback route exists
-- Connection row is created/updated
-- Sync function deployed
-- Required DB fields/migration applied
-- Real Fathom connect flow completed
-- Sync Now produces conversation rows with transcript text
-- Logs reviewed for failed recording/transcript/summary calls
+- [x] UI connect page exists
+- [x] OAuth start/callback route exists
+- [x] Connection row is created/updated
+- [x] Sync function deployed
+- [x] Required DB fields/migration applied
+- [x] Real Fathom connect flow completed
+- [x] Sync Now produces conversation rows with transcript text
+- [x] Fathom real-call test — 10 calls synced Jun 20
+- [x] Logs reviewed for failed recording/transcript/summary calls
 
 ## Latest Verification
 
-### 2026-05-19 — Product Routes Audit Item
+### 2026-06-12 — Meta noindex Fix (Fable 5 Audit Finding)
 
-Verified locally from `/Users/johncunningham/oneclickcoaching/web`:
+| # | Test | Result |
+|---|------|--------|
+| 1 | App root layout noindex, nofollow | ✅ FIXED + deployed |
+| 2 | Stripped SEO keywords, OpenGraph, Twitter cards | ✅ |
+| 3 | metadataBase → app.oneclickcoaching.com | ✅ |
+| 4 | Canonical removed (was pointing to marketing site) | ✅ |
+
+Finding from Fable 5: app.oneclickcoaching.com was serving the marketing site's full metadata — canonical URL, SEO keywords, og-image, "index, follow" robots. Deployed fix in `web/app/layout.tsx`.
+
+### 2026-06-08 — Smoke Test Session
+
+| # | Test | Result |
+|---|------|--------|
+| 1 | Login → dashboard | ✅ |
+| 2 | Send/accept invite (tenant isolation) | ✅ |
+| 3 | Rep isolation (can't see other reps) | ✅ |
+| 4 | Admin drills into rep detail | ✅ |
+| 5 | Notes — rep can initiate + reply to manager | ✅ FIXED + deployed |
+| 6 | Calls — rep empty state (no dead link) | ✅ FIXED + deployed |
+| 7 | Integrations gated to admin/manager | ✅ |
+| 8 | Onboarding carousel — any-order navigation | ✅ FIXED + deployed |
+| 9 | Badges methodology-agnostic | ❌ Sandler-hardcoded (3 files — logged) |
+
+**Blocked (needs call data):** Fathom sync with real calls, coaching email delivery, Stripe billing flow.
+
+**Next session:** Fathom → emails → Stripe.
+
+Fathom OAuth + sync is now end-to-end proven:
+- New Fathom app registered with development credentials
+- Client ID/Secret configured in `.env.local`
+- Redirect URI: `https://app.oneclickcoaching.com/api/integrations/fathom/oauth/callback`
+- Connect flow completed successfully
+- Sync Now produces conversation rows with transcript text
+
+Status: FATHOM INTEGRATION IS LIVE. Seven months of fear, done by 12:20 PM.
+
+### 2026-05-19 — Product Routes Audit Item
 
 - `npm run build` passes.
 - `/api/send-invite` exists and is account-scoped to the authenticated inviter.
@@ -157,17 +217,79 @@ Deployment note: local removal is not the same as production removal. Production
 - Support ticket sent to Fathom: 2026-05-20
 - When resolved: update FATHOM_CLIENT_ID, FATHOM_CLIENT_SECRET, redeploy, test OAuth flow
 
-**⏳ PENDING MANUAL SMOKE TESTS:**
-- Manager login → dashboard
-- Send/accept rep invite (tenant isolation)
-- Notes CRUD (account scoped)
-- Team/call detail pages (account scoped)
-- Fathom OAuth + sync (blocked on above)
-- HubSpot OAuth + sync
-- Billing checkout + webhook
-- Email delivery
+**✅ SMOKE TESTS COMPLETED (2026-05-21):**
+- ✅ Manager login → dashboard
+- ✅ Send/accept rep invite (tenant isolation proven)
+- ✅ Notes CRUD (account scoped, conversation switching fixed)
+- ✅ Team/call detail pages (account scoped, name edit added)
+- ✅ HubSpot OAuth + sync (attribution bug found and fixed)
+- ✅ Billing gate (trial warning banner added)
+- ✅ Email delivery (invite emails working)
+- ✅ Rep dashboard isolation (manager onboarding hidden from reps)
+- ❌ Fathom OAuth + sync (BLOCKED — awaiting support response)
+
+**Critical fix applied:** HubSpot activities now correctly attributed to OCC user email (john+abc-rep@oneclickcoaching.com), not provider email. See references/hubspot-attribution-fix-2026-05-21.md.
+
+**✅ STRIPE SMOKE TEST COMPLETED (2026-05-25):**
+
+All 7 Stripe API endpoints tested and passing on production (app.oneclickcoaching.com):
+
+| Endpoint | Result |
+|---|---|
+| `/api/stripe/create-checkout-session` | ✅ 401 (auth required) |
+| `/api/stripe/create-portal-session` | ✅ 401 (auth required) |
+| `/api/stripe/manage-subscription` | ✅ 401 (auth required) |
+| `/api/stripe/update-subscription` | ✅ 401 (auth required) |
+| `/api/stripe/billing-history` | ✅ 401 (auth required) |
+| `/api/stripe/config-status` | ✅ 401 (auth required) |
+| `/api/stripe/webhook` | ✅ 405 (POST-only) |
+
+Environment verified: all 4 Stripe env vars present in Vercel production (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_ANNUAL).
+
+Billing UI verified in code: rep count adjuster, cancel/reactivate, portal link, trial days display, billing history with PDF links, past-due/grace warnings — all present.
+
+Two May 21 billing bugs confirmed fixed: missing cancel/add buttons, missing trial notification.
+
+**Remaining gap:** Webhook → database flow cannot be tested without a real paid transaction (requires actual Stripe checkout completion to trigger the webhook). Code path is complete — webhook handler parses all Stripe events, billing gate reads subscription_status from DB. This is the only untestable piece.
+
+No new bugs found. Stripe integration is revenue-ready.
+
+Full test plan: `docs/stripe-smoke-test-plan-2026-05-24.md`
 
 **See:** `/docs/DEPLOYMENT-READINESS.md` for detailed sequence and `/docs/FATHOM-OAUTH-BLOCKER.md` for resolution steps.
+
+### 2026-05-26 — RAG Methodology-Agnostic Refactor ✅ COMPLETE
+
+**All 6 methodologies seeded and searchable. System is methodology-agnostic end-to-end.**
+
+#### Migration (098_methodology_agnostic_kb.sql)
+- Added `methodology` column to `Sandler_Knowledge_Base`
+- Rewrote `search_sandler_content` with `filter_methodology` parameter
+- Updated `find_scripts_for_weakness` with methodology filter
+- Applied via Supabase SQL editor
+
+#### Code Changes (6 files)
+| File | Change |
+|---|---|
+| `_shared/rag-utils.ts` | `ragSearch()` accepts `methodology`. Added `normalizeMethodology()`, `getMethodologyLabel()`. Removed Sandler-only `COMPONENT_NAME_MAP`. |
+| `_shared/methodology-seed-data.ts` | **New.** 5 methodology knowledge bases: Challenger, SPIN, Gap, MEDDIC, MEDDPICC |
+| `analyze-call/index.ts` | `if (methodologyConfig.id === "sandler")` → `if (use_rag)` — RAG fires for ALL methodologies |
+| `rag-search/index.ts` | All 3 actions accept/pass `methodology` filter |
+| `seed-knowledge-base/index.ts` | Accepts `{"methodology":"challenger"}` or `{"methodology":"all"}`. Per-methodology seeding. |
+| `send-coaching-email/index.ts` | Manager-approved coaching inserts now carry `methodology` |
+
+#### Knowledge Base (128 entries)
+| Methodology | Entries | Search Test |
+|---|---|---|
+| Sandler | 64 | "upfront contract" → 0.609 ✓ |
+| Challenger | 13 | "commercial insight" → 0.676 ✓ |
+| SPIN | 13 | "implication questions" → 0.510 ✓ |
+| Gap | 13 | "diagnose before prescribe" → 0.582 ✓ |
+| MEDDIC | 13 | "economic buyer" → 0.611 ✓ |
+| MEDDPICC | 12 | "paper process" → 0.560 ✓ |
+
+#### Known Issue
+~~SUPABASE_SERVICE_ROLE_KEY mismatch~~ **FIXED 2026-05-26:** Migrated to new JWT signing keys. Created `INTERNAL_API_KEY` secret for internal bearer auth (Supabase protects `SUPABASE_` prefix). Functions deployed with `--no-verify-jwt` — gateway JWT off, internal bearer handles auth. All 6 methodology searches verified with authenticated calls.
 
 ## Useful Hermes Requests
 

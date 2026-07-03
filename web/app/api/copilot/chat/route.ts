@@ -1,12 +1,63 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
-import Anthropic from '@anthropic-ai/sdk'
+import { createAdminClient } from '@/lib/supabase/admin'
+import OpenAI from 'openai'
+
+export const dynamic = 'force-dynamic'
+
 import sandlerIntents from '@/lib/sales-copilot-intents.json'
 import challengerIntents from '@/lib/methodologies/challenger-intents.json'
 import gapIntents from '@/lib/methodologies/gap-intents.json'
 import meddicIntents from '@/lib/methodologies/meddic-intents.json'
 import meddpiccIntents from '@/lib/methodologies/meddpicc-intents.json'
 import spinIntents from '@/lib/methodologies/spin-intents.json'
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY || '',
+})
+
+// ─── RAG Search (local, for copilot context injection) ───
+async function ragSearchLocally(
+  query: string,
+  methodology: string,
+  matchCount = 5,
+): Promise<string> {
+  if (!process.env.OPENAI_API_KEY) return ''
+
+  try {
+    const supabase = createAdminClient()
+
+    // Generate embedding
+    const embRes = await openai.embeddings.create({
+      model: 'text-embedding-3-small',
+      input: query,
+    })
+    const embedding = embRes.data[0].embedding
+
+    // Search knowledge base
+    const { data, error } = await supabase.rpc('search_sandler_content', {
+      query_embedding: `[${embedding.join(',')}]`,
+      match_threshold: 0.3,
+      match_count: matchCount,
+      filter_content_types: ['best_practice', 'process', 'pitfall', 'script'],
+      filter_methodology: methodology,
+    })
+
+    if (error || !data?.length) return ''
+
+    return data
+      .map((r: any, i: number) => {
+        const label = r.content_type === 'pitfall' ? '⚠️ WATCH OUT' :
+                      r.content_type === 'script' ? '📋 SCRIPT' :
+                      r.content_type === 'process' ? '📋 PROCESS' : '📖 KNOWLEDGE'
+        return `[${label}] ${r.chunk_title}\n${r.chunk_text}`
+      })
+      .join('\n\n')
+  } catch (e) {
+    console.warn('Copilot RAG search failed, continuing without:', e)
+    return ''
+  }
+}
 
 interface CopilotIntent {
   name: string
@@ -25,8 +76,9 @@ interface MethodologyConfig {
   intents: CopilotIntent[]
 }
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
+const deepseek = new OpenAI({
+  apiKey: process.env.DEEPSEEK_API_KEY || 'sk-placeholder',
+  baseURL: 'https://api.deepseek.com/v1',
 })
 
 const methodologyConfigs: Record<string, MethodologyConfig> = {
@@ -34,9 +86,7 @@ const methodologyConfigs: Record<string, MethodologyConfig> = {
     label: 'Sandler',
     classifierName: 'Sandler sales coaching bot',
     intents: sandlerIntents as CopilotIntent[],
-    systemPrompt: `You are a Sandler-certified sales coach helping a rep prepare for or navigate a live sales conversation.
-
-Coach from Sandler principles: equal business stature, upfront contracts, pain discovery, budget and decision clarity, negative reversals, and no free consulting. Be direct, practical, and willing to help the rep disqualify bad-fit opportunities.`,
+    systemPrompt: `You are a Sandler-trained sales coach inside One Click Coaching, helping a rep mid-call or between calls. Coach from the full Sandler Selling System: equal business stature, up-front contracts, pain before product (Pain Funnel), budget and decision clarity before presentation, negative reversals delivered softly and curiously (never smug), and a genuine willingness to disqualify bad-fit opportunities. Be calm, direct, and practical. Your job is to change what the rep does in the next 30 seconds — not deliver theory. Never give closing scripts when the Pain compartment is still open.`,
     helpMessage: `**I'm your Sandler sales coach.**
 
 I can help you execute Sandler methodology before or during calls. Try asking:
@@ -58,9 +108,7 @@ Try asking:
     label: 'Challenger',
     classifierName: 'Challenger sales coaching bot',
     intents: challengerIntents as CopilotIntent[],
-    systemPrompt: `You are a Challenger Sales coach for B2B sales reps.
-
-Coach from Challenger principles: teach with commercial insight, reframe the customer's assumptions, tailor the message to each stakeholder, and take constructive control of the buying process. Push the rep to create value through a sharper point of view, not by asking generic discovery questions.`,
+    systemPrompt: `You are a Challenger Sales coach inside One Click Coaching, helping a rep mid-call or between calls. Coach from the full Challenger model: Teach for differentiation (bring insight that reframes their business), Tailor for resonance (translate to each stakeholder's value drivers), and Take Control (be assertive about money, process, and next steps — tolerate the tension that creates). Push the rep to lead with insight, not discovery. Reject insights that don't lead uniquely back to the rep's solution. Insist on constructive tension — if the customer is comfortable, the status quo wins. The biggest competitor is no-decision.`,
     helpMessage: `**I'm your Challenger sales coach.**
 
 I can help you teach, tailor, and take control. Try asking:
@@ -127,25 +175,25 @@ Try asking:
 • "Help" to see available topics`,
   },
   meddic: {
-    label: 'MEDDIC',
-    classifierName: 'MEDDIC sales coaching bot',
+    label: 'MEDDPICC',
+    classifierName: 'MEDDPICC sales coaching bot',
     intents: meddicIntents as CopilotIntent[],
-    systemPrompt: `You are a MEDDIC/MEDDPICC coach for enterprise B2B sales reps.
+    systemPrompt: `You are a MEDDPICC coach for enterprise B2B sales reps.
 
-Coach from deal qualification principles: Metrics, Economic Buyer, Decision Criteria, Decision Process, Identify Pain, and Champion. Where useful, include Paper Process and Competition. Be rigorous. If an element is weak, call it a forecast risk and give the next concrete action.`,
-    helpMessage: `**I'm your MEDDIC deal coach.**
+Coach from deal qualification principles: Metrics, Economic Buyer, Decision Criteria, Decision Process, Identify Pain, Champion, Competition, and Paper Process. Be rigorous. If an element is weak, call it a forecast risk and give the next concrete action.`,
+    helpMessage: `**I'm your MEDDPICC deal coach.**
 
 I can help you qualify the deal and find risk. Try asking:
 
-• "Run a MEDDIC audit"
+• "Run a MEDDPICC audit"
 • "How do I get to the economic buyer?"
 • "Is my champion strong enough?"
 • "What metrics do I need?"
 • "Help me clean up this forecast"`,
-    fallbackMessage: `I'm not sure how to help with that specific MEDDIC question.
+    fallbackMessage: `I'm not sure how to help with that specific MEDDPICC question.
 
 Try asking:
-• "Run a MEDDIC audit"
+• "Run a MEDDPICC audit"
 • "Is my champion strong enough?"
 • "How do I get to the economic buyer?"
 • "Help" to see available topics`,
@@ -177,8 +225,11 @@ Try asking:
 }
 
 function getMethodologyConfig(methodology: string | null | undefined): MethodologyConfig {
-  const normalized = methodology?.trim().toLowerCase() || 'sandler'
-  return methodologyConfigs[normalized] || methodologyConfigs.sandler
+  const normalized = methodology?.trim().toLowerCase()
+  if (!normalized || !methodologyConfigs[normalized]) {
+    return methodologyConfigs.challenger
+  }
+  return methodologyConfigs[normalized]
 }
 
 async function matchIntent(question: string, config: MethodologyConfig) {
@@ -198,17 +249,14 @@ Return ONLY the intent name, nothing else.
 If none match well, return "unknown".`
 
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const completion = await deepseek.chat.completions.create({
+      model: 'deepseek-chat',
       max_tokens: 50,
       messages: [{ role: 'user', content: prompt }],
     })
 
-    const content = message.content[0]
-    if (content.type !== 'text') return null
-
-    const intentName = content.text.trim()
-    if (intentName === 'unknown') return null
+    const intentName = completion.choices[0].message.content?.trim()
+    if (!intentName || intentName === 'unknown') return null
 
     return config.intents.find((intent) => intent.name === intentName) || null
   } catch (error) {
@@ -217,8 +265,12 @@ If none match well, return "unknown".`
   }
 }
 
-async function generateResponse(intent: CopilotIntent, question: string, config: MethodologyConfig) {
-  const fullPrompt = `${config.systemPrompt}
+async function generateResponse(intent: CopilotIntent, question: string, config: MethodologyConfig, ragContext = '') {
+  const ragSection = ragContext
+    ? `\n\nCOACHING KNOWLEDGE from your knowledge base:\n${ragContext}\n\nUse this knowledge to inform your response. Reference specific patterns, scripts, or pitfalls that apply.`
+    : ''
+
+  const fullPrompt = `${config.systemPrompt}${ragSection}
 
 Intent: ${intent.name}
 Stage: ${intent.stage}
@@ -234,16 +286,15 @@ Keep it concise: 2-3 short paragraphs max. The rep may be preparing for a call o
 Use clear formatting with bullets where useful.`
 
   try {
-    const message = await anthropic.messages.create({
-      model: 'claude-sonnet-4-20250514',
+    const completion = await deepseek.chat.completions.create({
+      model: 'deepseek-chat',
       max_tokens: 600,
       messages: [{ role: 'user', content: fullPrompt }],
     })
 
-    const content = message.content[0]
-    if (content.type !== 'text') throw new Error('Unexpected response type')
-
-    return content.text
+    const text = completion.choices[0].message.content
+    if (!text) throw new Error('Empty response')
+    return text
   } catch (error) {
     console.error('Response generation error:', error)
     throw error
@@ -332,7 +383,11 @@ export async function POST(request: Request) {
       })
     }
 
-    const response = await generateResponse(intent, question, config)
+    // Query RAG for methodology-specific coaching knowledge
+    const methodology = account?.methodology || 'challenger'
+    const ragContext = await ragSearchLocally(question, methodology)
+
+    const response = await generateResponse(intent, question, config, ragContext)
 
     const { data: interaction } = await supabase
       .from('Copilot_Interactions')

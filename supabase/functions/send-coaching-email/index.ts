@@ -292,6 +292,7 @@ serve(async (req) => {
             source_coaching_message_id: body.coaching_message_id,
             embedding,
             is_active: true,
+            methodology: methodology || "sandler",
           });
         } else {
           console.warn("Skipping RAG insert — no embedding generated");

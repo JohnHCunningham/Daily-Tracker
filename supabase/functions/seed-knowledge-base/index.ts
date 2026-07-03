@@ -1,17 +1,20 @@
 // ============================================
 // SEED KNOWLEDGE BASE EDGE FUNCTION
-// One-time function to populate Sandler_Knowledge_Base with methodology content
-// Invoke: supabase functions invoke seed-knowledge-base
+// Seeds the knowledge base with methodology-specific content.
+// Supports: sandler, challenger, spin, gap, meddic, meddpicc
+// Invoke with {"methodology": "challenger"} or {"methodology": "all"}
 // ============================================
 
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { generateEmbedding } from "../_shared/rag-utils.ts";
+import { buildMethodologyChunks, MethodologyChunk } from "../_shared/methodology-seed-data.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
-const INTERNAL_BEARER = `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`;
+const INTERNAL_API_KEY = Deno.env.get("INTERNAL_API_KEY") || SUPABASE_SERVICE_ROLE_KEY;
+const INTERNAL_BEARER = `Bearer ${INTERNAL_API_KEY}`;
 
 // ============================================
 // SANDLER METHODOLOGY DATA
@@ -718,129 +721,122 @@ serve(async (req) => {
   try {
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-    // Check if already seeded
-    const { count } = await supabase
-      .from("Sandler_Knowledge_Base")
-      .select("*", { count: "exact", head: true });
-
-    if (count && count > 0) {
-      return new Response(
-        JSON.stringify({
-          message: `Knowledge base already has ${count} entries. Pass {"force": true} to re-seed.`,
-          existing_count: count,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
-
-    // Check for force re-seed
+    // Parse request for methodology + force
+    let methodology = "sandler";
     let force = false;
-  try {
-    if (req.headers.get("Authorization") !== INTERNAL_BEARER) {
-      return new Response("Unauthorized", { status: 401 });
-    }
-
-    const body = await req.json();
+    try {
+      if (req.headers.get("Authorization") !== INTERNAL_BEARER) {
+        return new Response("Unauthorized", { status: 401 });
+      }
+      const body = await req.json();
+      methodology = body?.methodology || "sandler";
       force = body?.force === true;
     } catch {
-      // No body or invalid JSON is fine
+      // No body or invalid JSON — default to sandler
     }
 
-    if (count && count > 0 && !force) {
-      return new Response(
-        JSON.stringify({
-          message: `Knowledge base already has ${count} entries. Pass {"force": true} to re-seed.`,
-          existing_count: count,
-        }),
-        {
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        }
-      );
-    }
+    const targetMethodologies = methodology === "all"
+      ? ["sandler", "challenger", "spin", "gap", "meddpicc"]
+      : [methodology];
 
-    // If force, clear existing entries first
-    if (force && count && count > 0) {
-      await supabase
+    let allResults: { methodology: string; total: number; success: number; errors: number }[] = [];
+
+    for (const meth of targetMethodologies) {
+      // Check if this specific methodology is already seeded
+      const { count: methCount } = await supabase
         .from("Sandler_Knowledge_Base")
-        .delete()
-        .neq("id", "00000000-0000-0000-0000-000000000000"); // delete all
-    }
+        .select("*", { count: "exact", head: true })
+        .eq("methodology", meth);
 
-    // Build all chunks
-    const componentChunks = chunkComponents();
-    const allChunks: Chunk[] = [
-      ...componentChunks,
-      ...OBJECTION_CHUNKS,
-      ...BEST_PRACTICE_CHUNKS,
-    ];
-
-    const results: { title: string; status: string; error?: string }[] = [];
-    let successCount = 0;
-    let errorCount = 0;
-
-    for (const chunk of allChunks) {
-      try {
-        // Generate embedding
-        const embeddingResult = await generateEmbedding(
-          chunk.chunk_text,
-          supabase,
-          OPENAI_API_KEY
-        );
-
-        // Insert into knowledge base
-        const { error } = await supabase
-          .from("Sandler_Knowledge_Base")
-          .insert({
-            content_type: chunk.content_type,
-            component_name: chunk.component_name,
-            chunk_title: chunk.chunk_title,
-            chunk_text: chunk.chunk_text,
-            situation_tags: chunk.situation_tags,
-            weakness_tags: chunk.weakness_tags,
-            embedding: embeddingResult.embedding,
-            source_file: chunk.source_file,
-            chunk_index: chunk.chunk_index,
-            is_active: true,
-          });
-
-        if (error) throw error;
-
-        results.push({ title: chunk.chunk_title, status: "success" });
-        successCount++;
-      } catch (err) {
-        results.push({
-          title: chunk.chunk_title,
-          status: "error",
-          error: (err as Error).message,
+      if (methCount && methCount > 0 && !force) {
+        allResults.push({
+          methodology: meth,
+          total: methCount,
+          success: 0,
+          errors: 0,
         });
-        errorCount++;
+        continue; // Skip — already seeded
       }
 
-      // Rate limit: 100ms between chunks
-      await new Promise((r) => setTimeout(r, 100));
+      // If force, clear existing entries for this methodology
+      if (force && methCount && methCount > 0) {
+          await supabase
+            .from("Sandler_Knowledge_Base")
+            .delete()
+            .eq("methodology", meth);
+      }
+
+      // Build chunks — use shared data for non-Sandler, existing sandler builder for sandler
+      let allChunks: MethodologyChunk[];
+      if (meth === "sandler") {
+        const sandlerChunks = chunkComponents();
+        const sandlerAll: MethodologyChunk[] = [
+          ...sandlerChunks.map((c: any) => ({ ...c, methodology: "sandler" })),
+          ...OBJECTION_CHUNKS.map((c: any) => ({ ...c, methodology: "sandler" })),
+          ...BEST_PRACTICE_CHUNKS.map((c: any) => ({ ...c, methodology: "sandler" })),
+        ];
+        allChunks = sandlerAll;
+      } else {
+        allChunks = buildMethodologyChunks(meth);
+      }
+
+      let successCount = 0;
+      let errorCount = 0;
+
+      for (const chunk of allChunks) {
+        try {
+          const embeddingResult = await generateEmbedding(
+            chunk.chunk_text,
+            supabase,
+            OPENAI_API_KEY
+          );
+
+          const { error } = await supabase
+            .from("Sandler_Knowledge_Base")
+            .insert({
+              content_type: chunk.content_type,
+              component_name: chunk.component_name,
+              chunk_title: chunk.chunk_title,
+              chunk_text: chunk.chunk_text,
+              situation_tags: chunk.situation_tags,
+              weakness_tags: chunk.weakness_tags,
+              embedding: embeddingResult.embedding,
+              source_file: chunk.source_file,
+              chunk_index: chunk.chunk_index,
+              is_active: true,
+              methodology: chunk.methodology || meth,
+            });
+
+          if (error) throw error;
+          successCount++;
+        } catch (err) {
+          errorCount++;
+        }
+
+        // Rate limit
+        await new Promise((r) => setTimeout(r, 100));
+      }
+
+      allResults.push({
+        methodology: meth,
+        total: allChunks.length,
+        success: successCount,
+        errors: errorCount,
+      });
     }
 
     return new Response(
       JSON.stringify({
         message: "Seeding complete",
-        total: allChunks.length,
-        success: successCount,
-        errors: errorCount,
-        results,
+        methodologies: allResults,
       }),
-      {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
+
   } catch (error) {
     return new Response(
       JSON.stringify({ error: (error as Error).message }),
-      {
-        status: 500,
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      }
+      { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
 });

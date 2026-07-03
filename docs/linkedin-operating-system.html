@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>LinkedIn Operating System — OCC</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
+    background: #F4EFE8;
+    color: #2A221C;
+    padding: 40px 24px;
+    line-height: 1.5;
+  }
+  
+  .container { max-width: 1100px; margin: 0 auto; }
+  
+  /* Header */
+  .header {
+    text-align: center;
+    margin-bottom: 48px;
+    padding: 40px 24px;
+    background: linear-gradient(135deg, #1A1511 0%, #2A221C 100%);
+    border-radius: 16px;
+    color: #F4EFE8;
+  }
+  .header h1 { font-size: 28px; font-weight: 700; letter-spacing: -0.5px; margin-bottom: 6px; }
+  .header .sub { color: #C9A687; font-size: 15px; }
+  
+  /* Flow Diagram */
+  .flow-row {
+    display: flex;
+    gap: 12px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 48px;
+  }
+  .flow-node {
+    padding: 12px 20px;
+    border-radius: 10px;
+    font-size: 13px;
+    font-weight: 600;
+    text-align: center;
+    min-width: 100px;
+  }
+  .flow-node.outbound { background: #B5583E; color: #fff; }
+  .flow-node.accept { background: #2A221C; color: #F4EFE8; }
+  .flow-node.thankyou { background: #C9A687; color: #1A1511; }
+  .flow-node.content { background: #6E6358; color: #fff; }
+  .flow-node.comment { background: #8F847A; color: #fff; }
+  .flow-node.call { background: #1A1511; color: #F4EFE8; border: 2px solid #B5583E; }
+  .flow-arrow {
+    display: flex; align-items: center;
+    color: #C9A687; font-size: 20px; font-weight: 300;
+  }
+  
+  /* Sections */
+  .sections { display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 16px; }
+  
+  .card {
+    background: #fff;
+    border: 1px solid #C9A687;
+    border-radius: 12px;
+    padding: 24px;
+    transition: transform 0.15s, box-shadow 0.15s;
+  }
+  .card:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(26,21,17,0.08); }
+  
+  .card-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px; padding-bottom: 12px;
+    border-bottom: 1px solid #F4EFE8;
+  }
+  .card-icon {
+    width: 36px; height: 36px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .card-icon.red { background: #B5583E; color: #fff; }
+  .card-icon.dark { background: #2A221C; color: #F4EFE8; }
+  .card-icon.clay { background: #C9A687; color: #1A1511; }
+  .card-icon.stone { background: #6E6358; color: #fff; }
+  .card-title { font-size: 15px; font-weight: 700; color: #1A1511; }
+  
+  .card-body { font-size: 13px; color: #6E6358; }
+  .card-body p { margin-bottom: 10px; }
+  
+  /* Mini table inside cards */
+  .mini-table { width: 100%; font-size: 12px; border-collapse: collapse; margin-top: 10px; }
+  .mini-table th {
+    text-align: left; padding: 6px 8px;
+    background: #F4EFE8; color: #8F847A; font-weight: 600;
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.5px;
+  }
+  .mini-table td { padding: 6px 8px; border-bottom: 1px solid #F4EFE8; color: #6E6358; }
+  
+  /* Highlight box */
+  .highlight {
+    background: #F4EFE8; border-left: 3px solid #B5583E;
+    padding: 12px 16px; border-radius: 0 8px 8px 0;
+    margin-top: 12px; font-size: 12px; color: #6E6358;
+  }
+  .highlight strong { color: #B5583E; }
+  
+  /* Phases */
+  .phase-badge {
+    display: inline-block; padding: 3px 10px; border-radius: 20px;
+    font-size: 11px; font-weight: 600; margin-bottom: 10px;
+  }
+  .phase-badge.p1 { background: #B5583E; color: #fff; }
+  .phase-badge.p2 { background: #C9A687; color: #1A1511; }
+  .phase-badge.p3 { background: #6E6358; color: #fff; }
+  .phase-badge.p4 { background: #2A221C; color: #F4EFE8; }
+  .phase-badge.p5 { background: #1A1511; color: #F4EFE8; border: 1px solid #B5583E; }
+  
+  /* Footer */
+  .footer {
+    text-align: center; margin-top: 48px; padding: 24px;
+    color: #8F847A; font-size: 12px;
+  }
+  
+  /* Responsive */
+  @media (max-width: 768px) {
+    .flow-row { flex-direction: column; align-items: center; }
+    .flow-arrow { transform: rotate(90deg); }
+    .sections { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>LinkedIn Operating System</h1>
+    <div class="sub">One Click Coaching — Full Lifecycle from Outbound to Discovery Call</div>
+  </div>
+
+  <!-- FLOW DIAGRAM -->
+  <div class="flow-row">
+    <div class="flow-node outbound">Connection<br>Requests</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node accept">Acceptance</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node thankyou">Thank-You<br>Note</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node content">Content<br>Feed</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node comment">Comment<br>Exchange</div>
+    <div class="flow-arrow">→</div>
+    <div class="flow-node call">Discovery<br>Call</div>
+  </div>
+
+  <!-- CARD GRID -->
+  <div class="sections">
+
+    <!-- 1. Connection Requests -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon red">📤</div>
+        <div class="card-title">1. Connection Requests</div>
+      </div>
+      <div class="card-body">
+        <p><strong>Source:</strong> Sales Navigator — VP Sales, Sales Managers, Enablement, CROs at 5–50 rep companies</p>
+        <p><strong>Format:</strong> 300 chars max, no subject line, one warm sentence</p>
+        <p><strong>Pipeline:</strong> CSV → score → filter → dedupe → draft → HTML form</p>
+        <p><strong>Target:</strong> 25–40 per day</p>
+      </div>
+    </div>
+
+    <!-- 2. Lag Times -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon dark">⏱️</div>
+        <div class="card-title">2. Lag Times</div>
+      </div>
+      <div class="card-body">
+        <table class="mini-table">
+          <tr><th>Action</th><th>Wait</th></tr>
+          <tr><td>Profile view → request</td><td>3 days</td></tr>
+          <tr><td>Acceptance → thank-you</td><td>Within 24h</td></tr>
+          <tr><td>Thank-you → second DM</td><td>NEVER</td></tr>
+          <tr><td>Thank-you → comment</td><td>3+ days</td></tr>
+          <tr><td>2× comments → DM</td><td>2+ weeks</td></tr>
+          <tr><td>DM → call mention</td><td>2–3 exchanges</td></tr>
+        </table>
+        <div class="highlight">
+          <strong>Red flag:</strong> They liked your comment but didn't reply. You moved too fast.
+        </div>
+      </div>
+    </div>
+
+    <!-- 3. Profile Views -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon clay">👁️</div>
+        <div class="card-title">3. Profile Views</div>
+      </div>
+      <div class="card-body">
+        <p>Not all views are equal. The source tells you intent.</p>
+        <table class="mini-table">
+          <tr><th>Source</th><th>Priority</th></tr>
+          <tr><td>Clicked your post</td><td>HIGH</td></tr>
+          <tr><td>Comment on someone's post</td><td>HIGH</td></tr>
+          <tr><td>Sales Nav search</td><td>MEDIUM</td></tr>
+          <tr><td>Mutual connection</td><td>LOW</td></tr>
+        </table>
+        <div class="highlight">
+          <strong>CRITICAL:</strong> Process AFTER acceptances. Cross-ref before sending. Never connect-note someone who already accepted.
+        </div>
+      </div>
+    </div>
+
+    <!-- 4. Relationship Development -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon stone">🌱</div>
+        <div class="card-title">4. Relationship Phases</div>
+      </div>
+      <div class="card-body">
+        <p><span class="phase-badge p1">Wk 1</span> <strong>Handshake</strong> — thank-you only. Let them see your name.</p>
+        <p><span class="phase-badge p2">Wk 1–4</span> <strong>Feed Presence</strong> — content does the work. Pattern recognition.</p>
+        <p><span class="phase-badge p3">Ongoing</span> <strong>Comment Exchange</strong> — 2–3 thoughtful exchanges. Build shared thinking.</p>
+        <p><span class="phase-badge p4">Wk 4+</span> <strong>DM Re-engage</strong> — only after real exchange. "Loved your take on X."</p>
+        <p><span class="phase-badge p5">Signal</span> <strong>The Call</strong> — they ask what you do OR engage 3+ posts. Then: "Happy to compare notes."</p>
+      </div>
+    </div>
+
+    <!-- 5. Comment Protocol -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon red">💬</div>
+        <div class="card-title">5. Comment Protocol</div>
+      </div>
+      <div class="card-body">
+        <p><strong>3-part format:</strong></p>
+        <p>① Acknowledge with specificity — show you read it</p>
+        <p>② Add one layer most people missed</p>
+        <p>③ End with open-ended question</p>
+        <p style="margin-top:10px;"><strong>Never:</strong> mention OCC, pitch, or pivot to what you do.</p>
+        <p><strong>Max:</strong> 2 comments per person per session.</p>
+        <div class="highlight">
+          <strong>Non-connections:</strong> Your comment IS the handshake. Often converts better than a cold request.
+        </div>
+      </div>
+    </div>
+
+    <!-- 6. Content Engine -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon dark">📅</div>
+        <div class="card-title">6. Content Engine</div>
+      </div>
+      <div class="card-body">
+        <table class="mini-table">
+          <tr><th>Day</th><th>Action</th></tr>
+          <tr><td>Tue AM</td><td>LinkedIn post + Sandler group</td></tr>
+          <tr><td>Wed noon</td><td>LinkedIn post + Challenger group</td></tr>
+          <tr><td>Thu PM</td><td>LinkedIn post + Sales Leaders group</td></tr>
+          <tr><td>Sat</td><td>Carousel + blog + catch-up</td></tr>
+        </table>
+        <p style="margin-top:8px;"><strong>Queue caps:</strong> 6 LinkedIn · 4 blog · 2 group</p>
+        <p><strong>New:</strong> 1 carousel/week replaces 1 text post</p>
+      </div>
+    </div>
+
+    <!-- 7. InMail -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon clay">✉️</div>
+        <div class="card-title">7. InMail</div>
+      </div>
+      <div class="card-body">
+        <p><strong>Status:</strong> Paused (0 credits)</p>
+        <p><strong>Pipeline:</strong> SCAN → SCORE → FILTER → DEDUPE → DRAFT → BUILD → REPORT</p>
+        <p>Reserved for high-value prospects only. Subject + body. Full length.</p>
+      </div>
+    </div>
+
+    <!-- 8. Tracking -->
+    <div class="card">
+      <div class="card-header">
+        <div class="card-icon stone">📊</div>
+        <div class="card-title">8. Tracking & Integrity</div>
+      </div>
+      <div class="card-body">
+        <p><strong>LEDGER.md</strong> — bookkeeper standard. Two numbers from Sales Nav each morning. Everything else calculated.</p>
+        <p><strong>160-pt System</strong> — Revenue Engine (130) + Builder (50) + Strategic (30). Verified against LEDGER.</p>
+        <div class="highlight">
+          <strong>Daily sequence:</strong> ① Sales Nav numbers ② Acceptances ③ Thank-yous ④ Profile viewers ⑤ New requests ⑥ Close LEDGER
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="footer">
+    Full SOP: oneclickcoaching/docs/linkedin-daily-sop.md &nbsp;|&nbsp; Strategy map: oneclickcoaching/docs/linkedin-operating-map.md
+  </div>
+
+</div>
+
+</body>
+</html>

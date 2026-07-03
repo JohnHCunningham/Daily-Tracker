@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import Link from 'next/link'
-import { HiPhone, HiPlay, HiClock, HiUser } from 'react-icons/hi'
+import { HiPhone, HiPlay, HiClock, HiUser, HiRefresh } from 'react-icons/hi'
 
 interface Call {
   id: string
@@ -21,7 +21,30 @@ interface Call {
 export default function CallsPage() {
   const [calls, setCalls] = useState<Call[]>([])
   const [loading, setLoading] = useState(true)
+  const [syncing, setSyncing] = useState(false)
+  const [syncMsg, setSyncMsg] = useState<string | null>(null)
+  const [userRole, setUserRole] = useState<string>('')
   const supabase = createClient()
+
+  const handleSyncNow = async () => {
+    setSyncing(true)
+    setSyncMsg(null)
+    try {
+      // API route to sync all connected integrations
+      const res = await fetch('/api/sync-now', { method: 'POST' })
+      const data = await res.json()
+      if (data.success) {
+        setSyncMsg(`Synced ${data.results?.calls || 0} calls. Refresh to see them.`)
+        setTimeout(() => window.location.reload(), 2000)
+      } else {
+        setSyncMsg('Sync failed. Check integrations are connected.')
+      }
+    } catch {
+      setSyncMsg('Sync failed.')
+    } finally {
+      setSyncing(false)
+    }
+  }
 
   const loadCalls = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -37,6 +60,8 @@ export default function CallsPage() {
       setLoading(false)
       return
     }
+
+    setUserRole(userData.role)
 
     let query = supabase
       .from('Synced_Conversations')
@@ -73,11 +98,24 @@ export default function CallsPage() {
 
   return (
     <div>
-      <div className="mb-8 pb-4 border-b-2 border-terracotta/10">
-        <h1 className="text-3xl font-bold text-espresso mb-2">Calls</h1>
-        <p className="text-stone-light">
-          {calls.length} synced conversations
-        </p>
+      <div className="mb-8 pb-4 border-b-2 border-terracotta/10 flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-espresso mb-2">Calls</h1>
+          <p className="text-stone-light">
+            {calls.length} synced conversations
+          </p>
+        </div>
+        <div className="flex items-center gap-3">
+          {syncMsg && <p className="text-sm text-terracotta">{syncMsg}</p>}
+          <button
+            onClick={handleSyncNow}
+            disabled={syncing}
+            className="flex items-center gap-2 bg-terracotta/10 text-terracotta border border-terracotta/20 px-4 py-2 rounded-lg hover:bg-terracotta/20 transition-all text-sm font-medium disabled:opacity-50"
+          >
+            <HiRefresh className={syncing ? 'animate-spin' : ''} />
+            {syncing ? 'Syncing...' : 'Sync Now'}
+          </button>
+        </div>
       </div>
 
       {calls.length === 0 ? (
@@ -85,14 +123,18 @@ export default function CallsPage() {
           <HiPhone className="text-terracotta text-4xl mx-auto mb-4" />
           <h2 className="text-xl font-bold text-espresso mb-2">No calls yet</h2>
           <p className="text-stone-light text-sm mb-4">
-            Connect an integration to start syncing your sales calls.
+            {userRole === 'rep'
+              ? 'Your manager will set up the integration to start syncing calls.'
+              : 'Connect an integration to start syncing your sales calls.'}
           </p>
-          <Link
-            href="/integrations"
-            className="inline-block bg-terracotta text-white font-bold py-2.5 px-6 rounded-lg hover:bg-terracotta-bright transition-colors"
-          >
-            Set Up Integrations
-          </Link>
+          {userRole !== 'rep' && (
+            <Link
+              href="/integrations"
+              className="inline-block bg-terracotta text-white font-bold py-2.5 px-6 rounded-lg hover:bg-terracotta-bright transition-colors"
+            >
+              Set Up Integrations
+            </Link>
+          )}
         </div>
       ) : (
         <div className="space-y-3">

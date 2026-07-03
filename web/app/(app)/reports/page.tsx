@@ -16,16 +16,12 @@ import {
   HiClipboardCopy,
 } from 'react-icons/hi'
 
-const COMPONENT_LABELS: Record<string, string> = {
-  bondingRapport: 'Bonding & Rapport',
-  upfrontContract: 'Upfront Contract',
-  painFunnel: 'Pain Funnel',
-  budget: 'Budget',
-  decisionProcess: 'Decision Process',
-  fulfillment: 'Fulfillment',
-  postSell: 'Post-Sell',
-  negativeReverseSelling: 'Negative Reverse Selling',
-}
+// Component labels are now methodology-agnostic — see lib/methodology-config.ts
+// The legacy Sandler keys are mapped here for backward compatibility with
+// report data that still uses the old key format.
+import { getMethodologyComponentLabels } from '@/lib/methodology-config'
+
+const labels = getMethodologyComponentLabels('sandler')
 
 const REPORT_PERIODS = {
   weekly: { label: 'Weekly report', days: 7, compare: 'previous 7 days' },
@@ -289,7 +285,7 @@ export default function ReportsPage() {
                       </div>
                       {report.summary.strongComponents.map(([comp, score]) => (
                         <p key={comp} className="text-sm text-stone-light">
-                          {COMPONENT_LABELS[comp] || comp} — <span className="text-terracotta font-medium">{score}/10</span>
+                          {labels[comp] || comp} — <span className="text-terracotta font-medium">{score}/10</span>
                         </p>
                       ))}
                     </div>
@@ -302,7 +298,7 @@ export default function ReportsPage() {
                       </div>
                       {report.summary.weakComponents.map(([comp, score]) => (
                         <p key={comp} className="text-sm text-stone-light">
-                          {COMPONENT_LABELS[comp] || comp} — <span className="text-terracotta font-medium">{score}/10</span>
+                          {labels[comp] || comp} — <span className="text-terracotta font-medium">{score}/10</span>
                         </p>
                       ))}
                     </div>
@@ -319,7 +315,7 @@ export default function ReportsPage() {
                         <span className="text-sm font-bold text-teal">Biggest Improvement</span>
                       </div>
                       <p className="text-sm text-stone-light">
-                        {COMPONENT_LABELS[report.summary.bestImprovement.component] || report.summary.bestImprovement.component} is up{' '}
+                        {labels[report.summary.bestImprovement.component] || report.summary.bestImprovement.component} is up{' '}
                         <span className="font-medium text-teal">+{report.summary.bestImprovement.delta}</span> vs the previous period.
                       </p>
                     </div>
@@ -331,7 +327,7 @@ export default function ReportsPage() {
                         <span className="text-sm font-bold text-pink">Biggest Drop</span>
                       </div>
                       <p className="text-sm text-stone-light">
-                        {COMPONENT_LABELS[report.summary.biggestDrop.component] || report.summary.biggestDrop.component} is down{' '}
+                        {labels[report.summary.biggestDrop.component] || report.summary.biggestDrop.component} is down{' '}
                         <span className="font-medium text-pink">{report.summary.biggestDrop.delta}</span> vs the previous period.
                       </p>
                     </div>
@@ -385,7 +381,7 @@ export default function ReportsPage() {
               <h2 className="text-lg font-bold text-espresso mb-1 print:text-black">Methodology Scores</h2>
               <p className="text-xs text-stone-light mb-4">Team averages across all analysed calls this period</p>
               <div className="grid md:grid-cols-2 gap-x-8 gap-y-4">
-                {Object.entries(COMPONENT_LABELS).map(([key, label]) => {
+                {Object.entries(labels).map(([key, label]) => {
                   const score = report.componentAverages[key]
                   if (score === undefined) return null
                   const prev = report.trends.firstHalf[key]
@@ -453,7 +449,7 @@ export default function ReportsPage() {
                           <td className="py-3 pr-4">
                             {rep.weakest && (
                               <span className="text-xs text-terracotta bg-pink/10 px-2 py-1 rounded-full">
-                                {COMPONENT_LABELS[rep.weakest] || rep.weakest}
+                                {labels[rep.weakest] || rep.weakest}
                               </span>
                             )}
                           </td>

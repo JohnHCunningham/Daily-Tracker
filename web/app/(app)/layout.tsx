@@ -1,11 +1,9 @@
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
-import Sidebar from './components/Sidebar'
-import TopBar from './components/TopBar'
+import AppShell from './components/AppShell'
 import BrandProvider from './components/BrandProvider'
 import SubscriptionBanner from './components/SubscriptionBanner'
 import BillingAccessGate from './components/BillingAccessGate'
-import CopilotChat from '@/components/CopilotChat'
 
 export default async function AppLayout({
   children,
@@ -26,7 +24,6 @@ export default async function AppLayout({
     .single()
 
   if (!userData) {
-    // Auto-repair: user signed up but account creation failed
     const { data: repairResult, error: repairError } = await supabase
       .rpc('ensure_user_has_account')
 
@@ -43,7 +40,6 @@ export default async function AppLayout({
     }
   }
 
-  // Get subscription status for banner
   let subscriptionStatus = 'incomplete'
   let trialEndsAt: string | null = null
   let billingGraceEndsAt: string | null = null
@@ -67,9 +63,7 @@ export default async function AppLayout({
   return (
     <BrandProvider>
       <div className="min-h-screen bg-gradient-to-br from-bone-light via-white to-bone flex">
-        <Sidebar userRole={userRole} />
-        <div className="flex-1 flex flex-col min-h-screen">
-          <TopBar user={user} userRole={userRole} />
+        <AppShell user={user} userRole={userRole}>
           <SubscriptionBanner
             status={subscriptionStatus}
             trialEndsAt={trialEndsAt}
@@ -85,11 +79,8 @@ export default async function AppLayout({
               {children}
             </BillingAccessGate>
           </main>
-        </div>
+        </AppShell>
       </div>
-
-      {/* Sandler Coaching Copilot - floating widget available on all pages */}
-      <CopilotChat />
     </BrandProvider>
   )
 }

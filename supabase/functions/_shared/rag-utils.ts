@@ -1,6 +1,7 @@
 // ============================================
-// RAG UTILITIES FOR SANDLER REVENUE FACTORY
+// RAG UTILITIES — Methodology-Agnostic
 // Shared utilities for embedding generation and semantic search
+// Supports: Sandler, Challenger, SPIN, Gap Selling, MEDDPICC
 // ============================================
 
 import { SupabaseClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -21,6 +22,7 @@ export interface RAGSearchResult {
   situation_tags: string[];
   weakness_tags: string[];
   similarity: number;
+  methodology: string;
 }
 
 export interface RAGSearchOptions {
@@ -31,6 +33,7 @@ export interface RAGSearchOptions {
   situationTags?: string[];
   matchThreshold?: number;
   matchCount?: number;
+  methodology?: string;  // NEW: scope search to a specific methodology
 }
 
 // ============================================
@@ -102,7 +105,7 @@ export async function generateEmbedding(
   // Cache the embedding
   await supabase.rpc("cache_embedding", {
     input_hash: textHash,
-    input_text: normalizedText.substring(0, 5000), // Limit stored text
+    input_text: normalizedText.substring(0, 5000),
     input_embedding: `[${embedding.join(",")}]`,
     input_model: OPENAI_EMBEDDING_MODEL,
   });
@@ -198,7 +201,8 @@ export async function generateEmbeddingsBatch(
 // ============================================
 
 /**
- * Perform semantic search over Sandler knowledge base
+ * Perform semantic search over the methodology knowledge base.
+ * Pass methodology to scope results to a specific sales discipline.
  */
 export async function ragSearch(
   supabase: SupabaseClient,
@@ -213,12 +217,13 @@ export async function ragSearch(
     situationTags = null,
     matchThreshold = 0.5,
     matchCount = 5,
+    methodology = null,
   } = options;
 
   // Generate embedding for query
   const { embedding } = await generateEmbedding(query, supabase, openaiApiKey);
 
-  // Search using pgvector
+  // Search using pgvector with methodology filter
   const { data, error } = await supabase.rpc("search_sandler_content", {
     query_embedding: `[${embedding.join(",")}]`,
     match_threshold: matchThreshold,
@@ -227,6 +232,7 @@ export async function ragSearch(
     filter_components: components,
     filter_weakness_tags: weaknessTags,
     filter_situation_tags: situationTags,
+    filter_methodology: methodology,
   });
 
   if (error) {
@@ -238,17 +244,19 @@ export async function ragSearch(
 }
 
 /**
- * Find scripts for specific weak areas
- * Quick lookup without embedding generation
+ * Find scripts for specific weak areas within a methodology.
+ * Quick lookup without embedding generation.
  */
 export async function findScriptsForWeakness(
   supabase: SupabaseClient,
   weakComponent: string,
-  limit: number = 3
-): Promise<{ chunk_title: string; chunk_text: string; situation_tags: string[] }[]> {
+  limit: number = 3,
+  methodology?: string
+): Promise<{ chunk_title: string; chunk_text: string; situation_tags: string[]; methodology: string }[]> {
   const { data, error } = await supabase.rpc("find_scripts_for_weakness", {
     weak_component: weakComponent,
     limit_count: limit,
+    filter_methodology: methodology || null,
   });
 
   if (error) {
@@ -283,18 +291,21 @@ export function buildRAGContext(results: RAGSearchResult[]): string {
 }
 
 /**
- * Build coaching context from weaknesses
- * Retrieves relevant scripts and examples for coaching
+ * Build coaching context from weaknesses within a specific methodology.
+ * Retrieves relevant scripts and examples for coaching.
  */
 export async function buildCoachingContext(
   supabase: SupabaseClient,
   openaiApiKey: string,
   weakAreas: string[],
-  transcript?: string
+  transcript?: string,
+  methodology?: string,
+  methodologyLabel?: string
 ): Promise<string> {
   const contexts: string[] = [];
+  const label = methodologyLabel || "Sales Methodology";
 
-  // Search for content related to weak areas
+  // Search for content related to weak areas within the methodology
   const searchQuery = `Coaching for sales rep weakness in: ${weakAreas.join(", ")}. ${
     transcript ? `Call context: ${transcript.substring(0, 500)}` : ""
   }`;
@@ -305,15 +316,16 @@ export async function buildCoachingContext(
     weaknessTags: weakAreas.map((a) => a.toLowerCase().replace(/\s+/g, "_")),
     matchCount: 5,
     matchThreshold: 0.4,
+    methodology,
   });
 
   if (results.length > 0) {
-    contexts.push("## Relevant Sandler Techniques\n" + buildRAGContext(results));
+    contexts.push(`## Relevant ${label} Techniques\n` + buildRAGContext(results));
   }
 
   // Also get direct script matches for each weak area
   for (const area of weakAreas.slice(0, 2)) {
-    const scripts = await findScriptsForWeakness(supabase, area, 2);
+    const scripts = await findScriptsForWeakness(supabase, area, 2, methodology);
     if (scripts.length > 0) {
       const scriptText = scripts
         .map((s) => `**${s.chunk_title}**\n${s.chunk_text}`)
@@ -326,28 +338,26 @@ export async function buildCoachingContext(
 }
 
 // ============================================
-// COMPONENT NAME MAPPING
+// METHODOLOGY HELPERS
 // ============================================
 
-export const COMPONENT_NAME_MAP: Record<string, string> = {
-  "Bonding & Rapport": "BONDING_RAPPORT",
-  "Upfront Contract": "UPFRONT_CONTRACT",
-  "Pain Funnel": "PAIN_FUNNEL",
-  "Budget Step": "BUDGET",
-  "Decision Step": "DECISION",
-  "Fulfillment": "FULFILLMENT",
-  "Post-Sell": "POST_SELL",
-  "No Free Consulting": "NO_FREE_CONSULTING",
+/** Map methodology IDs to display labels */
+export const METHODOLOGY_LABELS: Record<string, string> = {
+  sandler: "Sandler",
+  challenger: "Challenger",
+  spin: "SPIN Selling",
+  gap: "Gap Selling",
+  meddic: "MEDDPICC",
+  meddpicc: "MEDDPICC",
 };
 
-export const REVERSE_COMPONENT_MAP: Record<string, string> = Object.fromEntries(
-  Object.entries(COMPONENT_NAME_MAP).map(([k, v]) => [v, k])
-);
-
-export function normalizeComponentName(name: string): string {
-  return COMPONENT_NAME_MAP[name] || name.toUpperCase().replace(/\s+/g, "_");
+/** Normalize a methodology ID to its canonical form */
+export function normalizeMethodology(methodology: string | null | undefined): string {
+  const normalized = methodology?.trim().toLowerCase() || "sandler";
+  return METHODOLOGY_LABELS[normalized] ? normalized : "sandler";
 }
 
-export function displayComponentName(name: string): string {
-  return REVERSE_COMPONENT_MAP[name] || name.replace(/_/g, " ").replace(/\b\w/g, (l) => l.toUpperCase());
+/** Get display label for a methodology ID */
+export function getMethodologyLabel(methodology: string): string {
+  return METHODOLOGY_LABELS[methodology] || "Sales Methodology";
 }

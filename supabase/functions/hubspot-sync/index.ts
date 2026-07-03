@@ -207,7 +207,7 @@ async function resolveOwnerMapping(
     .select("occ_user_id, match_status, confidence")
     .eq("account_id", account_id)
     .eq("provider", "hubspot")
-    .eq("provider_user_id", ownerId)
+    .eq("provider_user_id", String(ownerId))
     .maybeSingle();
 
   let occUserId = existing?.occ_user_id || null;
@@ -231,12 +231,13 @@ async function resolveOwnerMapping(
     }
   } else if (occUserId) {
     // Fetch email for existing mapped user
-    const { data: userData } = await supabase
+    const { data: userData, error: userError } = await supabase
       .from("Users")
       .select("email")
       .eq("id", occUserId)
       .maybeSingle();
     
+    console.log(`[OWNER ${ownerId}] Fetching email for occUserId ${occUserId}:`, userData, userError);
     occUserEmail = userData?.email || null;
   }
 
@@ -255,7 +256,7 @@ async function resolveOwnerMapping(
     .upsert({
       account_id,
       provider: "hubspot",
-      provider_user_id: ownerId,
+      provider_user_id: String(ownerId),
       provider_email: providerEmail,
       provider_name: providerName,
       occ_user_id: occUserId,
@@ -337,30 +338,60 @@ async function syncActivities(
       metadata.body = activity.properties.hs_note_body;
     }
 
+    const repEmail = ownerMapping.occUserEmail || ownerMapping.providerEmail;
+    console.log(`[ACTIVITY ${activity.id}] Owner mapping:`, ownerMapping, `Using rep_email: ${repEmail}`);
+    
+    // Add debug info to metadata
+    const debugMetadata = {
+      ...metadata,
+      _debug_mapping: {
+        occUserId: ownerMapping.occUserId,
+        occUserEmail: ownerMapping.occUserEmail,
+        providerEmail: ownerMapping.providerEmail,
+        matchStatus: ownerMapping.matchStatus,
+        calculatedRepEmail: repEmail,
+      }
+    };
+    
     records.push({
       account_id: account_id,
       user_id: ownerMapping.occUserId,
       occ_user_id: ownerMapping.occUserId,
-      rep_email: ownerMapping.occUserEmail || ownerMapping.providerEmail,
+      rep_email: repEmail,
       activity_date: activity.properties.hs_timestamp?.split("T")[0] || new Date().toISOString().split("T")[0],
       activity_type: activityType,
       count: 1,
-      metadata,
+      metadata: debugMetadata,
       source_provider: "hubspot",
       source_id: activity.id,
       source_url: `https://app.hubspot.com/contacts/${activityType}s/${activity.id}`,
     });
   }
 
-  const { error } = await supabase
+  console.log(`[SYNC] Attempting to upsert ${records.length} ${activityType} records`);
+  
+  // Delete existing records for this activity type first (upsert with onConflict is unreliable)
+  const sourceIds = records.map(r => r.source_id);
+  await supabase
     .from("Synced_Activities")
-    .upsert(records, { onConflict: "account_id,source_provider,source_id" });
+    .delete()
+    .eq("account_id", account_id)
+    .eq("source_provider", "hubspot")
+    .eq("activity_type", activityType)
+    .in("source_id", sourceIds);
+  
+  const { data, error } = await supabase
+    .from("Synced_Activities")
+    .insert(records)
+    .select();
 
   if (error) {
-    console.error(`Error syncing ${activityType}:`, error);
+    console.error(`[SYNC ERROR] Failed to sync ${activityType}:`, JSON.stringify(error));
+    console.error(`[SYNC ERROR] Sample record:`, JSON.stringify(records[0]));
     return 0;
   }
 
+  console.log(`[SYNC SUCCESS] Upserted ${data?.length || 0} ${activityType} records`);
   return records.length;
 }
 

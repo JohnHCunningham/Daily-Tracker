@@ -30,7 +30,7 @@ const goalTypeLabels: Record<string, string> = {
   proposals: 'Proposals Sent',
   sales: 'Sales Closed',
   quota: 'Revenue Quota',
-  sandler_score: 'Sandler Score Target',
+  sandler_score: 'Methodology Score Target',
 }
 
 const goalTypeUnits: Record<string, string> = {

@@ -3,6 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { analyzeTranscript as analyzeSandlerTranscript, generateCoachingFromAnalysis as generateSandlerCoachingFromAnalysis } from "./sandler-methodology.ts";
 import {
   buildMethodologySystemPrompt,
+  buildRAGEnhancedSystemPrompt,
   componentNameByKey,
   fallbackAnalyzeTranscript,
   generateMethodologyCoachingFromAnalysis,
@@ -11,7 +12,8 @@ import {
 } from "./methodology-scoring.ts";
 import {
   ragSearch,
-  normalizeComponentName,
+  normalizeMethodology,
+  getMethodologyLabel,
 } from "../_shared/rag-utils.ts";
 import { getAuthorizedAccountContext } from "../_shared/auth.ts";
 
@@ -76,6 +78,7 @@ async function analyzeWithGPT4(
   lens: CoachingLens,
   escalationTier: number,
   methodologyConfig: MethodologyConfig,
+  ragContext = "",
 ): Promise<{
   scores: Record<string, { score: number; evidence: string; status: string }>;
   done_well: string[];
@@ -97,12 +100,21 @@ async function analyzeWithGPT4(
   const lensInstruction = `\n\nCOACHING STYLE FOR THIS SESSION:\n${LENS_INSTRUCTIONS[lens]}`;
   const escalationInstruction = `\n\nTONE CALIBRATION:\n${ESCALATION_INSTRUCTIONS[escalationTier]}`;
 
-  const systemPrompt = buildMethodologySystemPrompt(
-    methodologyConfig,
-    lensInstruction,
-    escalationInstruction,
-    priorContext,
-  );
+  // Use RAG-enhanced prompt when knowledge is available, fall back to static prompt
+  const systemPrompt = ragContext
+    ? buildRAGEnhancedSystemPrompt(
+        methodologyConfig,
+        lensInstruction,
+        escalationInstruction,
+        priorContext,
+        ragContext,
+      )
+    : buildMethodologySystemPrompt(
+        methodologyConfig,
+        lensInstruction,
+        escalationInstruction,
+        priorContext,
+      );
 
   const response = await fetch("https://api.openai.com/v1/chat/completions", {
     method: "POST",
@@ -362,9 +374,40 @@ serve(async (req) => {
     let coaching: string;
     let methodologyScores: Record<string, number> = {};
 
+    // ─── Pre-analysis RAG: fetch methodology-wide coaching knowledge ───
+    const methodologyId = normalizeMethodology(methodologyConfig.id);
+    const methodologyLabel = getMethodologyLabel(methodologyId);
+    let ragContext = "";
+
+    if (use_rag && OPENAI_API_KEY) {
+      try {
+        const preRagResults = await ragSearch(supabase, OPENAI_API_KEY, {
+          query: `Coaching knowledge best practices pitfalls process for ${methodologyLabel} sales methodology`,
+          contentTypes: ["best_practice", "process", "pitfall"],
+          matchCount: 8,
+          matchThreshold: 0.3,
+          methodology: methodologyId,
+        });
+
+        if (preRagResults.length > 0) {
+          ragContext = preRagResults
+            .map((r: any, i: number) => {
+              const typeLabel = r.content_type === "pitfall" ? "⚠️ PITFALL" :
+                                r.content_type === "process" ? "📋 PROCESS" :
+                                "📖 BEST PRACTICE";
+              return `[${typeLabel}] ${r.chunk_title}\n${r.chunk_text}`;
+            })
+            .join("\n\n");
+          console.log(`Pre-analysis RAG: ${preRagResults.length} chunks injected into prompt`);
+        }
+      } catch (ragErr) {
+        console.warn("Pre-analysis RAG failed, continuing with static prompt:", ragErr);
+      }
+    }
+
     if (OPENAI_API_KEY) {
       try {
-        gptAnalysis = await analyzeWithGPT4(transcript, prior.texts, nextLens, escalationTier, methodologyConfig);
+        gptAnalysis = await analyzeWithGPT4(transcript, prior.texts, nextLens, escalationTier, methodologyConfig, ragContext);
 
         // Build methodology_scores from GPT-4 output
         const componentNameMap = componentNameByKey(methodologyConfig);
@@ -472,7 +515,7 @@ serve(async (req) => {
         : generateMethodologyCoachingFromAnalysis(methodologyConfig, keywordAnalysis as any);
     }
 
-    // RAG enhancement for weak areas
+    // RAG enhancement for weak areas — methodology-agnostic
     let ragScripts: any[] = [];
     const weakAreas = Object.entries(methodologyScores)
       .filter(([_, score]) => score < 7)
@@ -480,27 +523,35 @@ serve(async (req) => {
       .slice(0, 3)
       .map(([name]) => name);
 
-    if (methodologyConfig.id === "sandler" && use_rag && OPENAI_API_KEY && weakAreas.length > 0) {
+    if (use_rag && OPENAI_API_KEY && weakAreas.length > 0) {
       try {
         const weakestComponent = weakAreas[0];
-        const scriptResults = await ragSearch(supabase, OPENAI_API_KEY, {
-          query: `Sales script for ${weakestComponent} improvement`,
-          contentTypes: ["script", "manager_approved"],
-          components: [normalizeComponentName(weakestComponent)],
-          matchCount: 3,
+        const ragResults = await ragSearch(supabase, OPENAI_API_KEY, {
+          query: `Coaching and practice for ${weakestComponent} improvement in ${methodologyLabel}`,
+          contentTypes: ["script", "manager_approved", "best_practice", "pitfall"],
+          components: [weakestComponent],
+          matchCount: 5,
           matchThreshold: 0.4,
+          methodology: methodologyId,
         });
 
-        ragScripts = scriptResults.map((r: any) => ({
+        const retrievedScripts = ragResults
+          .filter((r: any) => r.content_type === "script" || r.content_type === "best_practice" || r.content_type === "manager_approved");
+        const retrievedPitfalls = ragResults
+          .filter((r: any) => r.content_type === "pitfall");
+
+        ragScripts = [...retrievedScripts, ...retrievedPitfalls].map((r: any) => ({
           title: r.chunk_title,
           text: r.chunk_text,
+          content_type: r.content_type,
           situation: r.situation_tags,
         }));
 
         if (ragScripts.length > 0) {
-          coaching += `\n\n---\nRECOMMENDED SCRIPTS\n\n`;
-          ragScripts.forEach((script: any, i: number) => {
-            coaching += `${i + 1}. ${script.title}\n${script.text}\n\n`;
+          coaching += `\n\n---\nCOACHING RESOURCES (${methodologyLabel})\n\n`;
+          ragScripts.forEach((item: any, i: number) => {
+            const label = item.content_type === "pitfall" ? "⚠️ WATCH OUT" : "📋 PRACTICE";
+            coaching += `${i + 1}. ${label}: ${item.title}\n${item.text}\n\n`;
           });
         }
       } catch (ragError) {

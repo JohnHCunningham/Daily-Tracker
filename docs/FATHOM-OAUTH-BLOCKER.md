@@ -15,6 +15,7 @@
 7. No confirmation email received with management link
 
 **Support ticket sent:** 2026-05-20 to Fathom support asking how to access OAuth app management page
+**2026-05-25 update:** Cannot log into the free Fathom account where OAuth was registered (aiadvantagesolutions.ca). Request sent to Fathom support to transfer account to johncunningham@oneclickcoaching.com. Awaiting response.
 
 ## Registered OAuth App Details
 

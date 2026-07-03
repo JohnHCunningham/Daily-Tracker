@@ -20,7 +20,7 @@ export const stripe = typeof process.env.STRIPE_SECRET_KEY === 'string'
   ? new Stripe(process.env.STRIPE_SECRET_KEY, { typescript: true })
   : (null as unknown as Stripe)
 
-// Price IDs for per-rep pricing ($50/rep/month, $500/rep/year)
+// Price IDs for per-rep pricing ($85/rep/month, $850/rep/year)
 export const STRIPE_PRICES = {
   monthly: process.env.STRIPE_PRICE_MONTHLY,
   annual: process.env.STRIPE_PRICE_ANNUAL,
@@ -28,8 +28,8 @@ export const STRIPE_PRICES = {
 
 // Per-rep pricing
 export const PRICE_PER_REP = {
-  monthly: 50, // $50/rep/month
-  annual: 500, // $500/rep/year (2 months free)
+  monthly: 85, // $85/rep/month
+  annual: 850, // $850/rep/year (2 months free)
 } as const
 
 export type BillingCycle = 'monthly' | 'annual'

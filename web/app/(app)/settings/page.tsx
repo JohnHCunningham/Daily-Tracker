@@ -58,7 +58,7 @@ export default function SettingsPage() {
     unique_customer_profile: '',
     competitor_context: '',
     email_from_name: 'One Click Coaching',
-    methodology: 'sandler',
+    methodology: '',
   })
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
@@ -119,7 +119,7 @@ export default function SettingsPage() {
         unique_customer_profile: accountData.unique_customer_profile || '',
         competitor_context: accountData.competitor_context || '',
         email_from_name: accountData.email_from_name || 'One Click Coaching',
-        methodology: accountData.methodology || 'sandler',
+        methodology: accountData.methodology || '',
       })
     }
     setLoading(false)
@@ -849,8 +849,7 @@ export default function SettingsPage() {
           <div className="space-y-3">
             {[
               { id: 'sandler', name: 'Sandler Selling System', initial: 'S', description: 'Qualify early, control the process, focus on pain' },
-              { id: 'meddic', name: 'MEDDIC', initial: 'M', description: 'Metrics, Economic Buyer, Decision Criteria, Decision Process, Identify Pain, Champion' },
-              { id: 'meddpicc', name: 'MEDDPICC', initial: 'MP', description: 'MEDDIC plus Paper Process and Competition for enterprise deals' },
+              { id: 'meddpicc', name: 'MEDDPICC', initial: 'MP', description: 'Metrics, Economic Buyer, Decision Criteria, Decision Process, Identify Pain, Champion, Competition, Paper Process — the enterprise standard' },
               { id: 'challenger', name: 'Challenger Sale', initial: 'C', description: 'Teach, tailor, take control of the sale' },
               { id: 'spin', name: 'SPIN Selling', initial: 'SP', description: 'Situation, Problem, Implication, Need-Payoff questions' },
               { id: 'gap', name: 'Gap Selling', initial: 'G', description: 'Problem-centric selling focused on closing the gap' },

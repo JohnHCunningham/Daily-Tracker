@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { HiArrowLeft, HiUserCircle, HiChatAlt2, HiCheckCircle, HiAcademicCap, HiSparkles, HiTrash } from 'react-icons/hi'
 import dynamic from 'next/dynamic'
-import SandlerBreakdown from '../../components/SandlerBreakdown'
+import ScoreBreakdown from '../../components/ScoreBreakdown'
 
 const ScoreRadial = dynamic(() => import('../../components/ScoreRadial'), { ssr: false })
 const ScoreTrendChart = dynamic(() => import('../../components/ScoreTrendChart'), { ssr: false })
@@ -341,7 +341,7 @@ export default function MemberDetailPage({ params }: { params: { memberId: strin
         <div className="bg-white rounded-2xl border border-bone-dark shadow-sm p-6">
           <h2 className="text-xl font-bold text-espresso mb-4">Methodology Breakdown</h2>
           {avgScores ? (
-            <SandlerBreakdown scores={avgScores} />
+            <ScoreBreakdown scores={avgScores} />
           ) : (
             <p className="text-stone-light text-sm">
               No analyzed calls yet. Scores will appear after calls are analyzed.

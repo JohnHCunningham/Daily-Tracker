@@ -5,9 +5,9 @@ import { HiCheck } from 'react-icons/hi'
 import { useState } from 'react'
 import Link from 'next/link'
 
-// Per-rep pricing: $50/rep/month or $500/rep/year (2 months free)
-const PRICE_PER_REP_MONTHLY = 50
-const PRICE_PER_REP_ANNUAL = 500
+// Per-rep pricing: $85/rep/month or $850/rep/year (2 months free)
+const PRICE_PER_REP_MONTHLY = 85
+const PRICE_PER_REP_ANNUAL = 850
 
 const features = [
   'Unlimited conversation analyses',

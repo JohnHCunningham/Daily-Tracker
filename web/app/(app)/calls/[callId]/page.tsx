@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import Link from 'next/link'
-import { HiArrowLeft, HiPlay, HiClock, HiRefresh, HiPhone, HiMail, HiCalendar, HiClipboardList, HiExternalLink } from 'react-icons/hi'
+import { HiArrowLeft, HiPlay, HiClock, HiRefresh, HiPhone, HiMail, HiCalendar, HiClipboardList, HiExternalLink, HiLightningBolt } from 'react-icons/hi'
 
 interface CallDetail {
   id: string
@@ -41,22 +41,31 @@ const hubspotTypeIcons: Record<string, React.ComponentType<{ className?: string 
   task: HiClipboardList,
 }
 
-const sandlerComponents = [
-  'Bonding & Rapport',
-  'Up-Front Contract',
-  'Pain',
-  'Budget',
-  'Decision',
-  'Fulfillment',
-  'Post-Sell',
-  'Overall',
-]
 
 export default function CallDetailPage({ params }: { params: { callId: string } }) {
   const [call, setCall] = useState<CallDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [analyzing, setAnalyzing] = useState(false)
+  const [syncing, setSyncing] = useState(false)
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null)
+
+  const handleSyncNow = async () => {
+    setSyncing(true)
+    setMessage(null)
+    try {
+      const res = await fetch('/api/sync-now', { method: 'POST' })
+      const data = await res.json()
+      if (data.success) {
+        setMessage({ type: 'success', text: `Synced ${data.results?.calls || 0} calls. Refresh the page to see them.` })
+      } else {
+        setMessage({ type: 'error', text: 'Sync failed. Check integrations are connected.' })
+      }
+    } catch {
+      setMessage({ type: 'error', text: 'Sync failed. Is the server running?' })
+    } finally {
+      setSyncing(false)
+    }
+  }
   const [hubspotActivities, setHubspotActivities] = useState<HubSpotActivity[]>([])
   const [currentUser, setCurrentUser] = useState<CurrentUser | null>(null)
 
@@ -158,6 +167,14 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
               <HiPlay /> Play Recording
             </a>
           )}
+          <button
+            onClick={handleSyncNow}
+            disabled={syncing}
+            className="flex items-center gap-2 bg-terracotta/10 text-terracotta border border-terracotta/20 px-4 py-2 rounded-lg hover:bg-terracotta/20 transition-all text-sm font-medium disabled:opacity-50"
+          >
+            <HiRefresh className={syncing ? 'animate-spin' : ''} />
+            {syncing ? 'Syncing...' : 'Sync Now'}
+          </button>
         </div>
       </div>
 
@@ -247,9 +264,17 @@ export default function CallDetailPage({ params }: { params: { callId: string } 
                 Coaching generated
               </div>
             ) : call.analyzed_at ? (
-              <p className="text-sm text-stone-light">
-                Analysis complete. Coaching can be generated from the coaching page.
-              </p>
+              <div className="space-y-3">
+                <p className="text-sm text-stone-light">
+                  Analysis complete. Generate coaching from the coaching page.
+                </p>
+                <Link
+                  href="/coaching"
+                  className="inline-flex items-center gap-2 bg-terracotta text-white px-4 py-2 rounded-lg text-sm font-medium hover:bg-terracotta-bright transition-colors"
+                >
+                  <HiLightningBolt /> Open Coaching
+                </Link>
+              </div>
             ) : (
               <p className="text-sm text-stone-light">
                 Analyze this call first to generate coaching.

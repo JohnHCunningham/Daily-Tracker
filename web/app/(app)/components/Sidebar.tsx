@@ -13,6 +13,8 @@ import {
   HiCog,
   HiSparkles,
   HiChatAlt2,
+  HiLightningBolt,
+  HiX,
 } from 'react-icons/hi'
 import { useBrand } from './BrandProvider'
 
@@ -28,6 +30,7 @@ const navItems: NavItem[] = [
   { href: '/team', label: 'Team', icon: HiUserGroup, roles: ['admin', 'manager', 'coach'] },
   { href: '/calls', label: 'Calls', icon: HiPhone },
   { href: '/coaching', label: 'Coaching', icon: HiAcademicCap },
+  { href: '/copilot', label: 'Call Prep', icon: HiLightningBolt },
   { href: '/notes', label: '1-on-1 Notes', icon: HiChatAlt2 },
   { href: '/goals', label: 'Goals & Targets', icon: HiChartBar },
   { href: '/celebrations', label: 'Wins', icon: HiSparkles },
@@ -35,7 +38,13 @@ const navItems: NavItem[] = [
   { href: '/settings', label: 'Settings', icon: HiCog, roles: ['admin'] },
 ]
 
-export default function Sidebar({ userRole }: { userRole: string }) {
+interface SidebarProps {
+  userRole: string
+  isOpen?: boolean
+  onClose?: () => void
+}
+
+export default function Sidebar({ userRole, isOpen = false, onClose }: SidebarProps) {
   const pathname = usePathname()
   const brand = useBrand()
 
@@ -43,26 +52,52 @@ export default function Sidebar({ userRole }: { userRole: string }) {
     (item) => !item.roles || item.roles.includes(userRole)
   )
 
+  const handleLinkClick = () => {
+    // Close sidebar on mobile when link is clicked
+    if (onClose) {
+      onClose()
+    }
+  }
+
   return (
-    <aside className="w-60 bg-gradient-to-b from-bone-light to-bone border-r border-bone-dark flex flex-col">
-      <div className="p-5 border-b border-clay/20">
-        {brand.logoUrl ? (
-          <Image
-            src={brand.logoUrl}
-            alt={brand.companyName}
-            width={160}
-            height={32}
-            unoptimized
-            className="h-8 w-auto object-contain"
-          />
-        ) : (
-          <Link href="/dashboard" className="font-bold text-lg text-espresso">
-            {brand.companyName === 'One Click Coaching' ? (
-              <>One Click<span className="text-terracotta"> Coaching</span></>
-            ) : (
-              <span>{brand.companyName}</span>
-            )}
-          </Link>
+    <aside
+      className={`
+        w-60 bg-gradient-to-b from-bone-light to-bone border-r border-bone-dark flex flex-col
+        fixed lg:relative top-0 left-0 h-full z-50
+        transition-transform duration-300 ease-in-out
+        ${isOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
+      `}
+    >
+      <div className="p-5 border-b border-clay/20 flex items-center justify-between">
+        <div className="flex-1">
+          {brand.logoUrl ? (
+            <Image
+              src={brand.logoUrl}
+              alt={brand.companyName}
+              width={160}
+              height={32}
+              unoptimized
+              className="h-8 w-auto object-contain"
+            />
+          ) : (
+            <Link href="/dashboard" className="font-bold text-lg text-espresso" onClick={handleLinkClick}>
+              {brand.companyName === 'One Click Coaching' ? (
+                <>One Click<span className="text-terracotta"> Coaching</span></>
+              ) : (
+                <span>{brand.companyName}</span>
+              )}
+            </Link>
+          )}
+        </div>
+        {/* Close button for mobile */}
+        {onClose && (
+          <button
+            onClick={onClose}
+            className="lg:hidden p-2 hover:bg-bone-dark/20 rounded-lg transition-colors"
+            aria-label="Close menu"
+          >
+            <HiX className="text-xl text-stone" />
+          </button>
         )}
       </div>
 
@@ -74,6 +109,7 @@ export default function Sidebar({ userRole }: { userRole: string }) {
             <Link
               key={item.href}
               href={item.href}
+              onClick={handleLinkClick}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors ${
                 isActive
                   ? 'bg-terracotta/10 text-terracotta border-l-4 border-terracotta ml-[-12px] pl-[8px]'

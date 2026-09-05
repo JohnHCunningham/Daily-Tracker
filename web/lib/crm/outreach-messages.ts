@@ -8,6 +8,14 @@ export type Stage = 'connect' | 'observability' | 'mirror' | 'free_analysis' | '
 export const MEETING_LINK = 'https://tidycal.com/aiautomations/execution-exploration'
 export const RESEARCH_LINK = 'https://www.oneclickcoaching.com/research.html'
 
+// Build a LinkedIn people-search URL from a lead name. Used as a fallback when a
+// lead has no stored linkedin_url, so John can jump straight to the search instead
+// of copying the name and searching LinkedIn manually.
+export function linkedinSearchUrl(firstName: string | null, lastName: string | null): string {
+  const query = `${firstName ?? ''} ${lastName ?? ''}`.trim()
+  return `https://www.linkedin.com/search/results/people/?keywords=${encodeURIComponent(query)}`
+}
+
 export const PERSONA_LABELS: Record<Persona, string> = {
   'sales-leadership': 'Sales Leadership',
   'enablement': 'Enablement',

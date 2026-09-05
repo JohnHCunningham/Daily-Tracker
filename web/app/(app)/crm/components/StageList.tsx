@@ -1,9 +1,9 @@
 'use client'
 
-import Link from 'next/link'
 import { HiStar, HiEye, HiClock, HiChevronRight } from 'react-icons/hi'
 import type { CRMLead } from '../page'
 import { STAGE_FOLLOW_UP_DAYS, type StageKey } from '@/lib/crm/stages'
+import CopyName from './CopyName'
 
 interface StageListProps {
   stage: StageKey
@@ -88,13 +88,11 @@ export default function StageList({ stage, leads, onOpenLead }: StageListProps) 
               {/* Name + title + company */}
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2">
-                  <Link
-                    href={`/crm/${lead.id}`}
-                    onClick={(e) => e.stopPropagation()}
-                    className="font-semibold text-espresso hover:text-terracotta transition-colors truncate"
-                  >
-                    {lead.first_name} {lead.last_name}
-                  </Link>
+                  <CopyName
+                    firstName={lead.first_name}
+                    lastName={lead.last_name}
+                    className="font-semibold text-espresso hover:text-terracotta transition-colors"
+                  />
                   {lead.classification === 'V-A' && (
                     <span className="text-xs font-bold text-teal bg-teal/10 px-1.5 py-0.5 rounded flex-shrink-0">
                       V-A

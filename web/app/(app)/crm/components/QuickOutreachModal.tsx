@@ -15,7 +15,9 @@ import {
   RESEARCH_LINK,
   getStageFromStatus,
   getPersonaFromCategory,
+  linkedinSearchUrl,
 } from '@/lib/crm/outreach-messages'
+import CopyName from './CopyName'
 
 interface QuickOutreachModalProps {
   lead: CRMLead
@@ -55,10 +57,9 @@ export default function QuickOutreachModal({ lead, onClose, onAdvanced }: QuickO
       await navigator.clipboard.writeText(currentMessage)
       setCopied(true)
 
-      // 2. Open LinkedIn in new tab
-      if (lead.linkedin_url) {
-        window.open(lead.linkedin_url, '_blank')
-      }
+      // 2. Open LinkedIn (profile if we have the URL, else pre-filled search) in new tab
+      const linkedinTarget = lead.linkedin_url || linkedinSearchUrl(lead.first_name, lead.last_name)
+      window.open(linkedinTarget, '_blank')
 
       // 3. Call API to advance stage and log activity
       const response = await fetch('/api/crm/advance-stage', {
@@ -102,12 +103,9 @@ export default function QuickOutreachModal({ lead, onClose, onAdvanced }: QuickO
   }, [currentSubject])
 
   const handleOpenLinkedIn = useCallback(() => {
-    if (lead.linkedin_url) {
-      window.open(lead.linkedin_url, '_blank')
-    } else {
-      toast.error('No LinkedIn URL for this lead')
-    }
-  }, [lead.linkedin_url])
+    const url = lead.linkedin_url || linkedinSearchUrl(lead.first_name, lead.last_name)
+    window.open(url, '_blank')
+  }, [lead.linkedin_url, lead.first_name, lead.last_name])
 
   return (
     <div
@@ -120,9 +118,12 @@ export default function QuickOutreachModal({ lead, onClose, onAdvanced }: QuickO
           <div className="flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
               <div className="flex items-center gap-2">
-                <h2 className="font-bold text-lg text-espresso truncate">
-                  {lead.first_name} {lead.last_name}
-                </h2>
+                <CopyName
+                  firstName={lead.first_name}
+                  lastName={lead.last_name}
+                  showIcon
+                  className="font-bold text-lg text-espresso hover:text-terracotta transition-colors"
+                />
                 {lead.classification === 'V-A' && (
                   <span className="text-xs font-bold text-teal bg-teal/10 px-1.5 py-0.5 rounded flex-shrink-0">
                     V-A

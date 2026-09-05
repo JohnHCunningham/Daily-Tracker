@@ -21,6 +21,8 @@ import type { CRMLead } from '../page'
 import { STAGE_ORDER, STAGE_LABELS, NEXT_STAGE, type StageKey } from '@/lib/crm/stages'
 import LeadFormModal from '../components/LeadFormModal'
 import MessageTemplates from '../components/MessageTemplates'
+import CopyName from '../components/CopyName'
+import { linkedinSearchUrl } from '@/lib/crm/outreach-messages'
 
 interface LeadActivity {
   id: string
@@ -215,9 +217,12 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
           </Link>
           <div>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold text-espresso">
-                {lead.first_name} {lead.last_name}
-              </h1>
+              <CopyName
+                firstName={lead.first_name}
+                lastName={lead.last_name}
+                showIcon
+                className="text-2xl font-bold text-espresso hover:text-terracotta transition-colors"
+              />
               {lead.classification === 'V-A' && (
                 <span className="text-xs font-bold text-teal bg-teal/10 px-2 py-1 rounded">V-A</span>
               )}
@@ -273,18 +278,14 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
               </div>
               <div>
                 <h3 className="text-xs font-medium text-stone-light mb-1">LinkedIn</h3>
-                {lead.linkedin_url ? (
-                  <a
-                    href={lead.linkedin_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-terracotta hover:underline flex items-center gap-1"
-                  >
-                    <HiExternalLink /> View Profile
-                  </a>
-                ) : (
-                  <p className="text-stone">-</p>
-                )}
+                <a
+                  href={lead.linkedin_url || linkedinSearchUrl(lead.first_name, lead.last_name)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-terracotta hover:underline flex items-center gap-1"
+                >
+                  <HiExternalLink /> {lead.linkedin_url ? 'View Profile' : 'Search LinkedIn'}
+                </a>
               </div>
             </div>
 
@@ -473,17 +474,15 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
           <div className="bg-white rounded-xl border border-bone-dark p-4">
             <h3 className="font-semibold text-espresso mb-3">Quick Actions</h3>
             <div className="space-y-2">
-              {lead.linkedin_url && (
-                <a
-                  href={lead.linkedin_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-espresso bg-bone rounded-lg hover:bg-terracotta/10 transition-colors"
-                >
-                  <HiExternalLink />
-                  Open LinkedIn Profile
-                </a>
-              )}
+              <a
+                href={lead.linkedin_url || linkedinSearchUrl(lead.first_name, lead.last_name)}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2 w-full px-3 py-2 text-sm text-left text-espresso bg-bone rounded-lg hover:bg-terracotta/10 transition-colors"
+              >
+                <HiExternalLink />
+                {lead.linkedin_url ? 'Open LinkedIn Profile' : 'Search LinkedIn'}
+              </a>
               {lead.email && (
                 <a
                   href={`mailto:${lead.email}`}

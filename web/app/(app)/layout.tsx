@@ -13,41 +13,35 @@ export default async function AppLayout({
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
 
-  // TEMPORARY: Skip auth for testing
-  // if (!user) {
-  //   redirect('/login')
-  // }
+  if (!user) {
+    redirect('/login')
+  }
 
   let userData: any = null
 
-  if (user) {
-    const { data } = await supabase
-      .from('Users')
-      .select('role, full_name, account_id')
-      .eq('auth_id', user.id)
-      .single()
+  const { data } = await supabase
+    .from('Users')
+    .select('role, full_name, account_id')
+    .eq('auth_id', user.id)
+    .single()
 
-    userData = data
+  userData = data
 
-    if (!userData) {
-      const { data: repairResult, error: repairError } = await supabase
-        .rpc('ensure_user_has_account')
+  if (!userData) {
+    const { data: repairResult, error: repairError } = await supabase
+      .rpc('ensure_user_has_account')
 
-      if (!repairError && repairResult?.created) {
-        const { data: repairedUser } = await supabase
-          .from('Users')
-          .select('role, full_name, account_id')
-          .eq('auth_id', user.id)
-          .single()
+    if (!repairError && repairResult?.created) {
+      const { data: repairedUser } = await supabase
+        .from('Users')
+        .select('role, full_name, account_id')
+        .eq('auth_id', user.id)
+        .single()
 
-        if (repairedUser) {
-          userData = repairedUser
-        }
+      if (repairedUser) {
+        userData = repairedUser
       }
     }
-  } else {
-    // TEMPORARY: Mock user for testing
-    userData = { role: 'user', full_name: 'Test User', account_id: 'c2cba487-7057-4140-ba84-e53c750781d7' }
   }
 
   let subscriptionStatus = 'incomplete'

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 
 export const dynamic = 'force-dynamic'
@@ -15,7 +16,22 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const testAccountId = 'c2cba487-7057-4140-ba84-e53c750781d7'
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: userData } = await supabase
+      .from('Users')
+      .select('account_id')
+      .eq('auth_id', user.id)
+      .single()
+
+    if (!userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
 
     // Create service client with no caching
     const serviceClient = createServiceClient(
@@ -38,7 +54,7 @@ export async function POST(request: NextRequest) {
         updated_at: new Date().toISOString(),
       })
       .eq('id', leadId)
-      .eq('account_id', testAccountId)
+      .eq('account_id', userData.account_id)
       .select()
       .single()
 

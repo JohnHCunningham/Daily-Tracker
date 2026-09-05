@@ -101,26 +101,23 @@ export default function CRMPage() {
   const loadLeads = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
 
-    // TEMPORARY: Mock user for testing
-    const mockAccountId = 'c2cba487-7057-4140-ba84-e53c750781d7'
-
     if (!user) {
-      // Use mock account for testing
-      setAccountId(mockAccountId)
-    } else {
-      const { data: userData } = await supabase
-        .from('Users')
-        .select('account_id, role')
-        .eq('auth_id', user.id)
-        .single()
-
-      if (!userData) {
-        setLoading(false)
-        return
-      }
-
-      setAccountId(userData.account_id)
+      window.location.href = '/login'
+      return
     }
+
+    const { data: userData } = await supabase
+      .from('Users')
+      .select('account_id, role')
+      .eq('auth_id', user.id)
+      .single()
+
+    if (!userData) {
+      setLoading(false)
+      return
+    }
+
+    setAccountId(userData.account_id)
 
     // Fetch from API route instead of using Supabase client directly
     try {

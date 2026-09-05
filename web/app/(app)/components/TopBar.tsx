@@ -27,7 +27,7 @@ export default function TopBar({ user, userRole, onMenuClick }: TopBarProps) {
     router.push('/login')
   }
 
-  const displayName = user?.user_metadata?.full_name || user?.email || 'Test User'
+  const displayName = user?.user_metadata?.full_name || user?.email || ''
 
   return (
     <header className="h-16 bg-white/80 backdrop-blur-sm border-b border-clay/20 flex items-center justify-between px-6 shadow-sm">
@@ -47,7 +47,7 @@ export default function TopBar({ user, userRole, onMenuClick }: TopBarProps) {
         </span>
         <div className="text-right">
           <p className="text-sm font-medium text-espresso">{displayName}</p>
-          <p className="text-xs text-stone-light">{user?.email || 'test@test.com'}</p>
+          <p className="text-xs text-stone-light">{user?.email || ''}</p>
         </div>
         <button
           onClick={handleLogout}

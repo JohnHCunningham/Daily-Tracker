@@ -6,7 +6,24 @@ export const dynamic = 'force-dynamic'
 
 export async function GET() {
   try {
-    const testAccountId = 'c2cba487-7057-4140-ba84-e53c750781d7'
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: userData } = await supabase
+      .from('Users')
+      .select('account_id')
+      .eq('auth_id', user.id)
+      .single()
+
+    if (!userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+
+    const accountId = userData.account_id
 
     // Create NEW service client for each request to avoid caching
     const serviceClient = createServiceClient(
@@ -32,23 +49,17 @@ export async function GET() {
     const { data: stages, error: stagesError } = await serviceClient
       .from('crm_pipeline_stages')
       .select('*')
-      .eq('account_id', testAccountId)
+      .eq('account_id', accountId)
       .order('stage_order')
 
     // Get leads with explicit refresh
     const { data: leads, error: leadsError } = await serviceClient
       .from('crm_leads')
       .select('*')
-      .eq('account_id', testAccountId)
+      .eq('account_id', accountId)
       .order('classification', { ascending: true })
       .order('profile_signal', { ascending: true, nullsFirst: false })
       .order('last_contact_at', { ascending: false, nullsFirst: true })
-
-    // DEBUG: Log status distribution
-    const statusCounts: Record<string, number> = {}
-    ;(leads || []).forEach(l => statusCounts[l.status] = (statusCounts[l.status] || 0) + 1)
-    console.log('API returning status counts:', statusCounts)
-    console.log(`Total leads returned: ${leads?.length}`)
 
     if (leadsError) {
       console.error('Leads query error:', leadsError)

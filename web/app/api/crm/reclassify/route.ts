@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createClient } from '@/lib/supabase/server'
 import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { classifyLead, categorizeLead, explainClassification } from '@/lib/crm/classify'
 
@@ -19,8 +20,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { dryRun = false, leadIds = null, strictICP = false } = body
 
-    // TEMPORARY: Use test account
-    const testAccountId = 'c2cba487-7057-4140-ba84-e53c750781d7'
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: userData } = await supabase
+      .from('Users')
+      .select('account_id')
+      .eq('auth_id', user.id)
+      .single()
+
+    if (!userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
 
     // Use service role client
     const serviceClient = createServiceClient(
@@ -32,7 +47,7 @@ export async function POST(request: NextRequest) {
     let query = serviceClient
       .from('crm_leads')
       .select('id, first_name, last_name, title, company, classification, category')
-      .eq('account_id', testAccountId)
+      .eq('account_id', userData.account_id)
 
     if (leadIds && Array.isArray(leadIds) && leadIds.length > 0) {
       query = query.in('id', leadIds)

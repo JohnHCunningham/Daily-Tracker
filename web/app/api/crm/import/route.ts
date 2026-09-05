@@ -130,8 +130,22 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
     const { csvData, leads: jsonLeads } = body
 
-    // TEMPORARY: Skip auth for testing - use real account UUID
-    const testAccountId = 'c2cba487-7057-4140-ba84-e53c750781d7'
+    const supabase = await createClient()
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+
+    const { data: userData } = await supabase
+      .from('Users')
+      .select('account_id, email')
+      .eq('auth_id', user.id)
+      .single()
+
+    if (!userData) {
+      return NextResponse.json({ error: 'User not found' }, { status: 404 })
+    }
 
     // Use service role client to bypass PostgREST issues
     const serviceClient = createServiceClient(
@@ -139,7 +153,7 @@ export async function POST(request: NextRequest) {
       process.env.SUPABASE_SERVICE_ROLE_KEY!
     )
 
-    const currentUser = { account_id: testAccountId, email: 'test@test.com' }
+    const currentUser = { account_id: userData.account_id, email: userData.email }
 
     // Parse leads from CSV or use provided JSON array
     let leadsToImport: ImportLead[] = []

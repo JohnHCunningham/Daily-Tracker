@@ -15,6 +15,7 @@ import {
   HiChatAlt2,
   HiLightningBolt,
   HiX,
+  HiBriefcase,
 } from 'react-icons/hi'
 import { useBrand } from './BrandProvider'
 
@@ -34,6 +35,7 @@ const navItems: NavItem[] = [
   { href: '/notes', label: '1-on-1 Notes', icon: HiChatAlt2 },
   { href: '/goals', label: 'Goals & Targets', icon: HiChartBar },
   { href: '/celebrations', label: 'Wins', icon: HiSparkles },
+  { href: '/crm', label: 'Outreach CRM', icon: HiBriefcase, roles: ['admin', 'manager'] },
   { href: '/integrations', label: 'Integrations', icon: HiPuzzle, roles: ['admin', 'manager'] },
   { href: '/settings', label: 'Settings', icon: HiCog, roles: ['admin'] },
 ]

@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OCC Priority Board</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg:#F4EFE8; --paper:#FBF8F3; --ink:#1A1511; --terracotta:#B5583E;
+    --muted:#8A7D6B; --border:#E4DACB; --green:#5B8C5A; --gold:#C08A2E;
+  }
+  * { box-sizing:border-box; }
+  html,body { margin:0; padding:0; }
+  body {
+    background:var(--bg); color:var(--ink);
+    font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    padding:24px 20px 60px; line-height:1.55;
+  }
+  canvas#confettiCanvas { position:fixed; inset:0; pointer-events:none; z-index:9999; }
+  .wrap { max-width:1080px; margin:0 auto; }
+
+  h1,h2,h3,.serif { font-family:"Instrument Serif", Georgia, serif; font-weight:400; }
+  .mono { font-family:"JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace; }
+
+  .header { display:flex; flex-wrap:wrap; align-items:baseline; gap:14px; margin-bottom:16px; }
+  .title { font-size:28px; letter-spacing:.2px; color:var(--ink); margin:0; }
+  .title small { font-family:"Inter"; font-size:14px; color:var(--muted); margin-left:8px; }
+  .streak { margin-left:auto; background:var(--paper); border:1px solid var(--border); border-radius:20px; padding:6px 14px; font-size:13px; color:var(--gold); font-weight:600; }
+  .progressbar { width:100%; height:10px; background:var(--paper); border:1px solid var(--border); border-radius:6px; overflow:hidden; margin:2px 0 4px; }
+  .progressbar .fill { height:100%; background:linear-gradient(90deg,var(--terracotta),#D98A5F); width:0%; transition:width .3s ease; }
+  .pct { font-size:12px; color:var(--muted); text-align:right; font-family:"JetBrains Mono",monospace; }
+
+  .mustdo { background:var(--paper); border:1px solid var(--terracotta); border-radius:12px; padding:16px 18px; margin-bottom:16px; }
+  .mustdo h2 { margin:0 0 10px; font-size:14px; letter-spacing:.6px; text-transform:uppercase; color:var(--terracotta); }
+  .mustdo .slot { display:flex; align-items:center; gap:12px; padding:8px 0; border-bottom:1px solid var(--border); font-size:16px; font-weight:600; }
+  .mustdo .slot:last-child { border-bottom:none; }
+  .mustdo .slot .num { color:var(--muted); font-weight:700; min-width:18px; font-family:"JetBrains Mono",monospace; }
+  .mustdo .slot.empty { color:var(--muted); font-weight:400; }
+
+  .lanes { display:grid; grid-template-columns:repeat(5,1fr); gap:14px; }
+  @media (max-width:980px){ .lanes { grid-template-columns:repeat(2,1fr); } }
+  @media (max-width:600px){ .lanes { grid-template-columns:1fr; } }
+  .lane { background:var(--paper); border:1px solid var(--border); border-radius:12px; padding:14px 16px; }
+  .lane h2 { margin:0 0 4px; font-size:18px; }
+  .lane.personal { border-color:var(--gold); }
+  .lane.personal h2 { color:var(--gold); }
+  .lane .today { font-size:12px; color:var(--terracotta); margin-bottom:12px; min-height:18px; font-family:"JetBrains Mono",monospace; }
+  .task { display:flex; align-items:flex-start; gap:11px; padding:9px 0; border-bottom:1px solid var(--border); cursor:pointer; }
+  .task:last-child { border-bottom:none; }
+  .task input[type=checkbox] { appearance:none; -webkit-appearance:none; width:20px; height:20px; min-width:20px; border:2px solid #C9BBA6; border-radius:5px; cursor:pointer; position:relative; margin-top:1px; background:var(--paper); }
+  .task input[type=checkbox]:checked { background:var(--green); border-color:var(--green); }
+  .task input[type=checkbox]:checked::after { content:''; position:absolute; left:6px; top:2px; width:5px; height:10px; border:solid #fff; border-width:0 2px 2px 0; transform:rotate(45deg); }
+  .task .label { font-size:14px; }
+  .task.done .label { color:var(--muted); text-decoration:line-through; }
+
+  .feedback { background:var(--paper); border:1px solid var(--border); border-radius:12px; padding:18px; margin-top:16px; }
+  .feedback h2 { margin:0 0 2px; font-size:20px; }
+  .feedback .sub { color:var(--muted); font-size:13px; margin:0 0 16px; }
+  .chart-wrap { position:relative; width:100%; }
+  #chartCanvas { display:block; width:100%; height:200px; }
+  .lb { margin-top:16px; }
+  .lb-row { display:flex; align-items:center; gap:12px; margin-bottom:9px; }
+  .lb-name { width:110px; font-size:13px; color:var(--ink); font-weight:600; }
+  .lb-bar { flex:1; height:16px; background:var(--bg); border:1px solid var(--border); border-radius:8px; overflow:hidden; }
+  .lb-fill { height:100%; border-radius:8px; width:0%; transition:width .3s ease; }
+  .lb-pct { width:42px; text-align:right; font-size:12px; color:var(--muted); font-family:"JetBrains Mono",monospace; }
+  .insight { margin-top:14px; padding:12px 14px; background:var(--bg); border:1px solid var(--border); border-radius:8px; font-size:13px; color:var(--ink); }
+
+  .reflect { background:var(--paper); border:1px solid var(--border); border-radius:12px; padding:18px; margin-top:16px; }
+  .reflect h2 { margin:0 0 2px; font-size:20px; }
+  .reflect .sub { color:var(--muted); font-size:13px; margin:0 0 14px; }
+  .reflect textarea, .reflect input[type=text] {
+    width:100%; background:var(--bg); border:1px solid var(--border); border-radius:8px;
+    color:var(--ink); padding:10px 12px; font-size:14px; font-family:inherit; resize:vertical;
+  }
+  .reflect textarea:focus, .reflect input:focus { outline:1px solid var(--terracotta); border-color:var(--terracotta); }
+  .reflect .field { margin-bottom:12px; }
+  .reflect label { display:block; font-size:12px; letter-spacing:.4px; text-transform:uppercase; color:var(--muted); margin-bottom:6px; font-family:"JetBrains Mono",monospace; }
+  .reflect .row3 { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+  @media (max-width:600px){ .reflect .row3 { grid-template-columns:1fr; } }
+  .btn { background:var(--terracotta); color:#fff; border:none; border-radius:8px; padding:12px 18px; font-size:15px; font-weight:600; cursor:pointer; }
+  .btn:hover { filter:brightness(1.08); }
+  .btn.copied { background:var(--green); }
+  .celebrate { position:fixed; top:50%; left:50%; transform:translate(-50%,-50%) scale(.6); z-index:10000;
+    background:var(--terracotta); color:#fff; font-family:"Instrument Serif",Georgia,serif;
+    font-size:44px; padding:20px 44px; border-radius:16px; opacity:0; pointer-events:none; text-align:center;
+    transition:opacity .3s ease, transform .4s cubic-bezier(.2,1.4,.4,1); }
+  .celebrate.show { opacity:1; transform:translate(-50%,-50%) scale(1); }
+</style>
+</head>
+<body>
+<canvas id="confettiCanvas"></canvas>
+<div class="celebrate" id="celebrate">Day complete! &#127881;</div>
+<div class="wrap">
+
+  <div class="header">
+    <h1 class="title">OCC Priority Board<small id="dateLabel"></small></h1>
+    <div class="streak" id="streakLabel">&#128293; 0 day streak</div>
+  </div>
+  <div class="progressbar"><div class="fill" id="progressFill"></div></div>
+  <div class="pct" id="pctLabel">0%</div>
+
+  <div class="mustdo">
+    <h2>Today's 3 must-dos</h2>
+    <div id="mustdoList"></div>
+  </div>
+
+  <div class="lanes" id="lanes"></div>
+
+  <div class="feedback">
+    <h2>Your pattern</h2>
+    <p class="sub">% completion per day (last 14 days) + lane breakdown (last 7 days).</p>
+    <div class="chart-wrap"><canvas id="chartCanvas"></canvas></div>
+    <div class="lb" id="laneBreakdown"></div>
+    <div class="insight" id="insight"></div>
+  </div>
+
+  <div class="reflect">
+    <h2>End of day — learn + plan tomorrow</h2>
+    <p class="sub">Fill this in tonight. Hit "Copy note for Hermes", paste it into chat, and I'll log it and tune tomorrow's board.</p>
+    <div class="field">
+      <label>What worked today</label>
+      <textarea id="worked" rows="2" placeholder="What actually moved the needle?"></textarea>
+    </div>
+    <div class="field">
+      <label>What didn't / got stuck</label>
+      <textarea id="didnt" rows="2" placeholder="Where did you stall, get distracted, or hit friction?"></textarea>
+    </div>
+    <div class="field">
+      <label>Set tomorrow's 3 must-dos</label>
+      <div class="row3">
+        <input type="text" id="tom1" placeholder="1. Priority" />
+        <input type="text" id="tom2" placeholder="2. Priority" />
+        <input type="text" id="tom3" placeholder="3. Priority" />
+      </div>
+    </div>
+    <button class="btn" id="copyBtn" onclick="copyNote()">Copy note for Hermes</button>
+  </div>
+
+</div>
+
+<script src="board-data.js"></script>
+<script>
+  // ---------- Constants ----------
+  var LS_KEY = 'occPriorityBoard.v1';
+  var LANES = [
+    { id:'li', name:'LinkedIn Posts', tasks:[
+      'Engage: comment on 3 posts before posting',
+      'Publish today\u2019s post (Tue carousel / Wed video / Thu text)',
+      'Sit in comments 30\u201360 min',
+      'Check viewers \u2192 request ICP same day'
+    ]},
+    { id:'blog', name:'Blog Posts', tasks:[
+      'Draft or advance next post (raw \u2192 I polish)',
+      'Review draft (critic/advisor pass)',
+      'Publish + internal link + sitemap',
+      'Submit next batch to GSC'
+    ]},
+    { id:'guest', name:'Guest Posts / PR', tasks:[
+      'Pitch Selling Power (editorial@sellingpower.com)',
+      'Pitch Demand Gen Report (Kim Zimmermann)',
+      'Find Tier-B editors on LinkedIn (4 pubs)',
+      'Log outreach + set follow-up date'
+    ]},
+    { id:'crm', name:'CRM Process', tasks:[
+      'Send DM batch 1 + 2 (from Telegram)',
+      'Process new Acceptances',
+      'Log connection requests + stamp Last Contact',
+      'Advance Call/Meeting follow-ups'
+    ]},
+    { id:'personal', name:'Personal', tasks:[
+      'Exercise',
+      'Prayer',
+      'Meditation',
+      'Meals (eat 3)'
+    ]}
+  ];
+  var LANE_COLORS = { li:'#B5583E', blog:'#5A7A8C', guest:'#6B5A8C', crm:'#7A8A5A', personal:'#C08A2E' };
+
+  // ---------- State ----------
+  function loadState(){ try { return JSON.parse(localStorage.getItem(LS_KEY)) || {}; } catch(e){ return {}; } }
+  function saveState(s){ localStorage.setItem(LS_KEY, JSON.stringify(s)); }
+  function todayStr(){ var d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+
+  function computeStats(tasks, mustDos){
+    var per = {}, laneDone = 0, laneTotals = 0;
+    LANES.forEach(function(l){
+      var d=0; l.tasks.forEach(function(_,ti){ if (tasks[l.id+'-'+ti]) d++; });
+      per[l.id] = Math.round(d/l.tasks.length*100);
+      laneDone += d; laneTotals += l.tasks.length;
+    });
+    var mustD=0, mustT=0;
+    for (var i=0;i<3;i++){ if ((mustDos[i]||'').trim()){ mustT++; if (tasks['must-'+i]) mustD++; } }
+    var overall = (laneTotals+mustT) ? Math.round((laneDone+mustD)/(laneTotals+mustT)*100) : 0;
+    return { per:per, laneDone:laneDone, laneTotals:laneTotals, mustDone:mustD, mustTotal:mustT, overall:overall };
+  }
+
+  var state = loadState();
+  var today = todayStr();
+
+  // ---------- Daily rollover (capture yesterday into history) ----------
+  if (state.date && state.date !== today) {
+    var prevDate = state.date;
+    var prevTasks = state.tasks || {};
+    var prevMustDos = state.mustDos || ['','',''];
+
+    // streak: all 3 must-dos done yesterday?
+    var allMust = true, hadMust = false;
+    for (var i=0;i<3;i++){ var v=prevMustDos[i]; if (v && v.trim()){ hadMust=true; if (!prevTasks['must-'+i]) allMust=false; } }
+    var newStreak = (typeof state.streak==='number') ? state.streak : 0;
+    if (hadMust) newStreak = allMust ? newStreak+1 : 0;
+
+    // history entry for yesterday
+    var ys = computeStats(prevTasks, prevMustDos);
+    if (!state.history) state.history = [];
+    var dup = state.history.some(function(h){ return h.date === prevDate; });
+    if (!dup) state.history.push({ date:prevDate, overall:ys.overall, li:ys.per.li, blog:ys.per.blog, crm:ys.per.crm, personal:ys.per.personal, must:ys.mustDone });
+    if (state.history.length > 30) state.history = state.history.slice(-30);
+
+    // reset for today
+    state.date = today;
+    state.streak = newStreak;
+    state.mustDos = (state.tomorrow || ['','','']).slice(0,3);
+    while (state.mustDos.length<3) state.mustDos.push('');
+    state.tomorrow = ['','',''];
+    state.tasks = {};
+    state.worked=''; state.didnt='';
+    saveState(state);
+  }
+  if (!state.history) state.history = [];
+  if (!state.mustDos) state.mustDos = ['','',''];
+  if (!state.tasks) state.tasks = {};
+  if (!state.tomorrow) state.tomorrow = ['','',''];
+  if (!state.worked) state.worked = '';
+  if (!state.didnt) state.didnt = '';
+
+  // ---------- Confetti ----------
+  var canvas = document.getElementById('confettiCanvas');
+  var ctx = canvas.getContext('2d');
+  var confetti = [], confettiAnim = null;
+  function resize(){ canvas.width = window.innerWidth; canvas.height = window.innerHeight; }
+  window.addEventListener('resize', resize); resize();
+  var CONFETTI_COLORS = ['#B5583E','#C08A2E','#5A7A8C','#7A8A5A','#1A1511','#D9A05B','#E07A5F','#8FBF9F','#C24E2E'];
+  function burst(count, big){
+    for (var i=0;i<count;i++){
+      var shape = (Math.random() < 0.35) ? 'circle' : 'rect';
+      confetti.push({
+        x: Math.random()*canvas.width, y: -10 - Math.random()*canvas.height*0.5,
+        w: big ? 9+Math.random()*9 : 6+Math.random()*6,
+        h: big ? 14+Math.random()*12 : 9+Math.random()*8,
+        shape: shape, color: CONFETTI_COLORS[(Math.random()*CONFETTI_COLORS.length)|0],
+        vx:(Math.random()-0.5)*4.5, vy: big ? 3+Math.random()*5.5 : 2.5+Math.random()*4.5,
+        rot:Math.random()*Math.PI*2, vr:(Math.random()-0.5)*0.4, life:1
+      });
+    }
+    if (!confettiAnim) loop();
+  }
+  function storm(){
+    var times = [0,180,360,540,720,900,1100];
+    times.forEach(function(t){ setTimeout(function(){ burst(240, true); }, t); });
+    setTimeout(function(){ burst(160, false); }, 300);
+    setTimeout(function(){ burst(160, false); }, 650);
+    setTimeout(function(){ burst(160, false); }, 1000);
+  }
+  function loop(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    confetti = confetti.filter(function(c){ return c.life>0 && c.y < canvas.height+30; });
+    for (var i=0;i<confetti.length;i++){
+      var c = confetti[i];
+      c.x += c.vx; c.y += c.vy; c.vy += 0.04; c.rot += c.vr; c.life -= 0.006;
+      ctx.save(); ctx.translate(c.x,c.y); ctx.rotate(c.rot);
+      ctx.globalAlpha = Math.max(0, c.life); ctx.fillStyle = c.color;
+      if (c.shape === 'circle'){ ctx.beginPath(); ctx.arc(0,0,c.w/2,0,Math.PI*2); ctx.fill(); }
+      else { ctx.fillRect(-c.w/2,-c.h/2,c.w,c.h); }
+      ctx.restore();
+    }
+    if (confetti.length) confettiAnim = requestAnimationFrame(loop);
+    else { confettiAnim = null; ctx.clearRect(0,0,canvas.width,canvas.height); }
+  }
+
+  // ---------- Helpers ----------
+  function weekdayName(){ return new Date().toLocaleDateString('en-US',{weekday:'long'}); }
+  function dateLabelText(){ return new Date().toLocaleDateString('en-US',{month:'long', day:'numeric'}) + ' \u00b7 ' + weekdayName(); }
+  var BOARD = (typeof window.BOARD_DATA !== 'undefined') ? window.BOARD_DATA : {};
+
+  // ---------- Render ----------
+  document.getElementById('dateLabel').textContent = '\u2014 ' + dateLabelText();
+  document.getElementById('streakLabel').innerHTML = '&#128293; ' + (state.streak||0) + ' day streak';
+
+  var md = document.getElementById('mustdoList'); md.innerHTML = '';
+  for (var m=0;m<3;m++){
+    var txt = state.mustDos[m] || '';
+    var div = document.createElement('div');
+    div.className = 'slot' + (txt ? '' : ' empty');
+    var cb = document.createElement('input'); cb.type='checkbox'; cb.id='must-'+m;
+    cb.checked = !!state.tasks['must-'+m];
+    cb.addEventListener('change', (function(id, slot){ return function(){ toggle(id, this.checked, slot); }; })('must-'+m, div));
+    var num = document.createElement('span'); num.className='num'; num.textContent = (m+1)+'.';
+    var lab = document.createElement('span'); lab.className='label';
+    lab.textContent = txt || 'No priority set \u2014 set tonight below';
+    div.appendChild(cb); div.appendChild(num); div.appendChild(lab);
+    md.appendChild(div);
+  }
+
+  var lanesEl = document.getElementById('lanes'); lanesEl.innerHTML = '';
+  LANES.forEach(function(lane){
+    var col = document.createElement('div'); col.className='lane' + (lane.id==='personal' ? ' personal' : '');
+    var h = document.createElement('h2'); h.textContent = lane.name; col.appendChild(h);
+    var hint = document.createElement('div'); hint.className='today';
+    hint.textContent = BOARD[lane.id] || '';
+    col.appendChild(hint);
+    lane.tasks.forEach(function(t, ti){
+      var id = lane.id+'-'+ti;
+      var row = document.createElement('div'); row.className='task' + (state.tasks[id] ? ' done' : '');
+      var cb = document.createElement('input'); cb.type='checkbox'; cb.checked = !!state.tasks[id];
+      cb.addEventListener('change', (function(tid, r){ return function(){ toggle(tid, this.checked, r); }; })(id, row));
+      var lab = document.createElement('span'); lab.className='label'; lab.textContent = t;
+      row.appendChild(cb); row.appendChild(lab);
+      col.appendChild(row);
+    });
+    lanesEl.appendChild(col);
+  });
+
+  document.getElementById('worked').value = state.worked || '';
+  document.getElementById('didnt').value = state.didnt || '';
+  document.getElementById('tom1').value = (state.tomorrow||['','',''])[0] || '';
+  document.getElementById('tom2').value = (state.tomorrow||['','',''])[1] || '';
+  document.getElementById('tom3').value = (state.tomorrow||['','',''])[2] || '';
+  ['worked','didnt'].forEach(function(k){
+    document.getElementById(k).addEventListener('input', function(){ state[k] = this.value; saveState(state); });
+  });
+  ['tom1','tom2','tom3'].forEach(function(k, i){
+    document.getElementById(k).addEventListener('input', function(){ state.tomorrow[i] = this.value; saveState(state); });
+  });
+
+  // ---------- Progress + toggle ----------
+  function updateProgress(){
+    var s = computeStats(state.tasks || {}, state.mustDos || ['','','']);
+    var done = s.laneDone + s.mustDone, total = s.laneTotals + s.mustTotal;
+    var pct = total ? Math.round(done/total*100) : 0;
+    document.getElementById('progressFill').style.width = pct + '%';
+    document.getElementById('pctLabel').textContent = pct + '% complete' + (done>0 ? ' ('+done+'/'+total+')' : '');
+    return pct;
+  }
+  var alreadyCelebrated = false;
+  function toggle(id, checked, row){
+    state.tasks[id] = checked;
+    saveState(state);
+    if (row) row.classList.toggle('done', checked);
+    if (checked) burst(70, false);
+    var pct = updateProgress();
+    if (pct === 100 && !alreadyCelebrated) {
+      alreadyCelebrated = true;
+      storm();
+      var cel = document.getElementById('celebrate');
+      if (cel) { cel.classList.add('show'); setTimeout(function(){ cel.classList.remove('show'); }, 2600); }
+    }
+    if (pct < 100) alreadyCelebrated = false;
+  }
+  updateProgress();
+
+  // ---------- Feedback chart ----------
+  function drawChart(){
+    var cv = document.getElementById('chartCanvas');
+    if (!cv) return;
+    var wrap = cv.parentNode;
+    var W = wrap.clientWidth || 600, H = 200;
+    var dpr = window.devicePixelRatio || 1;
+    cv.width = W * dpr; cv.height = H * dpr;
+    cv.style.width = W+'px'; cv.style.height = H+'px';
+    var c2 = cv.getContext('2d'); c2.scale(dpr, dpr);
+    c2.clearRect(0,0,W,H);
+    var hist = (state.history||[]).slice(-14);
+    if (!hist.length){
+      c2.fillStyle = '#8A7D6B'; c2.font = '13px Inter, sans-serif'; c2.textAlign='center';
+      c2.fillText('No history yet \u2014 check off a day and it\u2019ll chart here.', W/2, H/2);
+      return;
+    }
+    var padB = 18, padT = 16;
+    var barArea = W / hist.length;
+    var barW = barArea * 0.62;
+    // baseline
+    c2.strokeStyle = '#E4DACB'; c2.lineWidth = 1;
+    c2.beginPath(); c2.moveTo(0, H-padB+0.5); c2.lineTo(W, H-padB+0.5); c2.stroke();
+    hist.forEach(function(h, i){
+      var bh = (h.overall/100) * (H - padB - padT);
+      var x = i*barArea + (barArea-barW)/2;
+      var y = H - padB - bh;
+      c2.fillStyle = '#B5583E';
+      c2.fillRect(x, y, barW, bh);
+      c2.fillStyle = '#1A1511'; c2.font = '10px "JetBrains Mono", monospace'; c2.textAlign='center';
+      if (bh > 14) c2.fillText(h.overall+'%', x+barW/2, y-4);
+      var d = new Date(h.date+'T00:00:00');
+      var lab = (d.getMonth()+1)+'/'+d.getDate();
+      c2.fillStyle = '#8A7D6B'; c2.font = '10px Inter, sans-serif';
+      c2.fillText(lab, x+barW/2, H-5);
+    });
+  }
+  function drawLaneBreakdown(){
+    var el = document.getElementById('laneBreakdown'); if (!el) return;
+    var hist = (state.history||[]).slice(-7);
+    el.innerHTML = '';
+    LANES.forEach(function(l){
+      var vals = hist.map(function(h){ return h[l.id] || 0; });
+      var avg = vals.length ? Math.round(vals.reduce(function(a,b){return a+b;},0)/vals.length) : 0;
+      var row = document.createElement('div'); row.className='lb-row';
+      var name = document.createElement('div'); name.className='lb-name'; name.textContent = l.name;
+      var bar = document.createElement('div'); bar.className='lb-bar';
+      var fill = document.createElement('div'); fill.className='lb-fill'; fill.style.width = avg+'%'; fill.style.background = LANE_COLORS[l.id];
+      var pct = document.createElement('div'); pct.className='lb-pct'; pct.textContent = avg+'%';
+      bar.appendChild(fill);
+      row.appendChild(name); row.appendChild(bar); row.appendChild(pct);
+      el.appendChild(row);
+    });
+  }
+  function drawInsight(){
+    var el = document.getElementById('insight'); if (!el) return;
+    var hist = (state.history||[]).slice(-7);
+    if (!hist.length){ el.textContent = 'Patterns appear after a few logged days.'; return; }
+    var lowest = null, lowestAvg = 101, best = -1;
+    LANES.forEach(function(l){
+      var vals = hist.map(function(h){ return h[l.id]||0; });
+      var avg = vals.length ? Math.round(vals.reduce(function(a,b){return a+b;},0)/vals.length) : 0;
+      if (avg < lowestAvg){ lowestAvg = avg; lowest = l; }
+    });
+    hist.forEach(function(h){ if (h.overall > best) best = h.overall; });
+    var avgAll = Math.round(hist.reduce(function(a,h){return a+h.overall;},0)/hist.length);
+    el.textContent = lowest
+      ? ('Pattern: ' + lowest.name + ' is your most-skipped lane this week (' + lowestAvg + '%). Weekly avg ' + avgAll + '%, best day ' + best + '%.')
+      : '';
+  }
+  drawChart(); drawLaneBreakdown(); drawInsight();
+  window.addEventListener('resize', function(){ drawChart(); });
+
+  // ---------- Copy note ----------
+  function copyText(text){
+    var ta = document.createElement('textarea'); ta.value = text;
+    ta.style.position='fixed'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0,99999999);
+    var ok = false; try { ok = document.execCommand('copy'); } catch(e){}
+    document.body.removeChild(ta); return ok;
+  }
+  function copyNote(){
+    var s = computeStats(state.tasks||{}, state.mustDos||['','','']);
+    var done = s.laneDone + s.mustDone, total = s.laneTotals + s.mustTotal;
+    var hist = (state.history||[]).slice(-7);
+    var lines = [];
+    lines.push('\uD83D\uDCCB OCC Day Review \u2014 ' + dateLabelText());
+    lines.push('\u2705 Today: ' + done + '/' + total + '  \u00b7  Must-dos ' + s.mustDone + '/' + s.mustTotal);
+    if (hist.length){
+      var avg = Math.round(hist.reduce(function(a,h){return a+h.overall;},0)/hist.length);
+      var lanesStr = LANES.map(function(l){
+        var vals = hist.map(function(h){ return h[l.id]||0; });
+        var a = Math.round(vals.reduce(function(x,y){return x+y;},0)/vals.length);
+        return l.name + ' ' + a + '%';
+      }).join(' \u00b7 ');
+      lines.push('\uD83D\uDCCA 7-day: avg ' + avg + '%  \u2014  ' + lanesStr);
+    }
+    lines.push('');
+    if ((state.worked||'').trim()) lines.push('\uD83D\uDC4D Worked: ' + state.worked.trim());
+    if ((state.didnt||'').trim()) lines.push('\uD83D\uDC4E Didn\'t: ' + state.didnt.trim());
+    var tom = (state.tomorrow||[]).filter(function(x){ return x && x.trim(); });
+    if (tom.length) lines.push('\uD83C\uDFAF Tomorrow: ' + tom.map(function(t,i){ return (i+1)+') '+t; }).join('  '));
+    var msg = lines.join('\n');
+    var ok = copyText(msg);
+    var btn = document.getElementById('copyBtn');
+    var orig = btn.textContent;
+    btn.textContent = ok ? 'Copied \u2713 \u2014 paste into Hermes/Telegram' : 'Copy failed \u2014 select manually';
+    btn.classList.add('copied');
+    setTimeout(function(){ btn.textContent = orig; btn.classList.remove('copied'); }, 2000);
+  }
+</script>
+</body>
+</html>

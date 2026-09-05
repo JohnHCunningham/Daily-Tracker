@@ -38,7 +38,7 @@ export default function BillingAccessGate({
     (status === 'trialing' && (currentTrialDays === null || currentTrialDays > 0)) ||
     (isGraceActive && (currentGraceDays === null || currentGraceDays > 0))
 
-  if (hasAccess || pathname.startsWith('/settings')) {
+  if (hasAccess || pathname.startsWith('/settings') || pathname.startsWith('/crm')) {
     return <>{children}</>
   }
 

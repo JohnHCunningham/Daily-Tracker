@@ -550,7 +550,7 @@ function scoreComponent(componentKey: string, transcript: string, summary?: stri
   const component = SANDLER_COMPONENTS[componentKey as keyof typeof SANDLER_COMPONENTS];
   const text = (transcript + ' ' + (summary || '')).toLowerCase();
 
-  let score = 5; // Start at middle
+  let score = 1; // Start at 1 — no credit for absence. Keyword matches pull it up.
   const indicators: string[] = [];
   const missingElements: string[] = [];
   const suggestedLanguage: string[] = [];

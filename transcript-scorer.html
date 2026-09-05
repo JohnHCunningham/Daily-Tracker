@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Transcript Scorer — One Click Coaching</title>
+<style>
+  :root {
+    --bg: #0f0d0a; --surface: #1a1511; --border: #2a221c;
+    --text: #e8e0d5; --muted: #8b7355; --gold: #c9a687;
+    --terracotta: #c8501e; --green: #5a8f4a; --red: #c0392b;
+    --accent: #1a3a4a;
+  }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { 
+    background:var(--bg); color:var(--text); font-family:-apple-system,sans-serif;
+    max-width:800px; margin:0 auto; padding:32px 24px; min-height:100vh;
+  }
+  h1 { font-size:22px; margin-bottom:4px; }
+  .sub { color:var(--muted); font-size:13px; margin-bottom:24px; }
+  
+  label { display:block; font-size:13px; font-weight:600; margin-bottom:6px; color:var(--gold); }
+  textarea, select {
+    width:100%; background:var(--surface); border:1px solid var(--border);
+    color:var(--text); border-radius:8px; padding:12px; font-size:14px;
+    font-family:inherit; margin-bottom:16px; resize:vertical;
+  }
+  textarea { min-height:200px; }
+  select { width:auto; min-width:200px; }
+  
+  button {
+    background:var(--terracotta); color:#fff; border:none; border-radius:8px;
+    padding:12px 24px; font-size:15px; font-weight:600; cursor:pointer;
+    width:100%; margin-bottom:24px;
+  }
+  button:disabled { opacity:0.5; cursor:not-allowed; }
+  button:hover:not(:disabled) { background:#d45a2a; }
+  
+  .error { 
+    background:rgba(192,57,43,0.15); border:1px solid rgba(192,57,43,0.3);
+    border-radius:8px; padding:12px; margin-bottom:16px; font-size:13px; color:var(--red);
+  }
+  
+  .results { display:none; }
+  .results.show { display:block; }
+  
+  .score-card {
+    background:var(--surface); border:1px solid var(--border); border-radius:8px;
+    padding:16px; margin-bottom:16px;
+  }
+  .score-card h3 { font-size:14px; color:var(--gold); margin-bottom:12px; }
+  
+  .scores { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:12px; }
+  .score-badge {
+    background:var(--bg); border:1px solid var(--border); border-radius:6px;
+    padding:8px 12px; min-width:100px; text-align:center;
+  }
+  .score-badge .label { font-size:10px; color:var(--muted); text-transform:uppercase; }
+  .score-badge .value { font-size:24px; font-weight:700; }
+  .score-badge .value.high { color:var(--green); }
+  .score-badge .value.mid { color:var(--gold); }
+  .score-badge .value.low { color:var(--terracotta); }
+  
+  .section { margin-bottom:16px; }
+  .section h4 { font-size:12px; color:var(--gold); margin-bottom:6px; text-transform:uppercase; }
+  .section ul { list-style:none; font-size:13px; line-height:1.6; }
+  .section ul li::before { margin-right:6px; }
+  .strength li::before { content:"✅ "; }
+  .weak li::before { content:"⚠️ "; }
+  .missing li::before { content:"❌ "; }
+  .script li::before { content:"💬 "; }
+  
+  .status { font-size:12px; color:var(--muted); text-align:center; margin-top:8px; }
+  .spinner {
+    display:inline-block; width:14px; height:14px; border:2px solid var(--border);
+    border-top-color:var(--gold); border-radius:50%; animation:spin 0.6s linear infinite;
+    vertical-align:middle; margin-right:6px;
+  }
+  @keyframes spin { to { transform:rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<h1>Transcript Scorer</h1>
+<p class="sub">Paste a sales call transcript. Get Sandler methodology scores + coaching suggestions. No account needed. One-off analysis.</p>
+
+<label for="transcript">Call Transcript</label>
+<textarea id="transcript" placeholder="Paste the full call transcript here..."></textarea>
+
+<label for="methodology">Methodology</label>
+<select id="methodology">
+  <option value="sandler" selected>Sandler</option>
+  <option value="challenger">Challenger</option>
+  <option value="gap_selling">Gap Selling</option>
+  <option value="spin">SPIN</option>
+  <option value="meddic">MEDDIC</option>
+  <option value="command_of_the_message">Command of the Message</option>
+  <option value="value_selling">Value Selling</option>
+  <option value="solution_selling">Solution Selling</option>
+  <option value="strategic_selling">Strategic Selling</option>
+  <option value="conceptual_selling">Conceptual Selling</option>
+  <option value="customer_centric_selling">Customer Centric Selling</option>
+  <option value="negotiation">Negotiation</option>
+  <option value="general">General Sales</option>
+</select>
+
+<button id="scoreBtn" onclick="scoreTranscript()">Score This Call</button>
+<div class="error" id="error" style="display:none"></div>
+
+<div class="results" id="results">
+  <div class="score-card" id="keywordScores"></div>
+  <div class="score-card" id="gptAnalysis"></div>
+  <div style="text-align:center;margin-top:16px;display:none" id="reportBtnWrap">
+    <button onclick="openReport()" style="background:var(--accent);width:auto;padding:12px 32px">
+      📄 View Sendable Report →
+    </button>
+    <p style="font-size:11px;color:var(--muted);margin-top:6px">Opens a beautifully formatted report you can personalize, copy, and send</p>
+  </div>
+</div>
+
+<script>
+const EDGE_URL = "https://qwqlsbccwnwrdpcaccjz.supabase.co/functions/v1/analyze-call";
+
+async function scoreTranscript() {
+  const transcript = document.getElementById("transcript").value.trim();
+  const methodology = document.getElementById("methodology").value;
+  const btn = document.getElementById("scoreBtn");
+  const errorDiv = document.getElementById("error");
+  const results = document.getElementById("results");
+  
+  if (!transcript) {
+    showError("Paste a transcript first.");
+    return;
+  }
+  
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Analyzing...';
+  errorDiv.style.display = "none";
+  results.classList.remove("show");
+  
+  try {
+    const resp = await fetch(EDGE_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode: "manual", transcript, methodology })
+    });
+    
+    const data = await resp.json();
+    
+    if (!resp.ok || data.error) {
+      showError(data.error || "Analysis failed.");
+      btn.disabled = false;
+      btn.textContent = "Score This Call";
+      return;
+    }
+    
+    renderResults(data);
+    lastResponseData = data;
+    document.getElementById('reportBtnWrap').style.display = 'block';
+    results.classList.add("show");
+  } catch (e) {
+    showError("Network error — check if the edge function is deployed: " + e.message);
+  }
+  
+  btn.disabled = false;
+  btn.textContent = "Score This Call";
+}
+
+function showError(msg) {
+  const el = document.getElementById("error");
+  el.textContent = msg;
+  el.style.display = "block";
+}
+
+function renderResults(data) {
+  // Keyword scores
+  const kw = data.keyword_analysis;
+  let kwHtml = "<h3>📊 Component Scores</h3><div class='scores'>";
+  
+  if (kw?.scores) {
+    kw.scores.forEach(s => {
+      const cls = s.score >= 7 ? "high" : s.score >= 5 ? "mid" : "low";
+      kwHtml += `<div class="score-badge">
+        <div class="label">${s.component}</div>
+        <div class="value ${cls}">${s.score}/10</div>
+      </div>`;
+    });
+  }
+  kwHtml += "</div>";
+  if (kw?.summary) {
+    kwHtml += `<div class="section"><h4>Summary</h4><p style="font-size:13px;line-height:1.6">${kw.summary}</p></div>`;
+  }
+  document.getElementById("keywordScores").innerHTML = kwHtml;
+  
+  // GPT-4 analysis
+  const gpt = data.gpt_analysis;
+  if (!gpt) {
+    document.getElementById("gptAnalysis").innerHTML = 
+      "<h3>🤖 GPT-4 Analysis</h3><p style='font-size:13px;color:var(--muted)'>GPT-4 analysis unavailable — keyword fallback used.</p>";
+    return;
+  }
+  
+  let gptHtml = "<h3>🤖 GPT-4 Deep Analysis</h3>";
+  
+  if (gpt.done_well?.length) {
+    gptHtml += `<div class="section strength"><h4>✅ Done Well</h4><ul>${gpt.done_well.map(i => `<li>${i}</li>`).join("")}</ul></div>`;
+  }
+  if (gpt.missing?.length) {
+    gptHtml += `<div class="section missing"><h4>❌ Missing</h4><ul>${gpt.missing.map(i => `<li>${i}</li>`).join("")}</ul></div>`;
+  }
+  if (gpt.weak?.length) {
+    gptHtml += `<div class="section weak"><h4>⚠️ Needs Improvement</h4><ul>${gpt.weak.map(i => `<li>${i}</li>`).join("")}</ul></div>`;
+  }
+  if (gpt.suggestions?.length) {
+    gptHtml += `<div class="section"><h4>🎯 Coaching Suggestions</h4><ul style="list-style:decimal inside;font-size:13px;line-height:1.6">${gpt.suggestions.map((s,i) => `<li>${s}</li>`).join("")}</ul></div>`;
+  }
+  if (gpt.scripts?.length) {
+    gptHtml += `<div class="section script"><h4>💬 Scripts to Practice</h4><ul>${gpt.scripts.map(i => `<li>"${i}"</li>`).join("")}</ul></div>`;
+  }
+  
+  document.getElementById("gptAnalysis").innerHTML = gptHtml;
+}
+
+let lastResponseData = null;
+
+function openReport() {
+  if (!lastResponseData) return;
+  sessionStorage.setItem('occ_report_data', JSON.stringify(lastResponseData));
+  window.open('coaching-report.html', '_blank');
+}
+</script>
+
+<p class="status">Edge function: supabase.co/functions/v1/analyze-call — manual mode</p>
+
+</body>
+</html>

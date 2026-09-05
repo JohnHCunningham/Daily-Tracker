@@ -242,7 +242,7 @@ All 7 Stripe API endpoints tested and passing on production (app.oneclickcoachin
 | `/api/stripe/update-subscription` | ✅ 401 (auth required) |
 | `/api/stripe/billing-history` | ✅ 401 (auth required) |
 | `/api/stripe/config-status` | ✅ 401 (auth required) |
-| `/api/stripe/webhook` | ✅ 405 (POST-only) |
+| `/api/webhooks/stripe` | ✅ 405 (POST-only, deployed) |
 
 Environment verified: all 4 Stripe env vars present in Vercel production (STRIPE_SECRET_KEY, STRIPE_WEBHOOK_SECRET, STRIPE_PRICE_MONTHLY, STRIPE_PRICE_ANNUAL).
 

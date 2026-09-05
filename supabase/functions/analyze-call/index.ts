@@ -237,6 +237,102 @@ async function logSuggestions(
   }
 }
 
+// ─── Build Prospect-Facing Coaching Document ───
+function buildCoachingDoc(
+  gptAnalysis: any,
+  keywordAnalysis: any,
+  methodologyLabel: string
+): string {
+  const lines: string[] = [];
+
+  lines.push("═══════════════════════════════════════");
+  lines.push(`  CALL ANALYSIS — ${methodologyLabel.toUpperCase()}`);
+  lines.push("  Powered by One Click Coaching");
+  lines.push("═══════════════════════════════════════");
+  lines.push("");
+
+  // Component scores
+  if (keywordAnalysis?.scores) {
+    lines.push("📊 COMPONENT SCORES");
+    lines.push("");
+    for (const s of keywordAnalysis.scores) {
+      const bar = "█".repeat(Math.max(0, s.score)) + "░".repeat(Math.max(0, 10 - s.score));
+      lines.push(`  ${s.component.padEnd(30)} ${bar} ${s.score}/10`);
+    }
+    lines.push("");
+  }
+
+  // GPT-4 insights
+  if (gptAnalysis) {
+    if (gptAnalysis.done_well?.length) {
+      lines.push("✅ WHAT WORKED");
+      for (const item of gptAnalysis.done_well) {
+        lines.push(`  • ${item}`);
+      }
+      lines.push("");
+    }
+
+    if (gptAnalysis.missing?.length) {
+      lines.push("❌ WHAT WAS MISSING");
+      for (const item of gptAnalysis.missing) {
+        lines.push(`  • ${item}`);
+      }
+      lines.push("");
+    }
+
+    if (gptAnalysis.weak?.length) {
+      lines.push("⚠️ NEEDS IMPROVEMENT");
+      for (const item of gptAnalysis.weak) {
+        lines.push(`  • ${item}`);
+      }
+      lines.push("");
+    }
+
+    if (gptAnalysis.suggestions?.length) {
+      lines.push("🎯 COACHING SUGGESTIONS");
+      gptAnalysis.suggestions.forEach((s: string, i: number) => {
+        lines.push(`  ${i + 1}. ${s}`);
+      });
+      lines.push("");
+    }
+
+    if (gptAnalysis.scripts?.length) {
+      lines.push("💬 SCRIPTS TO PRACTICE");
+      gptAnalysis.scripts.forEach((s: string) => {
+        lines.push(`  "${s}"`);
+      });
+      lines.push("");
+    }
+  }
+
+  // OCC value proposition
+  lines.push("───────────────────────────────────────");
+  lines.push("  WHY THIS MATTERS");
+  lines.push("");
+  lines.push("  Every sales methodology — Sandler, Challenger, SPIN, MEDDIC —");
+  lines.push("  has the same fatal flaw: it's taught once and reinforced never.");
+  lines.push("");
+  lines.push("  Studies show 87% of training investment is lost within 90 days");
+  lines.push("  without consistent reinforcement. Managers want to coach but");
+  lines.push("  have 8+ reps and no time. Reps revert to old habits.");
+  lines.push("");
+  lines.push("  One Click Coaching closes this gap. AI scores every call against");
+  lines.push("  YOUR methodology, drafts personalized coaching for every rep,");
+  lines.push("  and surfaces exactly where your training is eroding — before it");
+  lines.push("  shows up in pipeline.");
+  lines.push("");
+  lines.push("  This analysis was produced from a single transcript in under");
+  lines.push("  60 seconds. Imagine this running on every call, every rep,");
+  lines.push("  every day — with zero manager lift.");
+  lines.push("───────────────────────────────────────");
+  lines.push("");
+  lines.push("  Want to see this for your entire team?");
+  lines.push("  john@oneclickcoaching.com");
+  lines.push("");
+
+  return lines.join("\n");
+}
+
 // ─── Main Handler ───
 serve(async (req) => {
   if (req.method === "OPTIONS") {
@@ -247,6 +343,83 @@ serve(async (req) => {
     const body = await req.json();
     const use_rag = body.use_rag !== false;
     const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+
+    // ─── Manual Mode: one-off transcript analysis, no auth required ───
+    if (body.mode === "manual") {
+      const transcript = body.transcript;
+      if (!transcript || transcript.trim().length === 0) {
+        return new Response(
+          JSON.stringify({ error: "transcript is required for manual mode" }),
+          { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+        );
+      }
+
+      const methodologyConfig = getMethodologyConfig(body.methodology || "sandler");
+
+      // RAG context
+      let ragContext = "";
+      if (use_rag && OPENAI_API_KEY) {
+        try {
+          const methodologyId = normalizeMethodology(methodologyConfig.id);
+          const methodologyLabel = getMethodologyLabel(methodologyId);
+          const preRagResults = await ragSearch(supabase, OPENAI_API_KEY, {
+            query: `Coaching knowledge best practices pitfalls process for ${methodologyLabel} sales methodology`,
+            contentTypes: ["best_practice", "process", "pitfall"],
+            matchCount: 8,
+            matchThreshold: 0.3,
+            methodology: methodologyId,
+          });
+          if (preRagResults.length > 0) {
+            ragContext = preRagResults
+              .map((r: any, i: number) => {
+                const typeLabel = r.content_type === "pitfall" ? "⚠️ PITFALL" :
+                                  r.content_type === "process" ? "📋 PROCESS" :
+                                  "📖 BEST PRACTICE";
+                return `[${typeLabel}] ${r.chunk_title}\n${r.chunk_text}`;
+              })
+              .join("\n\n");
+          }
+        } catch (ragErr) {
+          console.warn("Manual RAG failed, continuing:", ragErr);
+        }
+      }
+
+      // Run GPT-4 analysis directly
+      let gptAnalysis: any = null;
+      if (OPENAI_API_KEY) {
+        try {
+          gptAnalysis = await analyzeWithGPT4(transcript, [], "script", 1, methodologyConfig, ragContext);
+        } catch (gptError) {
+          console.warn("GPT-4 manual analysis failed:", gptError);
+        }
+      }
+
+      // Fallback to keyword
+      const keywordAnalysis = methodologyConfig.id === "sandler"
+        ? analyzeSandlerTranscript(transcript, "")
+        : fallbackAnalyzeTranscript(methodologyConfig, transcript, "");
+
+      // Build coaching document for prospect delivery
+      const coachingDoc = buildCoachingDoc(
+        gptAnalysis, keywordAnalysis, methodologyConfig.label
+      );
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          mode: "manual",
+          methodology: methodologyConfig.label,
+          gpt_analysis: gptAnalysis,
+          keyword_analysis: {
+            scores: keywordAnalysis.scores,
+            summary: keywordAnalysis.summary_result,
+          },
+          coaching_doc: coachingDoc,
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const auth = await getAuthorizedAccountContext(req, body);
     if ("error" in auth) {
       return new Response(

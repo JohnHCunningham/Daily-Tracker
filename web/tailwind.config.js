@@ -34,6 +34,22 @@ module.exports = {
           light: '#8F847A',    // Muted text
           dark: '#544A41',     // Darker text
         },
+        ink: {
+          DEFAULT: '#1A1511',  // Primary text
+        },
+        paper: {
+          DEFAULT: '#FBF8F3',  // Card backgrounds
+        },
+        line: {
+          DEFAULT: '#D9D0C2',  // Borders
+          dark: '#C6BAA8',     // Darker borders
+        },
+        aqua: {
+          DEFAULT: '#5EEAD4',  // Accent for Sandler
+        },
+        pink: {
+          DEFAULT: '#F472B6',  // Accent
+        },
         // Legacy color mappings for backwards compatibility
         navy: {
           DEFAULT: '#2A221C', // Maps to espresso
@@ -95,5 +111,18 @@ module.exports = {
       },
     },
   },
-  plugins: [],
+  plugins: [
+    // Hide scrollbar utility
+    function({ addUtilities }) {
+      addUtilities({
+        '.scrollbar-hide': {
+          '-ms-overflow-style': 'none',
+          'scrollbar-width': 'none',
+          '&::-webkit-scrollbar': {
+            display: 'none',
+          },
+        },
+      })
+    },
+  ],
 }

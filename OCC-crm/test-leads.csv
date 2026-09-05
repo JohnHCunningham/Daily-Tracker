@@ -1,0 +1,11 @@
+Name,Title,Company,LinkedIn URL,Category,Classification,Signal,Status
+Sarah Chen,VP of Sales,TechCorp,https://linkedin.com/in/sarahchen,VP,V-A,ONE_STAR,pending
+Michael Rodriguez,Sales Enablement Manager,SalesCo,https://linkedin.com/in/mrodriguez,Enablement,V-A,VIEWED,pending
+Emily Thompson,Sandler Franchisee,Sandler Training Boston,https://linkedin.com/in/emilythompson,Sandler Franchisee,V-B,,observability
+David Kim,Sales Manager,Growth Inc,https://linkedin.com/in/davidkim,Manager,V-A,,mirror
+Jessica Martinez,VP Revenue Operations,ScaleUp Corp,https://linkedin.com/in/jmartinez,VP,V-A,ONE_STAR,pending
+Robert Chen,Director of Sales,Enterprise Co,https://linkedin.com/in/robertchen,VP,V-A,,request_sent
+Lisa Anderson,Enablement Lead,SaaS Solutions,https://linkedin.com/in/lisaanderson,Enablement,V-B,VIEWED,observability
+James Wilson,Sandler User,Sales Team Inc,https://linkedin.com/in/jameswilson,Sandler User,V-B,,free_analysis
+Maria Garcia,CRO,HighGrowth Tech,https://linkedin.com/in/mariagarcia,VP,V-A,ONE_STAR,pending
+Thomas Brown,Sales Trainer,Training Corp,https://linkedin.com/in/thomasbrown,Sales Trainers,V-B,,breakup

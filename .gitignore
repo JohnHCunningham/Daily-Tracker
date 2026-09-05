@@ -31,6 +31,7 @@ node_modules/
 # Build outputs (if using a build step)
 dist/
 build/
+.next/
 .vercel
 .netlify
 .env*.local

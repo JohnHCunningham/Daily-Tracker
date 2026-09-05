@@ -1,140 +1,122 @@
 'use client'
 
 import { useMemo } from 'react'
-import { HiClock, HiExclamation, HiStar, HiChevronRight } from 'react-icons/hi'
+import { HiClock, HiStar, HiChevronRight, HiArrowRight } from 'react-icons/hi'
 import type { CRMLead } from '../page'
+import { type StageKey } from '@/lib/crm/stages'
 
 interface TicklerPanelProps {
   leads: CRMLead[]
   onLeadClick: (lead: CRMLead) => void
+  onSelectStage: (stage: StageKey) => void
 }
 
-// Days after last contact before follow-up is due
-const STAGE_FOLLOW_UP_DAYS: Record<string, number> = {
-  pending: 0,           // Immediate - new prospects
-  request_sent: 4,      // 3-5 days, wait for acceptance
-  observability: 3,     // Send 6-question test link
-  free_analysis: 5,     // After they take the test
-  mirror: 7,            // The nudge
-  breakup: 14,          // Final send
-  call: -1,             // N/A - scheduled meetings
-}
+// Actionable stages, in pipeline order. Call is excluded (scheduled, no follow-up).
+const ACTIONABLE_STAGES: StageKey[] = [
+  'pending',
+  'request_sent',
+  'observability',
+  'mirror',
+  'free_analysis',
+  'breakup',
+]
 
-const STAGE_LABELS: Record<string, string> = {
+// Action label shown per stage (what John actually does at this stage).
+const STAGE_ACTION_LABELS: Record<string, string> = {
   pending: 'Send Connection',
   request_sent: 'Check Acceptance',
   observability: 'Send Research Link',
-  free_analysis: 'Send Analysis',
   mirror: 'Send Mirror',
+  free_analysis: 'Send Analysis',
   breakup: 'Send Breakup',
 }
 
-const STAGE_ORDER = ['pending', 'request_sent', 'observability', 'free_analysis', 'mirror', 'breakup']
+// Max leads to surface per stage in the tickler; the rest live in the stage tab.
+const BATCH_PER_STAGE = 20
 
-interface DueLead extends CRMLead {
-  daysOverdue: number
-  daysSinceContact: number
+// Priority sort: V-A first, then ONE_STAR, then oldest created first.
+function prioritySort(a: CRMLead, b: CRMLead): number {
+  if (a.classification === 'V-A' && b.classification !== 'V-A') return -1
+  if (a.classification !== 'V-A' && b.classification === 'V-A') return 1
+  if (a.profile_signal === 'ONE_STAR' && b.profile_signal !== 'ONE_STAR') return -1
+  if (a.profile_signal !== 'ONE_STAR' && b.profile_signal === 'ONE_STAR') return 1
+  if (a.created_at < b.created_at) return -1
+  if (a.created_at > b.created_at) return 1
+  return 0
 }
 
-export default function TicklerPanel({ leads, onLeadClick }: TicklerPanelProps) {
-  const dueLeadsByStage = useMemo(() => {
-    const now = Date.now()
-    const result: Record<string, DueLead[]> = {}
-
-    for (const stage of STAGE_ORDER) {
-      const followUpDays = STAGE_FOLLOW_UP_DAYS[stage]
-      if (followUpDays < 0) continue // Skip stages with no follow-up
-
-      const stageLeads = leads.filter((lead) => lead.status === stage)
-      const dueLeads: DueLead[] = []
-
-      for (const lead of stageLeads) {
-        // Use last_contact_at, or created_at if no contact yet
-        const referenceDate = lead.last_contact_at || lead.created_at
-        if (!referenceDate) continue
-
-        const refTime = new Date(referenceDate).getTime()
-        const daysSinceContact = Math.floor((now - refTime) / (1000 * 60 * 60 * 24))
-        const daysOverdue = daysSinceContact - followUpDays
-
-        // Include if due today or overdue
-        if (daysOverdue >= 0) {
-          dueLeads.push({
-            ...lead,
-            daysOverdue,
-            daysSinceContact,
-          })
-        }
-      }
-
-      // Sort by: V-A first, then ONE_STAR, then most overdue
-      dueLeads.sort((a, b) => {
-        if (a.classification === 'V-A' && b.classification !== 'V-A') return -1
-        if (a.classification !== 'V-A' && b.classification === 'V-A') return 1
-        if (a.profile_signal === 'ONE_STAR' && b.profile_signal !== 'ONE_STAR') return -1
-        if (a.profile_signal !== 'ONE_STAR' && b.profile_signal === 'ONE_STAR') return 1
-        return b.daysOverdue - a.daysOverdue
-      })
-
-      if (dueLeads.length > 0) {
-        result[stage] = dueLeads
-      }
+export default function TicklerPanel({ leads, onLeadClick, onSelectStage }: TicklerPanelProps) {
+  // Group + prioritize + cap leads per actionable stage.
+  const stageBatches = useMemo(() => {
+    const result: Record<string, { total: number; batch: CRMLead[] }> = {}
+    for (const stage of ACTIONABLE_STAGES) {
+      const stageLeads = leads.filter((l) => l.status === stage)
+      if (stageLeads.length === 0) continue
+      const batch = [...stageLeads].sort(prioritySort).slice(0, BATCH_PER_STAGE)
+      result[stage] = { total: stageLeads.length, batch }
     }
-
     return result
   }, [leads])
 
-  const totalDue = useMemo(() => {
-    return Object.values(dueLeadsByStage).reduce((sum, arr) => sum + arr.length, 0)
-  }, [dueLeadsByStage])
+  const hasWork = Object.keys(stageBatches).length > 0
 
-  if (totalDue === 0) {
+  if (!hasWork) {
     return (
       <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
         <div className="flex items-center gap-2 text-green-700">
           <HiClock className="text-lg" />
           <span className="font-medium">All caught up!</span>
-          <span className="text-sm text-green-600">No prospects due for follow-up today.</span>
+          <span className="text-sm text-green-600">No prospects waiting in the pipeline.</span>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="bg-amber-50 border border-amber-200 rounded-xl mb-4 overflow-hidden">
+    <div className="bg-white border border-bone-dark rounded-xl mb-4 overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-3 bg-amber-100/50 border-b border-amber-200 flex items-center justify-between">
+      <div className="px-4 py-3 bg-bone-light/60 border-b border-bone-dark flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <HiExclamation className="text-amber-600 text-lg" />
-          <h3 className="font-semibold text-amber-900">Due Today</h3>
-          <span className="bg-amber-600 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-            {totalDue}
-          </span>
+          <HiClock className="text-terracotta text-lg" />
+          <h3 className="font-semibold text-espresso">Next Up</h3>
+          <span className="text-xs text-stone-light">Prioritized V-A → ONE_STAR</span>
         </div>
-        <span className="text-xs text-amber-700">Click to open outreach modal</span>
       </div>
 
-      {/* Stage groups */}
-      <div className="divide-y divide-amber-200">
-        {STAGE_ORDER.map((stage) => {
-          const stageLeads = dueLeadsByStage[stage]
-          if (!stageLeads || stageLeads.length === 0) return null
+      {/* Per-stage groups */}
+      <div className="divide-y divide-bone-dark">
+        {ACTIONABLE_STAGES.map((stage) => {
+          const group = stageBatches[stage]
+          if (!group) return null
 
           return (
             <div key={stage} className="p-3">
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs font-semibold text-amber-800 uppercase tracking-wide">
-                  {STAGE_LABELS[stage] || stage}
-                </span>
-                <span className="text-xs text-amber-600">({stageLeads.length})</span>
+              <div className="flex items-center justify-between mb-2">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-espresso uppercase tracking-wide">
+                    {STAGE_ACTION_LABELS[stage] || stage}
+                  </span>
+                  <span className="text-xs text-stone-light">
+                    {group.total > group.batch.length
+                      ? `next ${group.batch.length} of ${group.total}`
+                      : `(${group.total})`}
+                  </span>
+                </div>
+                <button
+                  onClick={() => onSelectStage(stage)}
+                  className="flex items-center gap-1 text-xs text-terracotta hover:text-terracotta-bright transition-colors"
+                >
+                  View all
+                  <HiArrowRight className="text-sm" />
+                </button>
               </div>
 
               <div className="flex flex-wrap gap-2">
-                {stageLeads.map((lead) => (
+                {group.batch.map((lead) => (
                   <button
                     key={lead.id}
                     onClick={() => onLeadClick(lead)}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-white border border-amber-300 rounded-lg hover:border-terracotta hover:shadow-sm transition-all text-left group"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-bone border border-bone-dark rounded-lg hover:border-terracotta hover:shadow-sm transition-all text-left group"
                   >
                     {lead.classification === 'V-A' && (
                       <span className="text-xs font-bold text-teal bg-teal/10 px-1 rounded">
@@ -147,11 +129,6 @@ export default function TicklerPanel({ leads, onLeadClick }: TicklerPanelProps) 
                     <span className="text-sm font-medium text-espresso group-hover:text-terracotta">
                       {lead.first_name} {lead.last_name?.charAt(0)}.
                     </span>
-                    {lead.daysOverdue > 0 && (
-                      <span className="text-xs text-red-600 font-medium">
-                        +{lead.daysOverdue}d
-                      </span>
-                    )}
                     <HiChevronRight className="text-stone-light text-sm opacity-0 group-hover:opacity-100 transition-opacity" />
                   </button>
                 ))}
@@ -161,9 +138,9 @@ export default function TicklerPanel({ leads, onLeadClick }: TicklerPanelProps) 
         })}
       </div>
 
-      {/* Research link reminder */}
-      {dueLeadsByStage.observability && dueLeadsByStage.observability.length > 0 && (
-        <div className="px-4 py-2 bg-terracotta/10 border-t border-amber-200">
+      {/* Research link helper */}
+      {stageBatches.observability && (
+        <div className="px-4 py-2 bg-terracotta/10 border-t border-bone-dark">
           <a
             href="https://www.oneclickcoaching.com/research.html"
             target="_blank"

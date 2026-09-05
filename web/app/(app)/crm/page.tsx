@@ -1,27 +1,23 @@
 'use client'
 
 import { useCallback, useEffect, useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
-import {
-  DndContext,
-  DragOverlay,
-  closestCorners,
-  KeyboardSensor,
-  PointerSensor,
-  useSensor,
-  useSensors,
-  DragStartEvent,
-  DragEndEvent,
-} from '@dnd-kit/core'
-import { sortableKeyboardCoordinates } from '@dnd-kit/sortable'
 import { HiPlus, HiFilter, HiSearch, HiRefresh } from 'react-icons/hi'
 import toast from 'react-hot-toast'
-import KanbanColumn from './components/KanbanColumn'
-import LeadCard from './components/LeadCard'
+import StageList from './components/StageList'
 import LeadFormModal from './components/LeadFormModal'
 import QuickOutreachModal from './components/QuickOutreachModal'
 import TicklerPanel from './components/TicklerPanel'
+import TodayMovement from './components/TodayMovement'
 import ImportModal from './components/ImportModal'
+import {
+  STAGE_ORDER,
+  STAGE_LABELS,
+  STAGE_COLORS,
+  STAGE_FOLLOW_UP_DAYS,
+  type StageKey,
+} from '@/lib/crm/stages'
 
 export interface CRMLead {
   id: string
@@ -50,53 +46,27 @@ export interface CRMLead {
   dm_variant: string | null
   created_at: string
   updated_at: string
+  stage_changed_at: string | null
 }
-
-export interface PipelineStage {
-  stage_key: string
-  stage_label: string
-  stage_order: number
-  color: string
-}
-
-const DEFAULT_STAGES: PipelineStage[] = [
-  { stage_key: 'pending', stage_label: 'Pending', stage_order: 0, color: '#8F847A' },
-  { stage_key: 'request_sent', stage_label: 'Request Sent', stage_order: 1, color: '#C9A687' },
-  { stage_key: 'observability', stage_label: 'Observability', stage_order: 2, color: '#D4B89A' },
-  { stage_key: 'free_analysis', stage_label: 'Free Analysis', stage_order: 3, color: '#D4633E' },
-  { stage_key: 'mirror', stage_label: 'Mirror', stage_order: 4, color: '#E87456' },
-  { stage_key: 'breakup', stage_label: 'Breakup', stage_order: 5, color: '#B5583E' },
-  { stage_key: 'call', stage_label: 'Call', stage_order: 6, color: '#2A221C' },
-]
 
 type FilterClassification = 'all' | 'V-A' | 'V-B'
 type FilterCategory = 'all' | string
+type ActiveTab = 'overview' | StageKey
 
 export default function CRMPage() {
+  const router = useRouter()
   const [leads, setLeads] = useState<CRMLead[]>([])
-  const [stages, setStages] = useState<PipelineStage[]>(DEFAULT_STAGES)
   const [loading, setLoading] = useState(true)
   const [accountId, setAccountId] = useState<string | null>(null)
-  const [activeId, setActiveId] = useState<string | null>(null)
   const [showNewLeadModal, setShowNewLeadModal] = useState(false)
   const [showImportModal, setShowImportModal] = useState(false)
   const [selectedLead, setSelectedLead] = useState<CRMLead | null>(null)
+  const [activeTab, setActiveTab] = useState<ActiveTab>('overview')
   const [searchQuery, setSearchQuery] = useState('')
   const [filterClassification, setFilterClassification] = useState<FilterClassification>('all')
   const [filterCategory, setFilterCategory] = useState<FilterCategory>('all')
   const [showFilters, setShowFilters] = useState(false)
   const supabase = createClient()
-
-  const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 8,
-      },
-    }),
-    useSensor(KeyboardSensor, {
-      coordinateGetter: sortableKeyboardCoordinates,
-    })
-  )
 
   const loadLeads = useCallback(async () => {
     const { data: { user } } = await supabase.auth.getUser()
@@ -119,14 +89,9 @@ export default function CRMPage() {
 
     setAccountId(userData.account_id)
 
-    // Fetch from API route instead of using Supabase client directly
     try {
       const response = await fetch('/api/crm/data')
       const data = await response.json()
-
-      if (data.stages && data.stages.length > 0) {
-        setStages(data.stages)
-      }
 
       if (data.leads) {
         setLeads(data.leads)
@@ -143,11 +108,10 @@ export default function CRMPage() {
     void loadLeads()
   }, [loadLeads])
 
-  // Group leads by stage with filtering
-  const leadsByStage = useMemo(() => {
+  // Search + classification + category filters
+  const filteredLeads = useMemo(() => {
     let filtered = leads
 
-    // Search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase()
       filtered = filtered.filter(
@@ -159,30 +123,50 @@ export default function CRMPage() {
       )
     }
 
-    // Classification filter
     if (filterClassification !== 'all') {
       filtered = filtered.filter((lead) => lead.classification === filterClassification)
     }
 
-    // Category filter
     if (filterCategory !== 'all') {
       filtered = filtered.filter((lead) => lead.category === filterCategory)
     }
 
-    // Group by stage
-    return stages.reduce((acc, stage) => {
-      acc[stage.stage_key] = filtered.filter((lead) => lead.status === stage.stage_key)
-      return acc
-    }, {} as Record<string, CRMLead[]>)
-  }, [leads, stages, searchQuery, filterClassification, filterCategory])
+    return filtered
+  }, [leads, searchQuery, filterClassification, filterCategory])
 
-  // Get unique categories for filter
+  // Group by canonical stage order
+  const leadsByStage = useMemo(() => {
+    const acc: Record<string, CRMLead[]> = {}
+    for (const stage of STAGE_ORDER) {
+      acc[stage] = filteredLeads.filter((lead) => lead.status === stage)
+    }
+    return acc
+  }, [filteredLeads])
+
+  const stageStats = useMemo(() => {
+    return STAGE_ORDER.map((stage) => {
+      const stageLeads = leadsByStage[stage] || []
+      const vaCount = stageLeads.filter((l) => l.classification === 'V-A').length
+      const oneStarCount = stageLeads.filter((l) => l.profile_signal === 'ONE_STAR').length
+      const followUpDays = STAGE_FOLLOW_UP_DAYS[stage]
+      const dueCount =
+        followUpDays != null && followUpDays >= 0
+          ? stageLeads.filter((l) => {
+              const ref = l.last_contact_at || l.created_at
+              if (!ref) return false
+              const days = (Date.now() - new Date(ref).getTime()) / (1000 * 60 * 60 * 24)
+              return days - followUpDays >= 0
+            }).length
+          : 0
+      return { stage, count: stageLeads.length, vaCount, oneStarCount, dueCount }
+    })
+  }, [leadsByStage])
+
   const categories = useMemo(() => {
     const cats = new Set(leads.map((l) => l.category).filter(Boolean) as string[])
     return Array.from(cats).sort()
   }, [leads])
 
-  // Pipeline stats
   const stats = useMemo(() => {
     const vaCount = leads.filter((l) => l.classification === 'V-A').length
     const oneStarCount = leads.filter((l) => l.profile_signal === 'ONE_STAR').length
@@ -194,66 +178,21 @@ export default function CRMPage() {
     }
   }, [leads])
 
-  const handleDragStart = (event: DragStartEvent) => {
-    setActiveId(event.active.id as string)
-  }
-
-  const handleDragEnd = async (event: DragEndEvent) => {
-    const { active, over } = event
-    setActiveId(null)
-
-    if (!over) return
-
-    const leadId = active.id as string
-    const newStage = over.id as string
-
-    // Find the lead
-    const lead = leads.find((l) => l.id === leadId)
-    if (!lead || lead.status === newStage) return
-
-    // Get new stage order
-    const stage = stages.find((s) => s.stage_key === newStage)
-    if (!stage) return
-
-    // Optimistic update
-    setLeads((prev) =>
-      prev.map((l) =>
-        l.id === leadId
-          ? { ...l, status: newStage, pipeline_stage_order: stage.stage_order }
-          : l
-      )
-    )
-
-    // Update database
-    const { error } = await supabase
-      .from('crm_leads')
-      .update({
-        status: newStage,
-        pipeline_stage_order: stage.stage_order,
-        updated_at: new Date().toISOString(),
-      })
-      .eq('id', leadId)
-
-    if (error) {
-      toast.error('Failed to move lead')
-      void loadLeads() // Revert on error
-    } else {
-      toast.success(`Moved to ${stage.stage_label}`)
-    }
-  }
-
-  const activeLead = activeId ? leads.find((l) => l.id === activeId) : null
-
-  // Handle card click for quick outreach modal
+  // Tickler "Due Today" chip → open outreach modal (fast send)
   const handleCardClick = useCallback((lead: CRMLead) => {
     setSelectedLead(lead)
   }, [])
 
-  // Handle lead advancement from modal
+  // Stage list row → navigate to detail page
+  const handleOpenLead = useCallback(
+    (lead: CRMLead) => {
+      router.push(`/crm/${lead.id}`)
+    },
+    [router]
+  )
+
   const handleLeadAdvanced = useCallback((updatedLead: CRMLead) => {
-    setLeads((prev) =>
-      prev.map((l) => (l.id === updatedLead.id ? updatedLead : l))
-    )
+    setLeads((prev) => prev.map((l) => (l.id === updatedLead.id ? updatedLead : l)))
   }, [])
 
   if (loading) {
@@ -265,7 +204,7 @@ export default function CRMPage() {
   }
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="flex flex-col">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
         <div>
@@ -373,33 +312,76 @@ export default function CRMPage() {
         </div>
       )}
 
-      {/* Tickler Panel - Due Today */}
-      <TicklerPanel leads={leads} onLeadClick={handleCardClick} />
+      {/* Today's Movement */}
+      <TodayMovement leads={leads} />
 
-      {/* Kanban Board */}
-      <div className="flex-1 overflow-x-auto pb-4">
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCorners}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
+      {/* Tickler Panel - Next Up */}
+      <TicklerPanel leads={leads} onLeadClick={handleCardClick} onSelectStage={setActiveTab} />
+
+      {/* Stage Tabs */}
+      <div className="flex gap-1 overflow-x-auto border-b border-bone-dark mb-6">
+        <button
+          onClick={() => setActiveTab('overview')}
+          className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors ${
+            activeTab === 'overview'
+              ? 'border-terracotta text-terracotta'
+              : 'border-transparent text-stone hover:text-espresso'
+          }`}
         >
-          <div className="flex gap-4 min-w-max">
-            {stages.map((stage) => (
-              <KanbanColumn
-                key={stage.stage_key}
-                stage={stage}
-                leads={leadsByStage[stage.stage_key] || []}
-                onCardClick={handleCardClick}
-              />
-            ))}
-          </div>
+          Overview
+        </button>
 
-          <DragOverlay>
-            {activeLead && <LeadCard lead={activeLead} isDragging />}
-          </DragOverlay>
-        </DndContext>
+        {STAGE_ORDER.map((stage) => (
+          <button
+            key={stage}
+            onClick={() => setActiveTab(stage)}
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors ${
+              activeTab === stage
+                ? 'border-terracotta text-terracotta'
+                : 'border-transparent text-stone hover:text-espresso'
+            }`}
+          >
+            <span
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ backgroundColor: STAGE_COLORS[stage] }}
+            />
+            {STAGE_LABELS[stage]}
+            <span className="text-xs text-stone-light bg-bone-dark/60 px-1.5 py-0.5 rounded-full">
+              {leadsByStage[stage]?.length ?? 0}
+            </span>
+          </button>
+        ))}
       </div>
+
+      {/* Tab Content */}
+      {activeTab === 'overview' ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          {stageStats.map(({ stage, count, vaCount, oneStarCount, dueCount }) => (
+            <button
+              key={stage}
+              onClick={() => setActiveTab(stage)}
+              className="bg-white border border-bone-dark rounded-xl p-4 text-left transition-all hover:border-terracotta/40 hover:shadow-sm"
+              style={{ borderTopColor: STAGE_COLORS[stage], borderTopWidth: '3px', borderTopStyle: 'solid' }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="font-semibold text-espresso">{STAGE_LABELS[stage]}</span>
+                <span className="text-2xl font-bold text-espresso">{count}</span>
+              </div>
+              <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
+                {vaCount > 0 && <span className="text-teal font-medium">{vaCount} V-A</span>}
+                {oneStarCount > 0 && <span className="text-gold font-medium">{oneStarCount} ONE_STAR</span>}
+                {dueCount > 0 && <span className="text-red-600 font-medium">{dueCount} due</span>}
+              </div>
+            </button>
+          ))}
+        </div>
+      ) : (
+        <StageList
+          stage={activeTab}
+          leads={leadsByStage[activeTab] || []}
+          onOpenLead={handleOpenLead}
+        />
+      )}
 
       {/* New Lead Modal */}
       {showNewLeadModal && accountId && (
@@ -413,7 +395,7 @@ export default function CRMPage() {
         />
       )}
 
-      {/* Quick Outreach Modal */}
+      {/* Quick Outreach Modal (opened from the "Due Today" tickler) */}
       {selectedLead && (
         <QuickOutreachModal
           lead={selectedLead}

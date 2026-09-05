@@ -80,7 +80,7 @@ export default function LeadFormModal({ accountId, lead, onClose, onSaved }: Lea
     if (lead) {
       // Update
       const { error } = await supabase
-        .from('CRM_Leads')
+        .from('crm_leads')
         .update(data)
         .eq('id', lead.id)
 
@@ -93,7 +93,7 @@ export default function LeadFormModal({ accountId, lead, onClose, onSaved }: Lea
       }
     } else {
       // Insert
-      const { error } = await supabase.from('CRM_Leads').insert(data)
+      const { error } = await supabase.from('crm_leads').insert(data)
 
       if (error) {
         if (error.code === '23505') {

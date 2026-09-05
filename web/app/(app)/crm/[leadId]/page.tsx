@@ -18,6 +18,7 @@ import {
 } from 'react-icons/hi'
 import toast from 'react-hot-toast'
 import type { CRMLead } from '../page'
+import { STAGE_ORDER, STAGE_LABELS, NEXT_STAGE, type StageKey } from '@/lib/crm/stages'
 import LeadFormModal from '../components/LeadFormModal'
 import MessageTemplates from '../components/MessageTemplates'
 
@@ -40,18 +41,8 @@ interface LeadMeeting {
   transcript_summary: string | null
 }
 
-const STAGE_LABELS: Record<string, string> = {
-  pending: 'Pending',
-  request_sent: 'Request Sent',
-  observability: 'Observability',
-  free_analysis: 'Free Analysis',
-  mirror: 'Mirror',
-  breakup: 'Breakup',
-  call: 'Call',
-}
-
-export default function LeadDetailPage({ params }: { params: Promise<{ leadId: string }> }) {
-  const [leadId, setLeadId] = useState<string | null>(null)
+export default function LeadDetailPage({ params }: { params: { leadId: string } }) {
+  const leadId = params.leadId
   const [lead, setLead] = useState<CRMLead | null>(null)
   const [activities, setActivities] = useState<LeadActivity[]>([])
   const [meetings, setMeetings] = useState<LeadMeeting[]>([])
@@ -62,11 +53,6 @@ export default function LeadDetailPage({ params }: { params: Promise<{ leadId: s
   const [savingNote, setSavingNote] = useState(false)
   const router = useRouter()
   const supabase = createClient()
-
-  // Unwrap params
-  useEffect(() => {
-    params.then((p) => setLeadId(p.leadId))
-  }, [params])
 
   const loadLead = useCallback(async () => {
     if (!leadId) return
@@ -89,7 +75,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ leadId: s
 
     // Load lead
     const { data: leadData } = await supabase
-      .from('CRM_Leads')
+      .from('crm_leads')
       .select('*')
       .eq('id', leadId)
       .eq('account_id', userData.account_id)
@@ -101,7 +87,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ leadId: s
 
     // Load activities
     const { data: activitiesData } = await supabase
-      .from('CRM_Lead_Activities')
+      .from('crm_lead_activities')
       .select('*')
       .eq('lead_id', leadId)
       .order('activity_date', { ascending: false })
@@ -113,7 +99,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ leadId: s
 
     // Load meetings
     const { data: meetingsData } = await supabase
-      .from('CRM_Lead_Meetings')
+      .from('crm_lead_meetings')
       .select('*')
       .eq('lead_id', leadId)
       .order('meeting_date', { ascending: false })
@@ -136,7 +122,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ leadId: s
     if (!lead) return
     if (!confirm('Are you sure you want to delete this lead?')) return
 
-    const { error } = await supabase.from('CRM_Leads').delete().eq('id', lead.id)
+    const { error } = await supabase.from('crm_leads').delete().eq('id', lead.id)
 
     if (error) {
       toast.error('Failed to delete lead')
@@ -149,13 +135,15 @@ export default function LeadDetailPage({ params }: { params: Promise<{ leadId: s
   const handleStageChange = async (newStage: string) => {
     if (!lead) return
 
-    const stageOrder = Object.keys(STAGE_LABELS).indexOf(newStage)
+    const stageOrder = STAGE_ORDER.indexOf(newStage as StageKey)
 
     const { error } = await supabase
-      .from('CRM_Leads')
+      .from('crm_leads')
       .update({
         status: newStage,
         pipeline_stage_order: stageOrder,
+        last_contact_at: new Date().toISOString(),
+        stage_changed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', lead.id)
@@ -163,7 +151,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ leadId: s
     if (error) {
       toast.error('Failed to update stage')
     } else {
-      toast.success(`Moved to ${STAGE_LABELS[newStage]}`)
+      toast.success(`Moved to ${STAGE_LABELS[newStage as StageKey]}`)
       setLead({ ...lead, status: newStage, pipeline_stage_order: stageOrder })
     }
   }
@@ -174,7 +162,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ leadId: s
     setSavingNote(true)
 
     // Add as activity
-    const { error } = await supabase.from('CRM_Lead_Activities').insert({
+    const { error } = await supabase.from('crm_lead_activities').insert({
       lead_id: lead.id,
       account_id: accountId,
       activity_type: 'note',
@@ -304,7 +292,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ leadId: s
             <div className="mt-6 pt-6 border-t border-bone-dark">
               <h3 className="text-xs font-medium text-stone-light mb-2">Pipeline Stage</h3>
               <div className="flex flex-wrap gap-2">
-                {Object.entries(STAGE_LABELS).map(([key, label]) => (
+                {STAGE_ORDER.map((key) => (
                   <button
                     key={key}
                     onClick={() => handleStageChange(key)}
@@ -314,7 +302,7 @@ export default function LeadDetailPage({ params }: { params: Promise<{ leadId: s
                         : 'bg-bone text-stone hover:bg-terracotta/10 hover:text-terracotta'
                     }`}
                   >
-                    {label}
+                    {STAGE_LABELS[key]}
                   </button>
                 ))}
               </div>
@@ -457,6 +445,29 @@ export default function LeadDetailPage({ params }: { params: Promise<{ leadId: s
             currentStage={lead.status}
             firstName={lead.first_name}
           />
+
+          {/* Move to Next Stage */}
+          <div className="bg-white rounded-xl border border-bone-dark p-4">
+            <h3 className="font-semibold text-espresso mb-3">Move to Next Stage</h3>
+            {lead.status === 'breakup' ? (
+              <p className="text-sm text-stone-light">Breakup is the final stage.</p>
+            ) : (
+              <>
+                <div className="flex items-center justify-between text-sm mb-3">
+                  <span className="text-stone-light">Current</span>
+                  <span className="font-medium text-espresso">
+                    {STAGE_LABELS[lead.status as StageKey] || lead.status}
+                  </span>
+                </div>
+                <button
+                  onClick={() => handleStageChange(NEXT_STAGE[lead.status as StageKey])}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terracotta text-white font-semibold rounded-lg hover:bg-terracotta-bright transition-colors"
+                >
+                  Advance to {STAGE_LABELS[NEXT_STAGE[lead.status as StageKey]]}
+                </button>
+              </>
+            )}
+          </div>
 
           {/* Quick Actions */}
           <div className="bg-white rounded-xl border border-bone-dark p-4">

@@ -51,6 +51,7 @@ export async function POST(request: NextRequest) {
       .update({
         status: nextStage,
         last_contact_at: new Date().toISOString(),
+        stage_changed_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
       .eq('id', leadId)

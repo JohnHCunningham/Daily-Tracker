@@ -60,11 +60,11 @@ const SUBJECT_LINES: Record<Stage, Record<Persona, string>> = {
 const STAGE_PROGRESSION: Record<string, string> = {
   pending: 'request_sent',
   request_sent: 'observability',
-  observability: 'free_analysis',
-  free_analysis: 'mirror',
-  mirror: 'breakup',
-  breakup: 'call',
-  call: 'call', // stays at call
+  observability: 'mirror',
+  mirror: 'free_analysis',
+  free_analysis: 'call',
+  call: 'breakup',
+  breakup: 'breakup', // terminal — stays at breakup
 }
 
 const STAGE_LABELS: Record<string, string> = {

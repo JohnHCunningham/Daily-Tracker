@@ -30,10 +30,10 @@ const PERSONA_COLORS: Record<Persona, string> = {
 const STAGE_LABELS: Record<Stage, string> = {
   connect: 'Connect',
   observability: 'Observability',
-  free_analysis: 'Free Analysis',
   mirror: 'Mirror',
-  breakup: 'Breakup',
+  free_analysis: 'Free Analysis',
   call: 'Call',
+  breakup: 'Breakup',
 }
 
 const STAGE_NOTES: Record<Stage, string> = {
@@ -251,38 +251,42 @@ If it's the wrong idea entirely, I'd like to know why. You'd be doing me a favou
   call: {
     'sales-leadership': `Looking forward to [date].
 
-Rather than another general conversation, I'd like to put something specific on the table — a pilot with one of your clients.
+Rather than another conversation about methodology, I'd like to put proof on the table — a pilot with your team.
 
-You pick the account. I set it up myself, no cost to you or them. Thirty days of their calls scored, coaching drafted for the manager to approve. At the end you tell me what you'd say to them about it.
+You pick the reps. I score their calls for thirty days. Coaching drafted, manager approved, behavior tracked. At the end, you tell me what changed.
 
-I'm not looking for an invoice from the first one. I'm looking for one person who's seen it run on real calls and will say so.
+Proof, not promises. I'm not looking for an invoice. I'm looking for one reference who's seen it work.
 
 — John`,
     'enablement': `Looking forward to [date].
 
-Rather than another general conversation, I'd like to put something specific on the table — a pilot with one of your clients.
+Rather than talking about training impact, I'd like to show you training impact — a pilot with your team.
 
-You pick the account. I set it up myself, no cost to you or them. Thirty days of their calls scored, coaching drafted for the manager to approve. At the end you tell me what you'd say to them about it.
+You pick the cohort. I score their calls for thirty days. Every behavior measured against what you taught. At the end, you can finally answer "did it work" with evidence, not hope.
 
-I'm not looking for an invoice from the first one. I'm looking for one person who's seen it run on real calls and will say so.
+I'm not looking for a sale. I'm looking for proof you can show leadership.
 
 — John`,
     'sandler-franchisee': `Looking forward to [date].
 
-Rather than another general conversation, I'd like to put something specific on the table — a pilot with one of your clients.
+Rather than pitching you, I'd like to prove it to one of your clients.
 
-You pick the account. I set it up myself, no cost to you or them. Thirty days of their calls scored, coaching drafted for the manager to approve. At the end you tell me what you'd say to them about it.
+You pick the account. I run it white-label under your brand. Thirty days of their calls scored against the eight Sandler components, coaching drafted for their managers. At the end, you tell them what you saw.
 
-I'm not looking for an invoice from the first one. I'm looking for one person who's seen it run on real calls and will say so.
+Your brand. Your client relationship. Our scoring layer.
+
+I'm not looking for an invoice. I'm looking for a renewal you can prove.
 
 — John`,
     'partner': `Looking forward to [date].
 
-Rather than another general conversation, I'd like to put something specific on the table — a pilot with one of your clients.
+Rather than another partnership conversation, I'd like to show you what partnership looks like — a pilot with one of your clients.
 
-You pick the account. I set it up myself, no cost to you or them. Thirty days of their calls scored, coaching drafted for the manager to approve. At the end you tell me what you'd say to them about it.
+You pick the account. We run it co-branded. Thirty days of their calls scored against your methodology, coaching drafted for their team. At the end, you tell me whether it strengthened the relationship or weakened it.
 
-I'm not looking for an invoice from the first one. I'm looking for one person who's seen it run on real calls and will say so.
+Your methodology. Your brand. Our layer.
+
+I'm not looking for a contract. I'm looking for a client you kept because of it.
 
 — John`,
   },
@@ -337,7 +341,7 @@ export default function MessageTemplates({ category, currentStage, firstName }: 
           </a>
         </div>
         <p className="text-xs text-stone mt-1 hidden sm:block">
-          Value-first: Connect → Observability → Free Analysis → Mirror → Breakup
+          Value-first: Connect → Observability → Mirror → Free Analysis → Call → Breakup
         </p>
       </div>
 

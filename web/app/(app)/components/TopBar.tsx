@@ -13,7 +13,7 @@ const roleBadgeColor: Record<string, string> = {
 }
 
 interface TopBarProps {
-  user: User
+  user: User | null
   userRole: string
   onMenuClick?: () => void
 }

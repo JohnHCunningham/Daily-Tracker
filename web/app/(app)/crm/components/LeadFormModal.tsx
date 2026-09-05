@@ -211,7 +211,7 @@ export default function LeadFormModal({ accountId, lead, onClose, onSaved }: Lea
               <label className="block text-sm font-medium text-espresso mb-1">Classification</label>
               <select
                 value={formData.classification}
-                onChange={(e) => setFormData({ ...formData, classification: e.target.value })}
+                onChange={(e) => setFormData({ ...formData, classification: e.target.value as 'V-A' | 'V-B' })}
                 className="w-full px-4 py-2.5 bg-white border border-bone-dark rounded-lg text-espresso focus:outline-none focus:border-terracotta"
               >
                 <option value="V-A">V-A (High Value)</option>

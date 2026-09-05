@@ -6,7 +6,7 @@ import TopBar from './TopBar'
 import type { User } from '@supabase/supabase-js'
 
 interface AppShellProps {
-  user: User
+  user: User | null
   userRole: string
   children: React.ReactNode
 }

@@ -21,6 +21,15 @@ interface ImportLead {
   profile_signal?: 'ONE_STAR' | 'VIEWED' | null
   signal?: string  // HTML: ONE_STAR, VIEWED
   notes?: string
+  // Stage date columns (from Google Sheet CSV export)
+  ebbinghaus?: string
+  if?: string
+  free_analysis?: string
+  free_analysis_sent?: string
+  mirror?: string
+  mirror_sent?: string
+  breakup?: string
+  breakup_sent?: string
 }
 
 // Map HTML kanban stages to Supabase status

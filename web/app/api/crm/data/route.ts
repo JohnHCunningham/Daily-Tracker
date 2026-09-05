@@ -45,7 +45,7 @@ export async function GET() {
       .order('last_contact_at', { ascending: false, nullsFirst: true })
 
     // DEBUG: Log status distribution
-    const statusCounts = {}
+    const statusCounts: Record<string, number> = {}
     ;(leads || []).forEach(l => statusCounts[l.status] = (statusCounts[l.status] || 0) + 1)
     console.log('API returning status counts:', statusCounts)
     console.log(`Total leads returned: ${leads?.length}`)

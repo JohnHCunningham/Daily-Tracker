@@ -52,14 +52,31 @@ export async function GET() {
       .eq('account_id', accountId)
       .order('stage_order')
 
-    // Get leads with explicit refresh
-    const { data: leads, error: leadsError } = await serviceClient
-      .from('crm_leads')
-      .select('*')
-      .eq('account_id', accountId)
-      .order('classification', { ascending: true })
-      .order('profile_signal', { ascending: true, nullsFirst: false })
-      .order('last_contact_at', { ascending: false, nullsFirst: true })
+    // Get leads, paginated to exceed the 1000-row PostgREST cap
+    const pageSize = 1000
+    let leads: any[] = []
+    let leadsError: any = null
+    let from = 0
+    while (true) {
+      const { data, error } = await serviceClient
+        .from('crm_leads')
+        .select('*')
+        .eq('account_id', accountId)
+        .order('classification', { ascending: true })
+        .order('profile_signal', { ascending: true, nullsFirst: false })
+        .order('last_contact_at', { ascending: false, nullsFirst: true })
+        .order('id', { ascending: true })
+        .range(from, from + pageSize - 1)
+
+      if (error) {
+        leadsError = error
+        break
+      }
+      if (!data || data.length === 0) break
+      leads = leads.concat(data)
+      if (data.length < pageSize) break
+      from += pageSize
+    }
 
     if (leadsError) {
       console.error('Leads query error:', leadsError)

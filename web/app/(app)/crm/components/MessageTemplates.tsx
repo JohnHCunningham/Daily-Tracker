@@ -12,13 +12,14 @@ import {
   TEMPLATES,
   RESEARCH_LINK,
   getStageFromStatus,
-  getPersonaFromCategory,
+  getPersonaFromLead,
 } from '@/lib/crm/outreach-messages'
 
 interface MessageTemplatesProps {
   category?: string | null
   currentStage?: string | null
   firstName?: string
+  title?: string | null
 }
 
 const PERSONA_COLORS: Record<Persona, string> = {
@@ -28,9 +29,9 @@ const PERSONA_COLORS: Record<Persona, string> = {
   'partner': 'bg-clay/20 text-espresso border-clay',
 }
 
-export default function MessageTemplates({ category, currentStage, firstName }: MessageTemplatesProps) {
+export default function MessageTemplates({ category, currentStage, firstName, title }: MessageTemplatesProps) {
   const defaultStage = getStageFromStatus(currentStage || null)
-  const defaultPersona = getPersonaFromCategory(category || null)
+  const defaultPersona = getPersonaFromLead(title || null, category || null)
 
   const [selectedStage, setSelectedStage] = useState<Stage>(defaultStage)
   const [selectedPersona, setSelectedPersona] = useState<Persona>(defaultPersona)
@@ -39,8 +40,8 @@ export default function MessageTemplates({ category, currentStage, firstName }: 
   // Update when props change
   useEffect(() => {
     setSelectedStage(getStageFromStatus(currentStage || null))
-    setSelectedPersona(getPersonaFromCategory(category || null))
-  }, [currentStage, category])
+    setSelectedPersona(getPersonaFromLead(title || null, category || null))
+  }, [currentStage, category, title])
 
   const handleCopy = (stage: Stage, persona: Persona) => {
     const template = TEMPLATES[stage][persona]

@@ -445,6 +445,7 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
             category={lead.category}
             currentStage={lead.status}
             firstName={lead.first_name}
+            title={lead.title}
           />
 
           {/* Move to Next Stage */}

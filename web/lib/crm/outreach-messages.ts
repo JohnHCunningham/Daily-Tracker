@@ -360,3 +360,39 @@ export function getPersonaFromCategory(category: string | null): Persona {
       return 'partner'
   }
 }
+
+// Clean categories we trust. The rest are DIRTY (a botched import merged
+// connection-degree + InMail + date + classification data into the category
+// column for ~39% of leads), so those must fall back to title keywords.
+const CLEAN_CATEGORIES = new Set([
+  'VP', 'Manager', 'CRO', 'Sandler User', 'Enablement',
+  'Sandler Franchisee', 'Sales Trainers', 'Other',
+])
+
+// Derive persona from title keywords — used when category is dirty/empty.
+export function getPersonaFromTitle(title: string | null): Persona {
+  const t = (title || '').toLowerCase()
+  if (!t) return 'partner'
+  if (t.includes('enablement')) return 'enablement'
+  if (t.includes('sandler')) return 'sandler-franchisee'
+  const isSalesLeadership =
+    t.includes('vice president') ||
+    /\bvp\b/.test(t) || t.includes('svp') || t.includes('evp') || t.includes('rvp') ||
+    t.includes('head of sales') ||
+    t.includes('chief revenue') || /\bcro\b/.test(t) ||
+    t.includes('sales director') || t.includes('director of sales') ||
+    t.includes('sales manager') || t.includes('manager of sales') ||
+    t.includes('sales leader') || t.includes('sales lead') ||
+    t.includes('global sales')
+  return isSalesLeadership ? 'sales-leadership' : 'partner'
+}
+
+// Primary persona resolver. Trust a clean category when present (it carries the
+// Sandler Franchisee vs Sandler User distinction that title cannot), otherwise
+// fall back to title keywords.
+export function getPersonaFromLead(title: string | null, category: string | null): Persona {
+  if (category && CLEAN_CATEGORIES.has(category)) {
+    return getPersonaFromCategory(category)
+  }
+  return getPersonaFromTitle(title)
+}

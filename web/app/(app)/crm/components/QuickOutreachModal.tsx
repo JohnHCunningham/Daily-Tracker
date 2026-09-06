@@ -14,7 +14,7 @@ import {
   MEETING_LINK,
   RESEARCH_LINK,
   getStageFromStatus,
-  getPersonaFromCategory,
+  getPersonaFromLead,
   linkedinSearchUrl,
 } from '@/lib/crm/outreach-messages'
 import CopyName from './CopyName'
@@ -27,7 +27,7 @@ interface QuickOutreachModalProps {
 
 export default function QuickOutreachModal({ lead, onClose, onAdvanced }: QuickOutreachModalProps) {
   const messageStage = getStageFromStatus(lead.status)
-  const persona = getPersonaFromCategory(lead.category)
+  const persona = getPersonaFromLead(lead.title, lead.category)
   const nextStage = STAGE_PROGRESSION[lead.status] || lead.status
   const isAtFinalStage = lead.status === 'breakup'
 

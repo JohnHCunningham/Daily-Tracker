@@ -361,21 +361,14 @@ export function getPersonaFromCategory(category: string | null): Persona {
   }
 }
 
-// Clean categories we trust. The rest are DIRTY (a botched import merged
-// connection-degree + InMail + date + classification data into the category
-// column for ~39% of leads), so those must fall back to title keywords.
-const CLEAN_CATEGORIES = new Set([
-  'VP', 'Manager', 'CRO', 'Sandler User', 'Enablement',
-  'Sandler Franchisee', 'Sales Trainers', 'Other',
-])
-
-// Derive persona from title keywords — used when category is dirty/empty.
-export function getPersonaFromTitle(title: string | null): Persona {
-  const t = (title || '').toLowerCase()
-  if (!t) return 'partner'
-  if (t.includes('enablement')) return 'enablement'
-  if (t.includes('sandler')) return 'sandler-franchisee'
-  const isSalesLeadership =
+// Title keywords are the cleanest, most specific signal. The category column is
+// ~39% dirty from a botched import (degree + InMail + date data merged in), AND
+// even some "clean" categories (e.g. "Enablement") contain mis-assigned VP-Sales
+// people. So: title first, category only as a fallback for empty/ambiguous titles
+// and for the Sandler Franchisee distinction (franchise owners often have titles
+// like "President" that never say "Sandler").
+function isSalesLeadershipTitle(t: string): boolean {
+  return (
     t.includes('vice president') ||
     /\bvp\b/.test(t) || t.includes('svp') || t.includes('evp') || t.includes('rvp') ||
     t.includes('head of sales') ||
@@ -383,16 +376,27 @@ export function getPersonaFromTitle(title: string | null): Persona {
     t.includes('sales director') || t.includes('director of sales') ||
     t.includes('sales manager') || t.includes('manager of sales') ||
     t.includes('sales leader') || t.includes('sales lead') ||
-    t.includes('global sales')
-  return isSalesLeadership ? 'sales-leadership' : 'partner'
+    t.includes('global sales') || t.includes('enterprise sales')
+  )
 }
 
-// Primary persona resolver. Trust a clean category when present (it carries the
-// Sandler Franchisee vs Sandler User distinction that title cannot), otherwise
-// fall back to title keywords.
+export function getPersonaFromTitle(title: string | null): Persona {
+  const t = (title || '').toLowerCase()
+  if (!t) return 'partner'
+  if (t.includes('enablement')) return 'enablement'
+  if (t.includes('sandler')) return 'sandler-franchisee'
+  return isSalesLeadershipTitle(t) ? 'sales-leadership' : 'partner'
+}
+
+// Primary persona resolver — title first, category fallback.
 export function getPersonaFromLead(title: string | null, category: string | null): Persona {
-  if (category && CLEAN_CATEGORIES.has(category)) {
-    return getPersonaFromCategory(category)
-  }
-  return getPersonaFromTitle(title)
+  const t = (title || '').toLowerCase()
+  if (t.includes('enablement')) return 'enablement'
+  if (t.includes('sandler')) return 'sandler-franchisee'
+  if (isSalesLeadershipTitle(t)) return 'sales-leadership'
+  // Category fallback (only reached when the title gave no clear signal).
+  if (category === 'Sandler Franchisee') return 'sandler-franchisee'
+  if (category === 'Enablement') return 'enablement'
+  if (category && ['VP', 'Manager', 'CRO', 'Sandler User'].includes(category)) return 'sales-leadership'
+  return 'partner'
 }

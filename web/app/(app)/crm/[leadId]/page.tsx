@@ -23,6 +23,7 @@ import LeadFormModal from '../components/LeadFormModal'
 import MessageTemplates from '../components/MessageTemplates'
 import CopyName from '../components/CopyName'
 import { linkedinSearchUrl } from '@/lib/crm/outreach-messages'
+import { fireConfetti } from '@/lib/crm/celebrate'
 
 interface LeadActivity {
   id: string
@@ -153,6 +154,7 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
     if (error) {
       toast.error('Failed to update stage')
     } else {
+      fireConfetti(false)
       toast.success(`Moved to ${STAGE_LABELS[newStage as StageKey]}`)
       setLead({ ...lead, status: newStage, pipeline_stage_order: stageOrder })
     }

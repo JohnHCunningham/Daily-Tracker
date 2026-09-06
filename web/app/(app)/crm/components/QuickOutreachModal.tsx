@@ -18,14 +18,21 @@ import {
   linkedinSearchUrl,
 } from '@/lib/crm/outreach-messages'
 import CopyName from './CopyName'
+import { fireConfetti, isMilestone, milestoneMessage } from '@/lib/crm/celebrate'
 
 interface QuickOutreachModalProps {
   lead: CRMLead
   onClose: () => void
   onAdvanced: (lead: CRMLead) => void
+  todayMovedCount?: number
 }
 
-export default function QuickOutreachModal({ lead, onClose, onAdvanced }: QuickOutreachModalProps) {
+export default function QuickOutreachModal({
+  lead,
+  onClose,
+  onAdvanced,
+  todayMovedCount = 0,
+}: QuickOutreachModalProps) {
   const messageStage = getStageFromStatus(lead.status)
   const persona = getPersonaFromLead(lead.title, lead.category)
   const nextStage = STAGE_PROGRESSION[lead.status] || lead.status
@@ -78,7 +85,14 @@ export default function QuickOutreachModal({ lead, onClose, onAdvanced }: QuickO
 
       const { lead: updatedLead } = await response.json()
 
-      toast.success(`Copied! Moving to ${STATUS_LABELS[nextStage]}`)
+      const newCount = todayMovedCount + 1
+      if (isMilestone(newCount)) {
+        fireConfetti(true)
+        toast.success(milestoneMessage(newCount), { duration: 4500 })
+      } else {
+        fireConfetti(false)
+        toast.success(`Copied! Moving to ${STATUS_LABELS[nextStage]}`)
+      }
       onAdvanced(updatedLead)
       onClose()
     } catch (error) {
@@ -86,7 +100,7 @@ export default function QuickOutreachModal({ lead, onClose, onAdvanced }: QuickO
       toast.error('Failed to advance stage')
       setAdvancing(false)
     }
-  }, [lead, currentMessage, nextStage, onAdvanced, onClose, advancing])
+  }, [lead, currentMessage, nextStage, onAdvanced, onClose, advancing, todayMovedCount])
 
   const handleCopyOnly = useCallback(async () => {
     await navigator.clipboard.writeText(currentMessage)

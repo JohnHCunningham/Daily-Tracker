@@ -178,6 +178,15 @@ export default function CRMPage() {
     }
   }, [leads])
 
+  // Leads advanced today — used for milestone celebrations on advance.
+  const todayMovedCount = useMemo(() => {
+    const startOfToday = new Date()
+    startOfToday.setHours(0, 0, 0, 0)
+    return leads.filter(
+      (l) => l.stage_changed_at != null && new Date(l.stage_changed_at) >= startOfToday
+    ).length
+  }, [leads])
+
   // Tickler "Due Today" chip → open outreach modal (fast send)
   const handleCardClick = useCallback((lead: CRMLead) => {
     setSelectedLead(lead)
@@ -401,6 +410,7 @@ export default function CRMPage() {
           lead={selectedLead}
           onClose={() => setSelectedLead(null)}
           onAdvanced={handleLeadAdvanced}
+          todayMovedCount={todayMovedCount}
         />
       )}
 

@@ -1,6 +1,11 @@
 // Shared outreach messaging — single source of truth for CRM message templates.
 // Both MessageTemplates.tsx (Quick Copy panel) and QuickOutreachModal.tsx import from here,
 // so the copy can never drift between the two again.
+//
+// v2 (loaded 2026-09-06): rewritten to fix the leak between accept and conversation.
+// Stage 2 delivers one real finding inline (no gated link), Stage 4 works without a
+// quiz score, the referral ask moved out of Stage 3, and every message ends on
+// something answerable.
 
 export type Persona = 'sales-leadership' | 'enablement' | 'sandler-franchisee' | 'partner'
 export type Stage = 'connect' | 'observability' | 'mirror' | 'free_analysis' | 'call' | 'breakup'
@@ -35,12 +40,12 @@ export const STAGE_LABELS: Record<Stage, string> = {
 }
 
 export const STAGE_NOTES: Record<Stage, string> = {
-  connect: 'Connection request (2nd°) or InMail (3rd°). Before acceptance. Introduce the premise. Never pitch the product.',
-  observability: 'First DM after they accept. Opens with "Thanks for connecting," offers the six-question test. OCC is never named here.',
-  mirror: 'The nudge. Dissonance for direct track, referral ask for partner track.',
-  free_analysis: 'The reveal. They\'ve taken the test. This is where OCC gets named. End with "send me one call." Replace [X] with their score.',
-  call: 'Pre-call agenda note, sent before a discovery call.',
-  breakup: 'Final send. Clean close, leave the door open.',
+  connect: 'Connection request (2nd°) or InMail (3rd°). Earn the accept — nothing else. No pitch, no link, no ask.',
+  observability: 'First DM after they accept. Give one real finding, no link. End on a question. OCC never named.',
+  mirror: 'The nudge. Show them their own situation, give them an easy exit.',
+  free_analysis: 'The concrete offer — send me one call. Works whether or not they touched the research page.',
+  call: 'Pre-call agenda note. Do not price, do not give away a pilot in writing.',
+  breakup: 'Final send. Three reasons — timing, problem, person. Clean close, leave the door open.',
 }
 
 // CRM status → display label (used for the stage badge in the modal)
@@ -106,219 +111,237 @@ export const SUBJECT_LINES: Record<Stage, Record<Persona, string>> = {
 
 export const TEMPLATES: Record<Stage, Record<Persona, string>> = {
   connect: {
-    'sales-leadership': `How many of your reps ran the methodology on today's calls?
-
-If the honest answer is "I'd have to check" — that's the gap I work on. Not activity. Not training. Execution.
-
-Happy to send over what I'm finding.
-
-— John`,
-    'enablement': `One question: when's the last time you knew — not hoped, knew — that a rep ran the methodology on a live call?
-
-Most enablement leaders can't answer. Not because training failed. Because there's no instrument for it.
-
-I've been building one. If this is live for you, I'd like to compare notes.
-
-— John`,
-    'sandler-franchisee': `Your clients finish the training. Then nothing watches whether it stuck.
-
-That's your renewal problem — you can't show the behavior change you sold.
-
-I built a scoring layer for exactly that. I'd value your honest reaction more than a sale.
-
-— John`,
-    'partner': `You own the methodology. You don't own anything that runs when you're not in the room.
-
-I've been building that layer — the thing that keeps coaching your client's reps after the workshop ends.
-
-If that's interesting, I'd like to show you before I show anyone else.
-
-— John`,
+    'sales-leadership': `Most VPs I ask can't say how many of their reps ran the methodology on today's calls. Not a criticism — nobody hears 40 calls a week. That's the problem I work on. Would like to connect.`,
+    'enablement': `You can prove reps completed the training. Proving they run it on a live call is the harder half. That's the gap I work on. Would like to connect.`,
+    'sandler-franchisee': `You teach it, then a client says it didn't stick and there's no data to argue with. I've been building a way to measure whether Sandler actually gets run after the training ends. Worth connecting?`,
+    'partner': `Every trainer I talk to has the same renewal problem — no evidence the method is being run 90 days later. I've been building the measurement layer for it. Would like to connect.`,
   },
   observability: {
-    'sales-leadership': `Thanks for connecting.
+    'sales-leadership': `Thanks for connecting, [First].
 
-You can measure what got trained. You can measure what got logged. But can you measure what actually got run?
+One finding I keep coming back to: Dahling et al. studied sales teams and found coaching frequency only improved quota attainment where the manager's coaching skill was already high. Where it was low, more coaching made performance worse.
 
-I put together research on this — six questions, two minutes, you get a scored result that shows where your visibility breaks. No sales pitch. Just a diagnostic you can use whether we ever talk again.
+Which lands differently when most managers are working off four calls a week out of forty.
 
-Real research, not a lead magnet disguised as one.
-
-Here's the link: https://www.oneclickcoaching.com/research.html
+Curious how it works at [Company] — do your managers pick which calls to review, or is it whatever's top of mind that week?
 
 — John`,
-    'enablement': `Thanks for connecting.
+    'enablement': `Thanks for connecting, [First].
 
-Training gets delivered. Behavior gets hoped for. Results get measured later.
+Kluger and DeNisi meta-analysed feedback interventions and found more than a third of them made performance worse. Feedback isn't automatically useful — it has to be anchored to something specific the person actually did.
 
-I built research that shows exactly where that gap lives — six questions, self-scored, you get a result that names whether you're missing activity data, behavior data, or execution proof.
+Which is the part I think enablement gets blamed for unfairly. You can prove completion. Nobody's handed you an instrument for execution.
 
-No pitch. Just a diagnostic. Use it whether we talk again or not.
-
-Here's the link: https://www.oneclickcoaching.com/research.html
+What are you using right now to tell whether a rep ran the framework on a live call?
 
 — John`,
-    'sandler-franchisee': `Thanks for connecting.
+    'sandler-franchisee': `Thanks for connecting, [First].
 
-Your clients finish the training. You invoice. Then nobody can prove it stuck.
+Cepeda's meta-analysis on the spacing effect is the one that stuck with me — distributed practice beats a single session, and the gap is wider than most people assume.
 
-I put together research that surfaces where that visibility breaks — for you and for your clients. Six questions, two minutes, you get a scored result that shows the gap before renewal time.
+Which is the argument for reinforcement. Except nearly every reinforcement program I've looked at measures attendance rather than whether the method actually gets run.
 
-No sales hype. Real diagnostic you can use right now.
-
-Here's the link: https://www.oneclickcoaching.com/research.html
+How do you handle the 90 days after an engagement wraps?
 
 — John`,
-    'partner': `Thanks for connecting.
+    'partner': `Thanks for connecting, [First].
 
-Trainers sell behavior change. Clients buy it. Nobody proves it happened.
+The finding I keep returning to: Kluger and DeNisi found over a third of feedback interventions made performance worse. Feedback has to be anchored to specific behaviour or it does damage.
 
-I built research that names exactly where that break is — six questions, self-scored result shows whether the gap is in your visibility, their execution, or the measurement layer.
+Which is awkward for our side of the industry, because "be more consultative" is the most common coaching note in existence and it's anchored to nothing.
 
-Real research, not lead bait. Use it whether we ever work together or not.
-
-Here's the link: https://www.oneclickcoaching.com/research.html
+When a client tells you it didn't stick, what do you say?
 
 — John`,
   },
   mirror: {
-    'sales-leadership': `One question, then I'll leave you alone.
+    'sales-leadership': `[First] — no reply needed if this isn't live for you.
 
-You can measure what got trained. You can measure what got logged. But can you measure what actually got run?
+However many calls your team ran this week, you heard a handful. The rest happened with no record beyond a CRM note written by the person being coached.
 
-If you've got a way to check whether reps ran the methodology on today's calls — not logged it, ran it — I'd like to hear it. If you haven't, that's the gap I built for.
+That's not a discipline problem, it's arithmetic. Nobody coaches their way out of it.
 
-— John`,
-    'enablement': `One question, then I'll stop.
-
-If a rep ran the methodology perfectly on a call this morning, would anyone know? Not hope. Not assume. Know.
-
-Training delivered is not training run. Hope is not measurement. That's the whole thing I built.
-
-Send me one call and I'll show you rather than describe it.
+If you've solved it, I'd like to know how. If you haven't, that's the thing I built for.
 
 — John`,
-    'sandler-franchisee': `One ask, then I'll leave it.
+    'enablement': `[First] — last one on this, then I'll leave it.
 
-Who else in your network should I be talking to? One or two people whose reaction you'd trust.
+The pattern I keep running into: enablement gets measured on delivery — sessions run, completion, certifications — and then gets held responsible for adoption, which nobody gave you the tools to see.
 
-I'd rather have the introduction than the arrangement.
+If a rep ran your framework perfectly this morning, would anything in your stack tell you?
+
+If yes, I'd like to hear what you're using. If no, that's the gap.
 
 — John`,
-    'partner': `One ask, then I'll leave it.
+    'sandler-franchisee': `[First] — one thought, then I'll leave it.
 
-Who else in your network should I be talking to? One or two people whose reaction you'd trust.
+The renewal conversation I hear about most: the client says it didn't really stick, and the honest answer is that it's an execution problem on their side. True, and it never lands well.
 
-I'd rather have the introduction than the arrangement.
+The version that does land is a number. Something like "you were at 31% in March, you're at 78% now."
+
+Is that worth twenty minutes, or is reinforcement not really a line you sell?
+
+— John`,
+    'partner': `[First] — one thought, then I'll leave it.
+
+Most reinforcement programs measure attendance. Which means at renewal you can say "your reps attended four sessions" and you can't say "your reps run the framework in 78% of discovery calls, up from 31%."
+
+The second sentence is worth money. The first one isn't.
+
+Is measurement something you've tried to solve, or has it not been worth the effort?
 
 — John`,
   },
   free_analysis: {
-    'sales-leadership': `You scored a [X].
+    'sales-leadership': `[First] — something concrete instead of another message.
 
-That number is the answer to a question nobody asks out loud: if a rep ran the methodology on a call today, would you actually know?
+Send me one recorded discovery call from your team. I'll score it against whatever methodology you run and send back the annotated transcript: the moments where the rep drifted, quoted with timestamps, and the play I'd have their manager send before the next call.
 
-That's what I built — the thing that scores every call and shows you, in one line, whether it's happening. Not the CRM. Not a survey. The call itself.
+One day's turnaround, no cost, and your reps don't need to know it happened.
 
-Send me one real call. I'll send back what it sees.
+If it's useless you'll know in five minutes and I'll stop. If it isn't, you'll have seen what your managers are missing on the other 39 calls this week.
 
-— John`,
-    'enablement': `You scored a [X].
-
-That's not a judgment on your training. It's a measure of the gap between what got delivered and what anyone can prove happened.
-
-I built the instrument that closes it — every call scored, so you can finally answer "did the training change anything" with a number instead of a guess.
-
-Send me one call from the team. I'll send back what it sees.
+Want to send one?
 
 — John`,
-    'sandler-franchisee': `You scored a [X].
+    'enablement': `[First] — here's something concrete rather than another note.
 
-Your clients would score about the same — not because the training's bad, but because nothing watches after the workshop ends.
+Send me one call from a rep who's been through your program. I'll score it against your framework and send back the annotated transcript: which components landed, which didn't, and where the drift starts.
 
-That's the layer I built. It scores every call against the eight Sandler components and coaches what's missing, with the manager approving before anything reaches a rep. White-label, so it runs under your brand.
+A day, no cost, no rep involvement.
 
-Send me one call — yours or a client's, redacted. I'll send back what it sees.
+Worst case you learn nothing and I go away. Best case it's your first piece of adoption evidence that isn't a survey.
+
+Want to try one?
 
 — John`,
-    'partner': `You scored a [X].
+    'sandler-franchisee': `[First] — a concrete offer rather than another message.
 
-That's the gap between the methodology you teach and what anyone can prove a rep runs afterward. It's also the thing that kills your renewals — your clients can't see the change they paid for.
+Send me one call. Yours, or a client's with names redacted. I'll score it against the Sandler components — upfront contract, pain funnel, budget, decision — and send back the annotated transcript with the coaching I'd draft for their manager.
 
-I built the layer that closes it. Every call scored, coaching drafted, running under your brand, not mine.
+A day's turnaround, no cost, and nothing carries my name unless you want it to.
 
-Send me one call. I'll send back what it sees.
+If the output's useful we can talk about what it looks like running under your brand after an engagement. If it isn't, you've lost twenty minutes.
+
+Want to send one?
+
+— John`,
+    'partner': `[First] — something concrete instead of another note.
+
+Send me one call from a client team you've trained. I'll score it against your methodology and send back the annotated transcript: what got run, what got skipped, and the coaching note I'd draft for their manager.
+
+A day, no cost, white-labelled if you'd rather it look like yours.
+
+That's the whole artifact. If it's not useful you'll know immediately and I'll leave you alone.
+
+Want to send one?
 
 — John`,
   },
   call: {
-    'sales-leadership': `Looking forward to [date].
+    'sales-leadership': `Looking forward to [date], [First].
 
-Rather than another conversation about methodology, I'd like to put proof on the table — a pilot with your team.
+So we don't waste it, here's what I'd like to cover — tell me if you'd change it.
 
-You pick the reps. I score their calls for thirty days. Coaching drafted, manager approved, behavior tracked. At the end, you tell me what changed.
+How coaching works on your team today and where it breaks down. Then one scored call, about five minutes, so you're reacting to something real rather than a description. Then we decide whether there's a next step.
 
-Proof, not promises. I'm not looking for an invoice. I'm looking for one reference who's seen it work.
+Three endings are all fine: not for you, right idea wrong quarter, or we pick a starting point.
 
-— John`,
-    'enablement': `Looking forward to [date].
-
-Rather than talking about training impact, I'd like to show you training impact — a pilot with your team.
-
-You pick the cohort. I score their calls for thirty days. Every behavior measured against what you taught. At the end, you can finally answer "did it work" with evidence, not hope.
-
-I'm not looking for a sale. I'm looking for proof you can show leadership.
+If there's a specific rep or deal stage you want me to look at, send it ahead and I'll come prepared.
 
 — John`,
-    'sandler-franchisee': `Looking forward to [date].
+    'enablement': `Looking forward to [date], [First].
 
-Rather than pitching you, I'd like to prove it to one of your clients.
+Quick agenda so we use it well — push back if you'd change it.
 
-You pick the account. I run it white-label under your brand. Thirty days of their calls scored against the eight Sandler components, coaching drafted for their managers. At the end, you tell them what you saw.
+How adoption gets measured today and where that falls apart. Then one scored call, five minutes, so you're looking at something concrete. Then we decide if there's a next step.
 
-Your brand. Your client relationship. Our scoring layer.
+"Not now" and "wrong problem" are both perfectly good outcomes.
 
-I'm not looking for an invoice. I'm looking for a renewal you can prove.
+If you can send one call ahead of time I'll score it and we'll spend the call on your data instead of my demo.
 
 — John`,
-    'partner': `Looking forward to [date].
+    'sandler-franchisee': `Looking forward to [date], [First].
 
-Rather than another partnership conversation, I'd like to show you what partnership looks like — a pilot with one of your clients.
+Upfront contract, since you'd do the same to me.
 
-You pick the account. We run it co-branded. Thirty days of their calls scored against your methodology, coaching drafted for their team. At the end, you tell me whether it strengthened the relationship or weakened it.
+I want to understand how you handle the 90 days after an engagement ends and where that gets hard. I'll show you one scored call, five minutes. At the end, three outcomes all work: not for you, right idea wrong timing, or we pick one client and I show you what it does on their actual calls.
 
-Your methodology. Your brand. Our layer.
+I'm not going to pitch you a subscription on a first call.
 
-I'm not looking for a contract. I'm looking for a client you kept because of it.
+One thing that'd help me prepare: when does your next engagement start or wrap?
+
+— John`,
+    'partner': `Looking forward to [date], [First].
+
+Agenda, so you can redirect it.
+
+How you handle reinforcement now, what the renewal conversation sounds like, and where the evidence gap costs you. Then one scored call, five minutes. Then we decide whether there's anything here.
+
+I'd rather find out it's not a fit on this call than three calls from now.
+
+Useful to know ahead of time: when does your next client engagement land?
 
 — John`,
   },
   breakup: {
-    'sales-leadership': `I've sent a few notes. Silence usually means one of three things: wrong timing, wrong problem, or wrong person.
+    'sales-leadership': `[First] — I'll stop here.
 
-If it's timing — say a quarter and I'll come back then.
-If it's the wrong problem — I'd like to know what the right one is.
-If it's the wrong person — who?
+Silence usually means one of three things, and any of them is a fine answer.
 
-— John`,
-    'enablement': `I've sent a few notes. Silence usually means one of three things: wrong timing, wrong problem, or wrong person.
+Wrong timing — name a quarter and I'll come back then, nothing in between.
+Wrong problem — I'd like to know what the real one is.
+Wrong person — who should I be talking to?
 
-If it's timing — say a quarter and I'll come back then.
-If it's the wrong problem — I'd like to know what the right one is.
-If it's the wrong person — who?
+And if it's none of those and you're just busy, no reply needed and no hard feelings.
 
 — John`,
-    'sandler-franchisee': `I've sent a couple of notes. If it's not the right time, that's fine and I won't keep asking.
+    'enablement': `[First] — closing the loop, then I'll leave you alone.
 
-If it's the wrong idea entirely, I'd like to know why. You'd be doing me a favour.
+Three possibilities, all fine.
+
+Wrong timing — tell me a quarter and I'll come back then.
+Wrong problem — what's the one actually on your list?
+Wrong person — point me at them and I'll stop bothering you.
+
+If none of those fit, no reply needed.
 
 — John`,
-    'partner': `I've sent a couple of notes. If it's not the right time, that's fine and I won't keep asking.
+    'sandler-franchisee': `[First] — last note, and I mean it.
 
-If it's the wrong idea entirely, I'd like to know why. You'd be doing me a favour.
+If the timing's off, tell me roughly when your next engagement lands and I'll come back then rather than checking in every few weeks.
+
+If the idea's wrong, I'd take one honest sentence on why over a polite no. You'd be doing me a real favour — I'd rather find out now than after another twenty of these conversations.
+
+Either way, thanks for the connection.
+
+— John`,
+    'partner': `[First] — I'll leave it here.
+
+If it's timing, tell me when your next engagement starts and I'll come back then.
+
+If it's the idea, I'd rather have one honest sentence about why than a polite no. Genuinely useful to me at this stage.
+
+And if I've misread what you do entirely, that's worth knowing too.
+
+Thanks either way.
 
 — John`,
   },
+}
+
+// Fill [First] and [Company] placeholders from a lead record, so John pastes a
+// personalized message instead of "Thanks for connecting, [First]". [date] is
+// left untouched — it's the scheduled call date, which only John knows.
+export function personalizeTemplate(
+  message: string,
+  lead: { first_name: string | null; company: string | null }
+): string {
+  const first = lead.first_name ?? ''
+  const company = lead.company ?? 'your company'
+  return message
+    .replace(/\[First\]/g, first)
+    .replace(/\[Company\]/g, company)
 }
 
 // Map CRM status to message stage

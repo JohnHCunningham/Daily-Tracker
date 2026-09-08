@@ -12,10 +12,10 @@ import {
   TEMPLATES,
   STAGE_PROGRESSION,
   MEETING_LINK,
-  RESEARCH_LINK,
   getStageFromStatus,
   getPersonaFromLead,
   linkedinSearchUrl,
+  personalizeTemplate,
 } from '@/lib/crm/outreach-messages'
 import CopyName from './CopyName'
 import { fireConfetti, isMilestone, milestoneMessage } from '@/lib/crm/celebrate'
@@ -43,7 +43,7 @@ export default function QuickOutreachModal({
   const [subjectCopied, setSubjectCopied] = useState(false)
   const [advancing, setAdvancing] = useState(false)
 
-  const currentMessage = TEMPLATES[messageStage][selectedPersona]
+  const currentMessage = personalizeTemplate(TEMPLATES[messageStage][selectedPersona], lead)
   const currentSubject = SUBJECT_LINES[messageStage][selectedPersona]
 
   // Close on escape key
@@ -250,26 +250,6 @@ export default function QuickOutreachModal({
           </div>
 
           {/* Tips and Links */}
-          {messageStage === 'observability' && (
-            <div className="mt-3 p-3 bg-terracotta/5 rounded-lg border border-terracotta/20">
-              <p className="text-xs text-stone-light mb-1.5">
-                💡 <span className="font-medium text-stone">Value-first positioning:</span> Real research they can use immediately, no pitch required.
-              </p>
-              <a
-                href={RESEARCH_LINK}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-xs text-terracotta hover:text-terracotta-bright font-medium inline-flex items-center gap-1"
-              >
-                Preview research page <HiExternalLink className="text-xs" />
-              </a>
-            </div>
-          )}
-          {messageStage === 'free_analysis' && (
-            <p className="text-xs text-terracotta mt-2">
-              Replace [X] with their score from the research test.
-            </p>
-          )}
           {messageStage === 'call' && (
             <div className="mt-3 p-3 bg-teal/5 rounded-lg border border-teal/20">
               <p className="text-xs text-stone mb-1">Replace [date] and send your booking link:</p>

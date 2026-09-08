@@ -13,6 +13,7 @@ import {
   RESEARCH_LINK,
   getStageFromStatus,
   getPersonaFromLead,
+  personalizeTemplate,
 } from '@/lib/crm/outreach-messages'
 
 interface MessageTemplatesProps {
@@ -20,6 +21,7 @@ interface MessageTemplatesProps {
   currentStage?: string | null
   firstName?: string
   title?: string | null
+  company?: string | null
 }
 
 const PERSONA_COLORS: Record<Persona, string> = {
@@ -29,7 +31,7 @@ const PERSONA_COLORS: Record<Persona, string> = {
   'partner': 'bg-clay/20 text-espresso border-clay',
 }
 
-export default function MessageTemplates({ category, currentStage, firstName, title }: MessageTemplatesProps) {
+export default function MessageTemplates({ category, currentStage, firstName, title, company }: MessageTemplatesProps) {
   const defaultStage = getStageFromStatus(currentStage || null)
   const defaultPersona = getPersonaFromLead(title || null, category || null)
 
@@ -47,11 +49,7 @@ export default function MessageTemplates({ category, currentStage, firstName, ti
     const template = TEMPLATES[stage][persona]
     if (!template) return
 
-    // Replace placeholders
-    let text = template
-    if (firstName) {
-      text = text.replace(/\[Name\]/g, firstName)
-    }
+    const text = personalizeTemplate(template, { first_name: firstName ?? null, company: company ?? null })
 
     navigator.clipboard.writeText(text)
     setCopiedId(`${stage}-${persona}`)
@@ -60,7 +58,10 @@ export default function MessageTemplates({ category, currentStage, firstName, ti
     setTimeout(() => setCopiedId(null), 2000)
   }
 
-  const currentTemplate = TEMPLATES[selectedStage][selectedPersona]
+  const currentTemplate = personalizeTemplate(TEMPLATES[selectedStage][selectedPersona], {
+    first_name: firstName ?? null,
+    company: company ?? null,
+  })
 
   return (
     <div className="bg-bone-light rounded-xl border border-bone-dark shadow-card">
@@ -169,11 +170,6 @@ export default function MessageTemplates({ category, currentStage, firstName, ti
         </div>
 
         {/* Quick Tips */}
-        {selectedStage === 'free_analysis' && (
-          <p className="text-xs text-terracotta mt-2">
-            Replace [X] with their actual score from the research test.
-          </p>
-        )}
         {selectedStage === 'call' && (
           <p className="text-xs text-terracotta mt-2">
             Replace [date] with the scheduled call date.

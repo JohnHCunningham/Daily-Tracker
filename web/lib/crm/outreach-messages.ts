@@ -59,17 +59,6 @@ export const STATUS_LABELS: Record<string, string> = {
   breakup: 'Breakup',
 }
 
-// Advance-stage progression. "breakup" is terminal.
-export const STAGE_PROGRESSION: Record<string, string> = {
-  pending: 'request_sent',
-  request_sent: 'observability',
-  observability: 'mirror',
-  mirror: 'free_analysis',
-  free_analysis: 'call',
-  call: 'breakup',
-  breakup: 'breakup',
-}
-
 export const SUBJECT_LINES: Record<Stage, Record<Persona, string>> = {
   connect: {
     'sales-leadership': 'The gap between training and execution',

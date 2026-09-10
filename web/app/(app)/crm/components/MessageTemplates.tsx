@@ -26,8 +26,8 @@ interface MessageTemplatesProps {
 
 const PERSONA_COLORS: Record<Persona, string> = {
   'sales-leadership': 'bg-terracotta/15 text-terracotta border-terracotta/30',
-  'enablement': 'bg-green-100 text-green-700 border-green-300',
-  'sandler-franchisee': 'bg-blue-100 text-blue-700 border-blue-300',
+  'enablement': 'bg-bone text-espresso border-bone-dark',
+  'sandler-franchisee': 'bg-clay/20 text-espresso border-clay',
   'partner': 'bg-clay/20 text-espresso border-clay',
 }
 
@@ -144,7 +144,7 @@ export default function MessageTemplates({ category, currentStage, firstName, ti
             onClick={() => handleCopy(selectedStage, selectedPersona)}
             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-semibold transition-all flex-shrink-0 ${
               copiedId === `${selectedStage}-${selectedPersona}`
-                ? 'bg-green-500 text-white'
+                ? 'bg-terracotta text-white'
                 : 'bg-terracotta text-white hover:bg-terracotta-bright'
             }`}
           >
@@ -195,7 +195,7 @@ export default function MessageTemplates({ category, currentStage, firstName, ti
                   onClick={() => handleCopy(stage, selectedPersona)}
                   className={`px-2 py-1 rounded text-xs font-medium transition-colors ${
                     copiedId === `${stage}-${selectedPersona}`
-                      ? 'bg-green-500 text-white'
+                      ? 'bg-terracotta text-white'
                       : 'bg-terracotta/10 text-terracotta hover:bg-terracotta/20'
                   }`}
                 >

@@ -35,7 +35,7 @@ export default function CopyName({ firstName, lastName, className, showIcon = fa
     >
       <span className="truncate">{fullName}</span>
       {copied ? (
-        <HiCheck className="text-green-500 text-sm flex-shrink-0" />
+        <HiCheck className="text-terracotta text-sm flex-shrink-0" />
       ) : (
         <HiClipboard
           className={`text-stone-light text-sm flex-shrink-0 transition-opacity ${

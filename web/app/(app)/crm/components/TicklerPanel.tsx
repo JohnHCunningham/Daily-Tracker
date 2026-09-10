@@ -62,11 +62,11 @@ export default function TicklerPanel({ leads, onLeadClick, onSelectStage }: Tick
 
   if (!hasWork) {
     return (
-      <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-4">
-        <div className="flex items-center gap-2 text-green-700">
+      <div className="bg-white border border-bone-dark rounded-xl p-4 mb-4">
+        <div className="flex items-center gap-2 text-espresso">
           <HiClock className="text-lg" />
           <span className="font-medium">All caught up!</span>
-          <span className="text-sm text-green-600">No prospects waiting in the pipeline.</span>
+          <span className="text-sm text-stone-light">No prospects waiting in the pipeline.</span>
         </div>
       </div>
     )

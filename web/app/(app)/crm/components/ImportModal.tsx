@@ -140,11 +140,11 @@ Michael Rodriguez,Sales Enablement Manager,SalesCo,https://linkedin.com/in/mrodr
           </details>
 
           {/* CSV format guide */}
-          <div className="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-lg">
-            <h3 className="text-sm font-semibold text-amber-900 mb-2">
+          <div className="mt-4 p-3 bg-bone border border-bone-dark rounded-lg">
+            <h3 className="text-sm font-semibold text-espresso mb-2">
               Supported Columns
             </h3>
-            <div className="text-xs text-amber-800 space-y-1">
+            <div className="text-xs text-stone space-y-1">
               <p><strong>Name</strong> or <strong>First Name + Last Name</strong> (required)</p>
               <p><strong>Title, Company, LinkedIn URL, Email</strong> (optional)</p>
               <p><strong>Category:</strong> VP, Manager, Enablement, Sandler Franchisee, etc.</p>

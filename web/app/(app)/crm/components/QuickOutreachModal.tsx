@@ -10,13 +10,13 @@ import {
   STATUS_LABELS,
   SUBJECT_LINES,
   TEMPLATES,
-  STAGE_PROGRESSION,
   MEETING_LINK,
   getStageFromStatus,
   getPersonaFromLead,
   linkedinSearchUrl,
   personalizeTemplate,
 } from '@/lib/crm/outreach-messages'
+import { NEXT_STAGE, STAGE_LABELS, type StageKey } from '@/lib/crm/stages'
 import CopyName from './CopyName'
 import { fireConfetti, isMilestone, milestoneMessage } from '@/lib/crm/celebrate'
 
@@ -35,7 +35,7 @@ export default function QuickOutreachModal({
 }: QuickOutreachModalProps) {
   const messageStage = getStageFromStatus(lead.status)
   const persona = getPersonaFromLead(lead.title, lead.category)
-  const nextStage = STAGE_PROGRESSION[lead.status] || lead.status
+  const nextStage = NEXT_STAGE[lead.status as StageKey]
   const isAtFinalStage = lead.status === 'breakup'
 
   const [selectedPersona, setSelectedPersona] = useState<Persona>(persona)
@@ -91,7 +91,7 @@ export default function QuickOutreachModal({
         toast.success(milestoneMessage(newCount), { duration: 4500 })
       } else {
         fireConfetti(false)
-        toast.success(`Copied! Moving to ${STATUS_LABELS[nextStage]}`)
+        toast.success(`Copied! Moving to ${STAGE_LABELS[nextStage]}`)
       }
       onAdvanced(updatedLead)
       onClose()
@@ -210,7 +210,7 @@ export default function QuickOutreachModal({
               onClick={handleCopySubject}
               className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
                 subjectCopied
-                  ? 'bg-green-500 text-white'
+                  ? 'bg-terracotta text-white'
                   : 'text-terracotta hover:bg-terracotta/10'
               }`}
             >
@@ -235,7 +235,7 @@ export default function QuickOutreachModal({
               onClick={handleCopyOnly}
               className={`flex items-center gap-1 px-2 py-1 rounded text-xs transition-colors ${
                 copied
-                  ? 'bg-green-500 text-white'
+                  ? 'bg-terracotta text-white'
                   : 'text-terracotta hover:bg-terracotta/10'
               }`}
             >

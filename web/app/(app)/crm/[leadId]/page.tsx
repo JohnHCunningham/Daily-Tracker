@@ -22,7 +22,13 @@ import { STAGE_ORDER, STAGE_LABELS, NEXT_STAGE, type StageKey } from '@/lib/crm/
 import LeadFormModal from '../components/LeadFormModal'
 import MessageTemplates from '../components/MessageTemplates'
 import CopyName from '../components/CopyName'
-import { linkedinSearchUrl } from '@/lib/crm/outreach-messages'
+import {
+  TEMPLATES,
+  getPersonaFromLead,
+  getStageFromStatus,
+  linkedinSearchUrl,
+  personalizeTemplate,
+} from '@/lib/crm/outreach-messages'
 import { fireConfetti } from '@/lib/crm/celebrate'
 
 interface LeadActivity {
@@ -54,6 +60,7 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
   const [showEditModal, setShowEditModal] = useState(false)
   const [newNote, setNewNote] = useState('')
   const [savingNote, setSavingNote] = useState(false)
+  const [advancingStage, setAdvancingStage] = useState<string | null>(null)
   const router = useRouter()
   const supabase = createClient()
 
@@ -135,28 +142,59 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
     }
   }
 
-  const handleStageChange = async (newStage: string) => {
+  const handleStageChange = async (newStage: StageKey) => {
     if (!lead) return
+    if (newStage === lead.status) return
 
-    const stageOrder = STAGE_ORDER.indexOf(newStage as StageKey)
+    if (lead.status === 'breakup') {
+      toast('Breakup is the final stage')
+      return
+    }
 
-    const { error } = await supabase
-      .from('crm_leads')
-      .update({
+    setAdvancingStage(newStage)
+
+    const stageOrder = STAGE_ORDER.indexOf(newStage)
+    const now = new Date().toISOString()
+    const messageStage = getStageFromStatus(lead.status)
+    const persona = getPersonaFromLead(lead.title, lead.category)
+    const currentMessage = personalizeTemplate(TEMPLATES[messageStage][persona], lead)
+
+    try {
+      await navigator.clipboard.writeText(currentMessage)
+
+      const linkedinTarget = lead.linkedin_url || linkedinSearchUrl(lead.first_name, lead.last_name)
+      window.open(linkedinTarget, '_blank')
+
+      const { error } = await supabase
+        .from('crm_leads')
+        .update({
+          status: newStage,
+          pipeline_stage_order: stageOrder,
+          last_contact_at: now,
+          stage_changed_at: now,
+          updated_at: now,
+        })
+        .eq('id', lead.id)
+
+      if (error) {
+        throw error
+      }
+
+      fireConfetti(false)
+      toast.success(`Copied! Moved to ${STAGE_LABELS[newStage]}`)
+      setLead({
+        ...lead,
         status: newStage,
         pipeline_stage_order: stageOrder,
-        last_contact_at: new Date().toISOString(),
-        stage_changed_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
+        last_contact_at: now,
+        stage_changed_at: now,
+        updated_at: now,
       })
-      .eq('id', lead.id)
-
-    if (error) {
+    } catch (error) {
+      console.error('Failed to copy and update stage:', error)
       toast.error('Failed to update stage')
-    } else {
-      fireConfetti(false)
-      toast.success(`Moved to ${STAGE_LABELS[newStage as StageKey]}`)
-      setLead({ ...lead, status: newStage, pipeline_stage_order: stageOrder })
+    } finally {
+      setAdvancingStage(null)
     }
   }
 
@@ -246,7 +284,7 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
           </button>
           <button
             onClick={handleDelete}
-            className="flex items-center gap-2 px-3 py-2 text-sm text-red-600 hover:text-red-700 border border-bone-dark rounded-lg hover:border-red-200 transition-colors"
+            className="flex items-center gap-2 px-3 py-2 text-sm text-terracotta-dark hover:text-terracotta border border-bone-dark rounded-lg hover:border-terracotta/40 transition-colors"
           >
             <HiTrash />
             Delete
@@ -298,14 +336,15 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
                 {STAGE_ORDER.map((key) => (
                   <button
                     key={key}
-                    onClick={() => handleStageChange(key)}
+                    onClick={() => void handleStageChange(key)}
+                    disabled={advancingStage != null || lead.status === key}
                     className={`px-3 py-1.5 text-sm rounded-lg transition-colors ${
                       lead.status === key
                         ? 'bg-terracotta text-white'
-                        : 'bg-bone text-stone hover:bg-terracotta/10 hover:text-terracotta'
+                        : 'bg-bone text-stone hover:bg-terracotta/10 hover:text-terracotta disabled:opacity-60'
                     }`}
                   >
-                    {STAGE_LABELS[key]}
+                    {advancingStage === key ? 'Copying...' : STAGE_LABELS[key]}
                   </button>
                 ))}
               </div>
@@ -317,7 +356,7 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
               <div className="grid grid-cols-4 gap-4 text-sm">
                 <div>
                   <p className="text-stone-light">Observability</p>
-                  <p className={`font-medium ${lead.ebbinghaus_status === 'sent' ? 'text-green-600' : 'text-stone'}`}>
+                  <p className={`font-medium ${lead.ebbinghaus_status === 'sent' ? 'text-terracotta' : 'text-stone'}`}>
                     {lead.ebbinghaus_status}
                   </p>
                   {lead.ebbinghaus_date && (
@@ -326,7 +365,7 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
                 </div>
                 <div>
                   <p className="text-stone-light">Free Analysis</p>
-                  <p className={`font-medium ${lead.free_analysis_status === 'sent' ? 'text-green-600' : 'text-stone'}`}>
+                  <p className={`font-medium ${lead.free_analysis_status === 'sent' ? 'text-terracotta' : 'text-stone'}`}>
                     {lead.free_analysis_status}
                   </p>
                   {lead.free_analysis_date && (
@@ -335,7 +374,7 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
                 </div>
                 <div>
                   <p className="text-stone-light">Mirror</p>
-                  <p className={`font-medium ${lead.mirror_status === 'sent' ? 'text-green-600' : 'text-stone'}`}>
+                  <p className={`font-medium ${lead.mirror_status === 'sent' ? 'text-terracotta' : 'text-stone'}`}>
                     {lead.mirror_status}
                   </p>
                   {lead.mirror_date && (
@@ -344,7 +383,7 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
                 </div>
                 <div>
                   <p className="text-stone-light">Breakup</p>
-                  <p className={`font-medium ${lead.breakup_status === 'sent' ? 'text-green-600' : 'text-stone'}`}>
+                  <p className={`font-medium ${lead.breakup_status === 'sent' ? 'text-terracotta' : 'text-stone'}`}>
                     {lead.breakup_status}
                   </p>
                   {lead.breakup_date && (
@@ -465,10 +504,13 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
                   </span>
                 </div>
                 <button
-                  onClick={() => handleStageChange(NEXT_STAGE[lead.status as StageKey])}
-                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terracotta text-white font-semibold rounded-lg hover:bg-terracotta-bright transition-colors"
+                  onClick={() => void handleStageChange(NEXT_STAGE[lead.status as StageKey])}
+                  disabled={advancingStage != null}
+                  className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-terracotta text-white font-semibold rounded-lg hover:bg-terracotta-bright transition-colors disabled:opacity-60"
                 >
-                  Advance to {STAGE_LABELS[NEXT_STAGE[lead.status as StageKey]]}
+                  {advancingStage
+                    ? 'Copying and advancing...'
+                    : `Copy & Advance to ${STAGE_LABELS[NEXT_STAGE[lead.status as StageKey]]}`}
                 </button>
               </>
             )}

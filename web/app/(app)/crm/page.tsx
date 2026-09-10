@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState, useMemo } from 'react'
+import { useCallback, useEffect, useRef, useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import { HiPlus, HiFilter, HiSearch, HiRefresh } from 'react-icons/hi'
@@ -53,8 +53,25 @@ type FilterClassification = 'all' | 'V-A' | 'V-B'
 type FilterCategory = 'all' | string
 type ActiveTab = 'overview' | StageKey
 
+function prioritySortLeads(a: CRMLead, b: CRMLead): number {
+  if (a.classification === 'V-A' && b.classification !== 'V-A') return -1
+  if (a.classification !== 'V-A' && b.classification === 'V-A') return 1
+  if (a.profile_signal === 'ONE_STAR' && b.profile_signal !== 'ONE_STAR') return -1
+  if (a.profile_signal !== 'ONE_STAR' && b.profile_signal === 'ONE_STAR') return 1
+  if (a.created_at < b.created_at) return -1
+  if (a.created_at > b.created_at) return 1
+  return 0
+}
+
+function isTypingTarget(target: EventTarget | null): boolean {
+  if (!(target instanceof HTMLElement)) return false
+  const tagName = target.tagName.toLowerCase()
+  return tagName === 'input' || tagName === 'textarea' || tagName === 'select' || target.isContentEditable
+}
+
 export default function CRMPage() {
   const router = useRouter()
+  const searchInputRef = useRef<HTMLInputElement>(null)
   const [leads, setLeads] = useState<CRMLead[]>([])
   const [loading, setLoading] = useState(true)
   const [accountId, setAccountId] = useState<string | null>(null)
@@ -152,9 +169,8 @@ export default function CRMPage() {
       const dueCount =
         followUpDays != null && followUpDays >= 0
           ? stageLeads.filter((l) => {
-              const ref = l.last_contact_at || l.created_at
-              if (!ref) return false
-              const days = (Date.now() - new Date(ref).getTime()) / (1000 * 60 * 60 * 24)
+              if (!l.last_contact_at) return false
+              const days = (Date.now() - new Date(l.last_contact_at).getTime()) / (1000 * 60 * 60 * 24)
               return days - followUpDays >= 0
             }).length
           : 0
@@ -204,6 +220,59 @@ export default function CRMPage() {
     setLeads((prev) => prev.map((l) => (l.id === updatedLead.id ? updatedLead : l)))
   }, [])
 
+  const getTopLeadForShortcut = useCallback(() => {
+    if (activeTab !== 'overview') {
+      return [...(leadsByStage[activeTab] || [])].sort(prioritySortLeads)[0] || null
+    }
+
+    const firstActiveStage = STAGE_ORDER.find(
+      (stage) => stage !== 'call' && (leadsByStage[stage]?.length || 0) > 0
+    )
+
+    if (!firstActiveStage) return null
+    return [...(leadsByStage[firstActiveStage] || [])].sort(prioritySortLeads)[0] || null
+  }, [activeTab, leadsByStage])
+
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (selectedLead || showNewLeadModal || showImportModal || showFilters) return
+      if (isTypingTarget(event.target)) return
+      if (event.metaKey || event.ctrlKey || event.altKey) return
+
+      if (event.key === '/') {
+        event.preventDefault()
+        searchInputRef.current?.focus()
+        return
+      }
+
+      if (event.key === '0') {
+        event.preventDefault()
+        setActiveTab('overview')
+        return
+      }
+
+      const numberKey = Number(event.key)
+      if (Number.isInteger(numberKey) && numberKey >= 1 && numberKey <= STAGE_ORDER.length) {
+        event.preventDefault()
+        setActiveTab(STAGE_ORDER[numberKey - 1])
+        return
+      }
+
+      if (event.key.toLowerCase() === 'n') {
+        event.preventDefault()
+        const topLead = getTopLeadForShortcut()
+        if (topLead) {
+          setSelectedLead(topLead)
+        } else {
+          toast('No lead ready in this view')
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [getTopLeadForShortcut, selectedLead, showFilters, showImportModal, showNewLeadModal])
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -228,6 +297,7 @@ export default function CRMPage() {
           <div className="relative">
             <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-light" />
             <input
+              ref={searchInputRef}
               type="text"
               placeholder="Search leads..."
               value={searchQuery}
@@ -324,17 +394,25 @@ export default function CRMPage() {
       {/* Today's Movement */}
       <TodayMovement leads={leads} />
 
+      <div className="mb-4 flex flex-wrap items-center gap-2 text-xs text-stone-light">
+        <span className="font-medium text-stone">Shortcuts</span>
+        <span className="rounded-full bg-white border border-bone-dark px-2 py-1">0 Overview</span>
+        <span className="rounded-full bg-white border border-bone-dark px-2 py-1">1-7 Stages</span>
+        <span className="rounded-full bg-white border border-bone-dark px-2 py-1">/ Search</span>
+        <span className="rounded-full bg-white border border-bone-dark px-2 py-1">N Next lead</span>
+      </div>
+
       {/* Tickler Panel - Next Up */}
       <TicklerPanel leads={leads} onLeadClick={handleCardClick} onSelectStage={setActiveTab} />
 
       {/* Stage Tabs */}
-      <div className="flex gap-1 overflow-x-auto border-b border-bone-dark mb-6">
+      <div className="flex gap-1 overflow-x-auto border-b border-bone-dark mb-6 pb-px">
         <button
           onClick={() => setActiveTab('overview')}
-          className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors ${
+          className={`px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors rounded-t-lg ${
             activeTab === 'overview'
-              ? 'border-terracotta text-terracotta'
-              : 'border-transparent text-stone hover:text-espresso'
+              ? 'border-terracotta text-terracotta bg-white'
+              : 'border-transparent text-stone hover:text-espresso hover:bg-white/60'
           }`}
         >
           Overview
@@ -344,10 +422,10 @@ export default function CRMPage() {
           <button
             key={stage}
             onClick={() => setActiveTab(stage)}
-            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors ${
+            className={`flex items-center gap-2 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 -mb-px transition-colors rounded-t-lg ${
               activeTab === stage
-                ? 'border-terracotta text-terracotta'
-                : 'border-transparent text-stone hover:text-espresso'
+                ? 'border-terracotta text-terracotta bg-white'
+                : 'border-transparent text-stone hover:text-espresso hover:bg-white/60'
             }`}
           >
             <span
@@ -379,7 +457,7 @@ export default function CRMPage() {
               <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs">
                 {vaCount > 0 && <span className="text-teal font-medium">{vaCount} V-A</span>}
                 {oneStarCount > 0 && <span className="text-gold font-medium">{oneStarCount} ONE_STAR</span>}
-                {dueCount > 0 && <span className="text-red-600 font-medium">{dueCount} due</span>}
+                {dueCount > 0 && <span className="text-terracotta-dark font-medium">{dueCount} due</span>}
               </div>
             </button>
           ))}
@@ -389,6 +467,8 @@ export default function CRMPage() {
           stage={activeTab}
           leads={leadsByStage[activeTab] || []}
           onOpenLead={handleOpenLead}
+          onLeadAdvanced={handleLeadAdvanced}
+          todayMovedCount={todayMovedCount}
         />
       )}
 

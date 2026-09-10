@@ -175,11 +175,11 @@ export default function ClassifyTestPage() {
           <div className="p-4 bg-bone rounded-lg">
             <div className="flex items-center gap-2 mb-4">
               {reclassifyStats.dryRun ? (
-                <span className="text-sm font-medium text-amber-700 bg-amber-100 px-2 py-1 rounded">
+                <span className="text-sm font-medium text-espresso bg-clay/20 px-2 py-1 rounded">
                   DRY RUN
                 </span>
               ) : (
-                <span className="text-sm font-medium text-green-700 bg-green-100 px-2 py-1 rounded">
+                <span className="text-sm font-medium text-terracotta bg-terracotta/10 px-2 py-1 rounded">
                   UPDATED
                 </span>
               )}

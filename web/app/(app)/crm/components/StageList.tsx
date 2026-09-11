@@ -5,6 +5,7 @@ import { HiStar, HiEye, HiChevronRight, HiClipboard, HiCheck } from 'react-icons
 import toast from 'react-hot-toast'
 import type { CRMLead } from '../page'
 import { NEXT_STAGE, STAGE_FOLLOW_UP_DAYS, STAGE_LABELS, type StageKey } from '@/lib/crm/stages'
+import { prioritySortLeads } from '@/lib/crm/lead-priority'
 import {
   TEMPLATES,
   getPersonaFromLead,
@@ -69,22 +70,82 @@ export default function StageList({
 }: StageListProps) {
   const [advancingLeadId, setAdvancingLeadId] = useState<string | null>(null)
 
-  // Priority sort: V-A first, then ONE_STAR, then most overdue, then last contact desc.
-  const sorted = [...leads].sort((a, b) => {
-    if (a.classification === 'V-A' && b.classification !== 'V-A') return -1
-    if (a.classification !== 'V-A' && b.classification === 'V-A') return 1
+  // Priority order comes from the shared sorter (single source of truth).
+  const sorted = [...leads].sort(prioritySortLeads)
 
-    if (a.profile_signal === 'ONE_STAR' && b.profile_signal !== 'ONE_STAR') return -1
-    if (a.profile_signal !== 'ONE_STAR' && b.profile_signal === 'ONE_STAR') return 1
+  const advanceStageRequest = useCallback(
+    async (lead: CRMLead, nextStage: StageKey, messageSent: string): Promise<CRMLead> => {
+      // The clipboard already has the message, so retry the stage move a few
+      // times for transient failures rather than leaving the lead behind.
+      let lastError: Error | null = null
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        try {
+          const response = await fetch('/api/crm/advance-stage', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ leadId: lead.id, nextStage, messageSent }),
+          })
 
-    const aOver = daysOverdue(a, stage)
-    const bOver = daysOverdue(b, stage)
-    if (aOver !== bOver) return bOver - aOver
+          if (response.ok) {
+            const { lead: updatedLead } = await response.json()
+            return updatedLead
+          }
 
-    const aDate = a.last_contact_at ? new Date(a.last_contact_at).getTime() : 0
-    const bDate = b.last_contact_at ? new Date(b.last_contact_at).getTime() : 0
-    return bDate - aDate
-  })
+          const body = await response.json().catch(() => ({}))
+          const err = new Error(body?.error || `Stage update failed (${response.status})`)
+
+          // Auth/validation errors won't fix themselves — don't retry those.
+          if (response.status === 400 || response.status === 401 || response.status === 404) {
+            throw err
+          }
+          lastError = err
+        } catch (error) {
+          const err = error instanceof Error ? error : new Error('Stage update failed')
+          if (error instanceof Error && /failed \(4\d\d\)|Unauthorized|Missing required/.test(error.message)) {
+            throw err
+          }
+          lastError = err
+        }
+
+        if (attempt < 3) {
+          await new Promise((resolve) => setTimeout(resolve, 600 * attempt))
+        }
+      }
+      throw lastError ?? new Error('Stage update failed')
+    },
+    []
+  )
+
+  const celebrateAndApply = useCallback(
+    (updatedLead: CRMLead, nextStage: StageKey) => {
+      const newCount = todayMovedCount + 1
+      if (isMilestone(newCount)) {
+        fireConfetti(true)
+        toast.success(milestoneMessage(newCount), { duration: 4500 })
+      } else {
+        fireConfetti(false)
+        toast.success(`Copied! Moving to ${STAGE_LABELS[nextStage]}`)
+      }
+      onLeadAdvanced(updatedLead)
+    },
+    [todayMovedCount, onLeadAdvanced]
+  )
+
+  const retryAdvance = useCallback(
+    async (lead: CRMLead, nextStage: StageKey, messageSent: string) => {
+      setAdvancingLeadId(lead.id)
+      try {
+        const updatedLead = await advanceStageRequest(lead, nextStage, messageSent)
+        celebrateAndApply(updatedLead, nextStage)
+      } catch (error) {
+        console.error('Retry advance failed:', error)
+        toast.error('Still failed to update the stage. Try refreshing the page.')
+      } finally {
+        setAdvancingLeadId(null)
+      }
+    },
+    [advanceStageRequest, celebrateAndApply]
+  )
 
   const handleCopyAndAdvance = useCallback(
     async (lead: CRMLead) => {
@@ -98,52 +159,54 @@ export default function StageList({
         return
       }
 
+      const messageStage = getStageFromStatus(lead.status)
+      const persona = getPersonaFromLead(lead.title, lead.category)
+      const currentMessage = personalizeTemplate(TEMPLATES[messageStage][persona], lead)
+
       setAdvancingLeadId(lead.id)
 
       try {
-        const messageStage = getStageFromStatus(lead.status)
-        const persona = getPersonaFromLead(lead.title, lead.category)
-        const currentMessage = personalizeTemplate(TEMPLATES[messageStage][persona], lead)
-
         await navigator.clipboard.writeText(currentMessage)
 
         const linkedinTarget = lead.linkedin_url || linkedinSearchUrl(lead.first_name, lead.last_name)
         window.open(linkedinTarget, '_blank')
 
-        const response = await fetch('/api/crm/advance-stage', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            leadId: lead.id,
-            nextStage,
-            messageSent: currentMessage.substring(0, 200),
-          }),
-        })
-
-        if (!response.ok) {
-          throw new Error('Failed to advance stage')
-        }
-
-        const { lead: updatedLead } = await response.json()
-        const newCount = todayMovedCount + 1
-
-        if (isMilestone(newCount)) {
-          fireConfetti(true)
-          toast.success(milestoneMessage(newCount), { duration: 4500 })
-        } else {
-          fireConfetti(false)
-          toast.success(`Copied! Moving to ${STAGE_LABELS[nextStage]}`)
-        }
-
-        onLeadAdvanced(updatedLead)
+        const updatedLead = await advanceStageRequest(lead, nextStage, currentMessage)
+        celebrateAndApply(updatedLead, nextStage)
       } catch (error) {
+        // The message was copied and LinkedIn opened; only the stage move failed.
+        // Offer a retry (re-advances without re-copying) instead of a dead end.
         console.error('Failed to copy and advance lead:', error)
-        toast.error('Failed to advance stage')
+        toast(
+          (t) => (
+            <div className="flex flex-col gap-2">
+              <span className="text-sm text-espresso">Message copied, but the stage didn't update.</span>
+              <div className="flex gap-2">
+                <button
+                  className="px-3 py-1 rounded bg-terracotta text-white text-xs font-semibold hover:bg-terracotta-bright"
+                  onClick={() => {
+                    toast.dismiss(t.id)
+                    void retryAdvance(lead, nextStage, currentMessage)
+                  }}
+                >
+                  Retry
+                </button>
+                <button
+                  className="px-3 py-1 rounded border border-bone-dark text-xs text-stone hover:border-terracotta/50"
+                  onClick={() => toast.dismiss(t.id)}
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          ),
+          { duration: 8000 }
+        )
       } finally {
         setAdvancingLeadId(null)
       }
     },
-    [advancingLeadId, onLeadAdvanced, todayMovedCount]
+    [advancingLeadId, advanceStageRequest, celebrateAndApply, retryAdvance]
   )
 
   if (leads.length === 0) {

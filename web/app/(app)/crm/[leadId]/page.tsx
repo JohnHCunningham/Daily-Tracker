@@ -180,6 +180,24 @@ export default function LeadDetailPage({ params }: { params: { leadId: string } 
         throw error
       }
 
+      // Record the outgoing message on the activity timeline (parity with the
+      // row-level "Copy & Next" API path). Non-fatal — the advance succeeded.
+      if (accountId) {
+        const { error: activityError } = await supabase.from('crm_lead_activities').insert({
+          lead_id: lead.id,
+          account_id: accountId,
+          activity_type: 'linkedin_message',
+          activity_date: now,
+          body: currentMessage,
+          direction: 'outbound',
+          source_provider: 'linkedin',
+        })
+
+        if (activityError) {
+          console.error('Error logging message activity:', activityError)
+        }
+      }
+
       fireConfetti(false)
       toast.success(`Copied! Moved to ${STAGE_LABELS[newStage]}`)
       setLead({

@@ -67,11 +67,27 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // Log the activity
-    console.log(`✅ Lead ${leadId} advanced to ${nextStage}`)
+    // Record the outgoing message as an activity (audit trail on the lead's
+    // timeline). Non-fatal — the stage advance already succeeded.
     if (messageSent) {
-      console.log(`📨 Message: ${messageSent}`)
+      const { error: activityError } = await serviceClient
+        .from('crm_lead_activities')
+        .insert({
+          lead_id: leadId,
+          account_id: userData.account_id,
+          activity_type: 'linkedin_message',
+          activity_date: new Date().toISOString(),
+          body: messageSent,
+          direction: 'outbound',
+          source_provider: 'linkedin',
+        })
+
+      if (activityError) {
+        console.error('Error logging message activity:', activityError)
+      }
     }
+
+    console.log(`✅ Lead ${leadId} advanced to ${nextStage}`)
 
     return NextResponse.json({
       success: true,

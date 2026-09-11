@@ -4,6 +4,7 @@ import { useMemo } from 'react'
 import { HiClock, HiStar, HiChevronRight, HiArrowRight } from 'react-icons/hi'
 import type { CRMLead } from '../page'
 import { type StageKey } from '@/lib/crm/stages'
+import { prioritySortLeads } from '@/lib/crm/lead-priority'
 
 interface TicklerPanelProps {
   leads: CRMLead[]
@@ -34,17 +35,6 @@ const STAGE_ACTION_LABELS: Record<string, string> = {
 // Max leads to surface per stage in the tickler; the rest live in the stage tab.
 const BATCH_PER_STAGE = 20
 
-// Priority sort: V-A first, then ONE_STAR, then oldest created first.
-function prioritySort(a: CRMLead, b: CRMLead): number {
-  if (a.classification === 'V-A' && b.classification !== 'V-A') return -1
-  if (a.classification !== 'V-A' && b.classification === 'V-A') return 1
-  if (a.profile_signal === 'ONE_STAR' && b.profile_signal !== 'ONE_STAR') return -1
-  if (a.profile_signal !== 'ONE_STAR' && b.profile_signal === 'ONE_STAR') return 1
-  if (a.created_at < b.created_at) return -1
-  if (a.created_at > b.created_at) return 1
-  return 0
-}
-
 export default function TicklerPanel({ leads, onLeadClick, onSelectStage }: TicklerPanelProps) {
   // Group + prioritize + cap leads per actionable stage.
   const stageBatches = useMemo(() => {
@@ -52,7 +42,7 @@ export default function TicklerPanel({ leads, onLeadClick, onSelectStage }: Tick
     for (const stage of ACTIONABLE_STAGES) {
       const stageLeads = leads.filter((l) => l.status === stage)
       if (stageLeads.length === 0) continue
-      const batch = [...stageLeads].sort(prioritySort).slice(0, BATCH_PER_STAGE)
+      const batch = [...stageLeads].sort(prioritySortLeads).slice(0, BATCH_PER_STAGE)
       result[stage] = { total: stageLeads.length, batch }
     }
     return result

@@ -18,6 +18,7 @@ import {
   STAGE_FOLLOW_UP_DAYS,
   type StageKey,
 } from '@/lib/crm/stages'
+import { prioritySortLeads } from '@/lib/crm/lead-priority'
 
 export interface CRMLead {
   id: string
@@ -52,16 +53,6 @@ export interface CRMLead {
 type FilterClassification = 'all' | 'V-A' | 'V-B'
 type FilterCategory = 'all' | string
 type ActiveTab = 'overview' | StageKey
-
-function prioritySortLeads(a: CRMLead, b: CRMLead): number {
-  if (a.classification === 'V-A' && b.classification !== 'V-A') return -1
-  if (a.classification !== 'V-A' && b.classification === 'V-A') return 1
-  if (a.profile_signal === 'ONE_STAR' && b.profile_signal !== 'ONE_STAR') return -1
-  if (a.profile_signal !== 'ONE_STAR' && b.profile_signal === 'ONE_STAR') return 1
-  if (a.created_at < b.created_at) return -1
-  if (a.created_at > b.created_at) return 1
-  return 0
-}
 
 function isTypingTarget(target: EventTarget | null): boolean {
   if (!(target instanceof HTMLElement)) return false
@@ -292,9 +283,9 @@ export default function CRMPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3">
           {/* Search */}
-          <div className="relative">
+          <div className="relative flex-1 min-w-[11rem] sm:flex-none">
             <HiSearch className="absolute left-3 top-1/2 -translate-y-1/2 text-stone-light" />
             <input
               ref={searchInputRef}
@@ -302,13 +293,15 @@ export default function CRMPage() {
               placeholder="Search leads..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10 pr-4 py-2 bg-white border border-bone-dark rounded-lg text-sm text-espresso placeholder-stone-light focus:outline-none focus:border-terracotta w-48"
+              className="pl-10 pr-4 py-2 bg-white border border-bone-dark rounded-lg text-sm text-espresso placeholder-stone-light focus:outline-none focus:border-terracotta w-full sm:w-48"
             />
           </div>
 
           {/* Filter Toggle */}
           <button
             onClick={() => setShowFilters(!showFilters)}
+            aria-label={showFilters ? 'Hide filters' : 'Show filters'}
+            title={showFilters ? 'Hide filters' : 'Show filters'}
             className={`p-2 rounded-lg border transition-colors ${
               showFilters || filterClassification !== 'all' || filterCategory !== 'all'
                 ? 'bg-terracotta/10 border-terracotta text-terracotta'
@@ -321,6 +314,8 @@ export default function CRMPage() {
           {/* Refresh */}
           <button
             onClick={() => void loadLeads()}
+            aria-label="Refresh leads"
+            title="Refresh leads"
             className="p-2 rounded-lg bg-white border border-bone-dark text-stone hover:border-terracotta/50 transition-colors"
           >
             <HiRefresh className="text-lg" />

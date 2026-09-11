@@ -13,6 +13,7 @@ export type StageKey =
   | 'free_analysis'
   | 'call'
   | 'breakup'
+  | 'disqualified'
 
 export const STAGE_ORDER: StageKey[] = [
   'pending',
@@ -22,6 +23,7 @@ export const STAGE_ORDER: StageKey[] = [
   'free_analysis',
   'call',
   'breakup',
+  'disqualified',
 ]
 
 export const STAGE_LABELS: Record<StageKey, string> = {
@@ -32,6 +34,7 @@ export const STAGE_LABELS: Record<StageKey, string> = {
   free_analysis: 'Free Analysis',
   call: 'Call',
   breakup: 'Breakup',
+  disqualified: 'Disqualified',
 }
 
 export const STAGE_COLORS: Record<StageKey, string> = {
@@ -42,6 +45,7 @@ export const STAGE_COLORS: Record<StageKey, string> = {
   free_analysis: '#E87456', // terracotta bright
   call: '#2A221C', // espresso
   breakup: '#B5583E', // terracotta dark
+  disqualified: '#6B7280', // neutral gray — dead lead, out of the active pipeline
 }
 
 // Advance-stage progression. "breakup" is terminal (maps to itself).
@@ -53,6 +57,7 @@ export const NEXT_STAGE: Record<StageKey, StageKey> = {
   free_analysis: 'call',
   call: 'breakup',
   breakup: 'breakup',
+  disqualified: 'disqualified',
 }
 
 // Days after last contact before follow-up is due (per stage). -1 = no follow-up.
@@ -64,4 +69,5 @@ export const STAGE_FOLLOW_UP_DAYS: Record<string, number> = {
   free_analysis: 5,
   call: -1,
   breakup: 14,
+  disqualified: -1,
 }

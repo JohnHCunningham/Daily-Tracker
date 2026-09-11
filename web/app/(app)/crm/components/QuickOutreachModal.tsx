@@ -121,6 +121,49 @@ export default function QuickOutreachModal({
     window.open(url, '_blank')
   }, [lead.linkedin_url, lead.first_name, lead.last_name])
 
+  const handleSkipOnly = useCallback(async () => {
+    if (advancing) return
+    setAdvancing(true)
+    try {
+      // Advance WITHOUT a message — for leads already messaged outside the CRM.
+      const response = await fetch('/api/crm/advance-stage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId: lead.id, nextStage }),
+      })
+      if (!response.ok) throw new Error('Failed to advance stage')
+      const { lead: updatedLead } = await response.json()
+      toast.success(`Moved to ${STAGE_LABELS[nextStage]} (no message sent)`)
+      onAdvanced(updatedLead)
+      onClose()
+    } catch (error) {
+      console.error('Skip failed:', error)
+      toast.error('Failed to move lead')
+      setAdvancing(false)
+    }
+  }, [advancing, lead, nextStage, onAdvanced, onClose])
+
+  const handleDisqualify = useCallback(async () => {
+    if (advancing) return
+    setAdvancing(true)
+    try {
+      const response = await fetch('/api/crm/advance-stage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ leadId: lead.id, nextStage: 'disqualified' }),
+      })
+      if (!response.ok) throw new Error('Failed to disqualify lead')
+      const { lead: updatedLead } = await response.json()
+      toast.success('Marked not interested — out of the pipeline')
+      onAdvanced(updatedLead)
+      onClose()
+    } catch (error) {
+      console.error('Disqualify failed:', error)
+      toast.error('Failed to mark not interested')
+      setAdvancing(false)
+    }
+  }, [advancing, lead, onAdvanced, onClose])
+
   return (
     <div
       className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
@@ -299,6 +342,23 @@ export default function QuickOutreachModal({
           >
             <HiExternalLink className="text-base" />
             LinkedIn
+          </button>
+
+          <button
+            onClick={handleSkipOnly}
+            disabled={advancing || isAtFinalStage}
+            className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium text-stone hover:text-espresso transition-colors disabled:opacity-50"
+          >
+            Skip (already sent)
+          </button>
+
+          <button
+            onClick={handleDisqualify}
+            disabled={advancing}
+            title="They said no — remove from the active pipeline"
+            className="flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium text-terracotta hover:text-espresso transition-colors disabled:opacity-50"
+          >
+            Not interested
           </button>
 
           {/* Book Call link - show for later stages */}

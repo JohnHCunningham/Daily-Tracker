@@ -4,8 +4,8 @@ import { useCallback, useState } from 'react'
 import { HiStar, HiEye, HiChevronRight, HiClipboard, HiCheck } from 'react-icons/hi'
 import toast from 'react-hot-toast'
 import type { CRMLead } from '../page'
-import { NEXT_STAGE, STAGE_FOLLOW_UP_DAYS, STAGE_LABELS, type StageKey } from '@/lib/crm/stages'
-import { prioritySortLeads } from '@/lib/crm/lead-priority'
+import { NEXT_STAGE, STAGE_LABELS, type StageKey } from '@/lib/crm/stages'
+import { prioritySortLeads, daysOverdue } from '@/lib/crm/lead-priority'
 import {
   TEMPLATES,
   getPersonaFromLead,
@@ -45,20 +45,6 @@ function formatRelativeDate(dateStr: string | null): string {
   if (diffDays < 7) return `${diffDays}d ago`
   if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`
   return `${Math.floor(diffDays / 30)}mo ago`
-}
-
-function daysOverdue(lead: CRMLead, stage: StageKey): number {
-  const followUpDays = STAGE_FOLLOW_UP_DAYS[stage]
-  if (followUpDays == null || followUpDays < 0) return -1
-
-  // "Overdue" only applies once a lead has actually been contacted.
-  // Leads with no contact yet (e.g. pending backlog) are not overdue.
-  if (!lead.last_contact_at) return -1
-
-  const diffDays = Math.floor(
-    (Date.now() - new Date(lead.last_contact_at).getTime()) / (1000 * 60 * 60 * 24)
-  )
-  return diffDays - followUpDays
 }
 
 export default function StageList({
@@ -209,6 +195,55 @@ export default function StageList({
     [advancingLeadId, advanceStageRequest, celebrateAndApply, retryAdvance]
   )
 
+  const handleSkip = useCallback(
+    async (lead: CRMLead) => {
+      if (advancingLeadId) return
+
+      const currentStage = lead.status as StageKey
+      const nextStage = NEXT_STAGE[currentStage]
+
+      if (currentStage === nextStage) {
+        toast('Breakup is the final stage')
+        return
+      }
+
+      setAdvancingLeadId(lead.id)
+      try {
+        // Advance WITHOUT a message — for leads you already messaged outside
+        // the CRM (e.g. sent on LinkedIn directly). No clipboard, no LinkedIn,
+        // no activity log; just move the stage forward.
+        const updatedLead = await advanceStageRequest(lead, nextStage, '')
+        onLeadAdvanced(updatedLead)
+        toast.success(`Moved to ${STAGE_LABELS[nextStage]} (no message sent)`)
+      } catch (error) {
+        console.error('Skip failed:', error)
+        toast.error('Failed to move lead')
+      } finally {
+        setAdvancingLeadId(null)
+      }
+    },
+    [advancingLeadId, advanceStageRequest, onLeadAdvanced]
+  )
+
+  const handleDisqualify = useCallback(
+    async (lead: CRMLead) => {
+      if (advancingLeadId) return
+      setAdvancingLeadId(lead.id)
+      try {
+        // "Not interested" — terminal, out of the active pipeline.
+        const updatedLead = await advanceStageRequest(lead, 'disqualified', '')
+        onLeadAdvanced(updatedLead)
+        toast.success('Marked not interested — out of the pipeline')
+      } catch (error) {
+        console.error('Disqualify failed:', error)
+        toast.error('Failed to mark not interested')
+      } finally {
+        setAdvancingLeadId(null)
+      }
+    },
+    [advancingLeadId, advanceStageRequest, onLeadAdvanced]
+  )
+
   if (leads.length === 0) {
     return (
       <div className="text-center py-14 bg-white border border-bone-dark rounded-xl">
@@ -315,6 +350,34 @@ export default function StageList({
                       Copy & Next
                     </>
                   )}
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    void handleSkip(lead)
+                  }}
+                  disabled={isAdvancing || isAtFinalStage}
+                  title="Move to next stage without sending a message"
+                  aria-label="Skip — move to next stage without sending"
+                  className="inline-flex items-center justify-center rounded-lg px-2.5 py-2 text-xs font-semibold text-stone border border-bone-dark hover:border-terracotta/50 hover:text-espresso transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Skip
+                </button>
+
+                <button
+                  type="button"
+                  onClick={(event) => {
+                    event.stopPropagation()
+                    void handleDisqualify(lead)
+                  }}
+                  disabled={isAdvancing}
+                  title="Not interested — remove from pipeline"
+                  aria-label="Mark not interested"
+                  className="inline-flex items-center justify-center rounded-lg px-2 py-2 text-xs font-bold text-stone-light hover:text-terracotta hover:border-terracotta/40 border border-transparent hover:border-bone-dark transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  ✕
                 </button>
 
                 <HiChevronRight className="hidden sm:block text-stone-light group-hover:text-terracotta transition-colors flex-shrink-0" />

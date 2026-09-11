@@ -3,6 +3,8 @@
 // shortcut's top-lead picker. Import from here everywhere; do NOT reimplement
 // priority sorting in a component (three files drifted out of sync this way).
 
+import { STAGE_FOLLOW_UP_DAYS } from './stages'
+
 // Minimal structural shape so this module doesn't import the full CRMLead type
 // from a page (which would create a circular dependency). Any lead object with
 // these fields satisfies it.
@@ -46,4 +48,22 @@ export function prioritySortLeads(a: PrioritizableLead, b: PrioritizableLead): n
   if (aTime < bTime) return -1
   if (aTime > bTime) return 1
   return 0
+}
+
+// Days a lead is past its follow-up window. Positive = overdue by N days.
+// -1 = not applicable (no follow-up scheduled for the stage, or never contacted).
+export function daysOverdue(
+  lead: { last_contact_at: string | null },
+  stage: string
+): number {
+  const followUpDays = STAGE_FOLLOW_UP_DAYS[stage]
+  if (followUpDays == null || followUpDays < 0) return -1
+  // "Overdue" only applies once a lead has actually been contacted.
+  // Leads with no contact yet (e.g. pending backlog) are not overdue.
+  if (!lead.last_contact_at) return -1
+
+  const diffDays = Math.floor(
+    (Date.now() - new Date(lead.last_contact_at).getTime()) / (1000 * 60 * 60 * 24)
+  )
+  return diffDays - followUpDays
 }

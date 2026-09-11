@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { HiClock, HiStar, HiChevronRight, HiArrowRight } from 'react-icons/hi'
 import type { CRMLead } from '../page'
 import { type StageKey } from '@/lib/crm/stages'
-import { prioritySortLeads } from '@/lib/crm/lead-priority'
+import { prioritySortLeads, daysOverdue } from '@/lib/crm/lead-priority'
 
 interface TicklerPanelProps {
   leads: CRMLead[]
@@ -38,12 +38,14 @@ const BATCH_PER_STAGE = 20
 export default function TicklerPanel({ leads, onLeadClick, onSelectStage }: TicklerPanelProps) {
   // Group + prioritize + cap leads per actionable stage.
   const stageBatches = useMemo(() => {
-    const result: Record<string, { total: number; batch: CRMLead[] }> = {}
+    const result: Record<string, { total: number; overdue: CRMLead[]; upcoming: CRMLead[] }> = {}
     for (const stage of ACTIONABLE_STAGES) {
       const stageLeads = leads.filter((l) => l.status === stage)
       if (stageLeads.length === 0) continue
-      const batch = [...stageLeads].sort(prioritySortLeads).slice(0, BATCH_PER_STAGE)
-      result[stage] = { total: stageLeads.length, batch }
+      const sorted = [...stageLeads].sort(prioritySortLeads)
+      const overdue = sorted.filter((l) => daysOverdue(l, stage) >= 0).slice(0, BATCH_PER_STAGE)
+      const upcoming = sorted.filter((l) => daysOverdue(l, stage) < 0).slice(0, BATCH_PER_STAGE)
+      result[stage] = { total: stageLeads.length, overdue, upcoming }
     }
     return result
   }, [leads])
@@ -61,6 +63,26 @@ export default function TicklerPanel({ leads, onLeadClick, onSelectStage }: Tick
       </div>
     )
   }
+
+  const renderPill = (lead: CRMLead, overdueDays?: number) => (
+    <button
+      key={lead.id}
+      onClick={() => onLeadClick(lead)}
+      className="flex items-center gap-1.5 px-2.5 py-1.5 bg-bone border border-bone-dark rounded-lg hover:border-terracotta hover:shadow-sm transition-all text-left group"
+    >
+      {lead.classification === 'V-A' && (
+        <span className="text-xs font-bold text-teal bg-teal/10 px-1 rounded">V-A</span>
+      )}
+      {lead.profile_signal === 'ONE_STAR' && <HiStar className="text-gold text-sm" />}
+      <span className="text-sm font-medium text-espresso group-hover:text-terracotta">
+        {lead.first_name} {lead.last_name?.charAt(0)}.
+      </span>
+      {overdueDays != null && overdueDays >= 0 && (
+        <span className="text-xs font-bold text-terracotta-dark">+{overdueDays}d</span>
+      )}
+      <HiChevronRight className="text-stone-light text-sm opacity-0 group-hover:opacity-100 transition-opacity" />
+    </button>
+  )
 
   return (
     <div className="bg-white border border-bone-dark rounded-xl mb-4 overflow-hidden">
@@ -81,48 +103,48 @@ export default function TicklerPanel({ leads, onLeadClick, onSelectStage }: Tick
 
           return (
             <div key={stage} className="p-3">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center gap-2">
+              <div className="flex items-center justify-between mb-2 gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <span className="text-xs font-semibold text-espresso uppercase tracking-wide">
                     {STAGE_ACTION_LABELS[stage] || stage}
                   </span>
-                  <span className="text-xs text-stone-light">
-                    {group.total > group.batch.length
-                      ? `next ${group.batch.length} of ${group.total}`
-                      : `(${group.total})`}
-                  </span>
+                  {group.overdue.length > 0 && (
+                    <span className="text-xs font-semibold text-terracotta-dark">
+                      {group.overdue.length} overdue
+                    </span>
+                  )}
+                  <span className="text-xs text-stone-light">({group.total})</span>
                 </div>
                 <button
                   onClick={() => onSelectStage(stage)}
-                  className="flex items-center gap-1 text-xs text-terracotta hover:text-terracotta-bright transition-colors"
+                  className="flex items-center gap-1 text-xs text-terracotta hover:text-terracotta-bright transition-colors flex-shrink-0"
                 >
                   View all
                   <HiArrowRight className="text-sm" />
                 </button>
               </div>
 
-              <div className="flex flex-wrap gap-2">
-                {group.batch.map((lead) => (
-                  <button
-                    key={lead.id}
-                    onClick={() => onLeadClick(lead)}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-bone border border-bone-dark rounded-lg hover:border-terracotta hover:shadow-sm transition-all text-left group"
-                  >
-                    {lead.classification === 'V-A' && (
-                      <span className="text-xs font-bold text-teal bg-teal/10 px-1 rounded">
-                        V-A
-                      </span>
-                    )}
-                    {lead.profile_signal === 'ONE_STAR' && (
-                      <HiStar className="text-gold text-sm" />
-                    )}
-                    <span className="text-sm font-medium text-espresso group-hover:text-terracotta">
-                      {lead.first_name} {lead.last_name?.charAt(0)}.
-                    </span>
-                    <HiChevronRight className="text-stone-light text-sm opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
-                ))}
-              </div>
+              {group.overdue.length > 0 && (
+                <div className="mb-2">
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-terracotta-dark mb-1.5">
+                    Overdue
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {group.overdue.map((lead) => renderPill(lead, daysOverdue(lead, stage)))}
+                  </div>
+                </div>
+              )}
+
+              {group.upcoming.length > 0 && (
+                <div>
+                  <div className="text-[11px] font-semibold uppercase tracking-wide text-stone-light mb-1.5">
+                    Upcoming
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {group.upcoming.map((lead) => renderPill(lead))}
+                  </div>
+                </div>
+              )}
             </div>
           )
         })}

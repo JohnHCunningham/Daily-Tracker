@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createClient as createServiceClient } from '@supabase/supabase-js'
 import { redirect } from 'next/navigation'
 import AppShell from './components/AppShell'
 import BrandProvider from './components/BrandProvider'
@@ -49,7 +50,16 @@ export default async function AppLayout({
   let billingGraceEndsAt: string | null = null
 
   if (userData?.account_id) {
-    const { data: account } = await supabase
+    // Read subscription state with the service role. The Accounts table in
+    // this project lacks the RLS policy that lets the session user read their
+    // own row, so a session-keyed read returns null and the app wrongly shows
+    // "Subscription inactive". Server-side billing status is authoritative.
+    const serviceClient = createServiceClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    )
+    const { data: account } = await serviceClient
       .from('Accounts')
       .select('subscription_status, trial_ends_at, billing_grace_ends_at')
       .eq('id', userData.account_id)

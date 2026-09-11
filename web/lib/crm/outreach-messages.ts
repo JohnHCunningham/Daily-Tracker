@@ -146,7 +146,7 @@ When a client tells you it didn't stick, what do you say?
   mirror: {
     'sales-leadership': `[First] — no reply needed if this isn't live for you.
 
-However many calls your team ran this week, you heard a handful. The rest happened with no record beyond a CRM note written by the person being coached.
+A nine-rep team runs roughly 360 calls a quarter. A manager hears maybe 50. So 310 conversations happen with no record beyond a CRM note written by the person being coached.
 
 That's not a discipline problem, it's arithmetic. Nobody coaches their way out of it.
 
@@ -166,7 +166,7 @@ If yes, I'd like to hear what you're using. If no, that's the gap.
 
 The renewal conversation I hear about most: the client says it didn't really stick, and the honest answer is that it's an execution problem on their side. True, and it never lands well.
 
-The version that does land is a number. Something like "you were at 31% in March, you're at 78% now."
+The version that does land is a number. 31% before, 78% ninety days later.
 
 Is that worth twenty minutes, or is reinforcement not really a line you sell?
 
